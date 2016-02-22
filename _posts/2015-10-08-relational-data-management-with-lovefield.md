@@ -54,11 +54,11 @@ Lovefield has been aggressively optimized and streamlined to provide superior pe
 
 ### Work in Progress
 
-Perhaps the biggest shortcoming of Lovefield is that, although being [released about a year ago](http://google-opensource.blogspot.com/2014/11/lovefield-powerful-javascript-sql-like_17.html), it is not yet feature complete. Support for foreign keys is still being actively developed, and performance and bug fixes are ongoing. Some users may take this as a sign that Lovefield isn’t ready for production, but I will mention that Google disagrees with that assessment – a significant portion of the Google Play Movies app has been running on Lovefield for over a year now.
+Perhaps the biggest shortcoming of Lovefield is that, although being [released about a year ago](http://google-opensource.blogspot.com/2014/11/lovefield-powerful-javascript-sql-like_17.html), it is not yet feature complete. ~~Support for foreign keys is still being actively developed~~ (21 December 2015: Foreign Key support has been added!), and performance and bug fixes are ongoing. Some users may take this as a sign that Lovefield isn’t ready for production, but I will mention that Google disagrees with that assessment – a significant portion of the Google Play Movies app has been running on Lovefield for over a year now.
 
 ### Environment
 
-For the NodeJS enthusiasts out there, I have bad news: Lovefield is designed to be used in a client JavaScript environment (primarily due to reliance on the browser to supply IndexedDB) so it will not work in your server-side code.
+For the NodeJS enthusiasts out there, I have bad news: Lovefield is designed to be used in a client JavaScript environment (primarily due to reliance on the browser to supply IndexedDB) ~~so it will not work in your server-side code.~~ (**21 December 2015**: Lovefield can be used in a NodeJS environment with the in-memory store, but requires a browser to supply the persistent IndexedDB store.)
 
 ## Code
 

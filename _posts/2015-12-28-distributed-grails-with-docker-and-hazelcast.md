@@ -19,13 +19,13 @@ I’ve used a variety of products and designs in the past to tackle this problem
 | Solution        |	Pros                                                 |	Cons                                             |
 |:----------------|:-----------------------------------------------------|:--------------------------------------------------|
 | Sticky Sessions | Simple                                               | Risk of data loss if cluster node dies, can cause unequal load-balancing |
-| Database	      | Reliable, persistent, and can handle large data volume | Requires infrastructure, decreases redundancy, relatively slow |
-| Redis           | Fast, persistent, easy to integrate | Requires infrastructure, single point of failure |
+| Database	      | Reliable, persistent, and can handle large data volume | Requires additional infrastructure, relatively slow |
+| Redis           | Fast, persistent, easy to integrate | Requires additional infrastructure |
 | JMS/Inter-node messaging | Push vs. pull/poll for data changes, no single point of failure | Complex, manual configuration |
 |-----------------+------------------------------------------------------+---------------------------------------------------|
 {: rules="groups"}
 
-#In-Memory Data Grid
+# In-Memory Data Grid
 
 While each of those data sharing options have solid use cases and can get the job done none of them provide the same capabilities, redundancy, and ease-of-use as an In-Memory Data Grid. IMDGs have been around for quite a while and I’m sure you’ve heard of some of the more popular products: [Gemfire](https://pivotal.io/big-data/pivotal-gemfire), [Coherence](https://www.oracle.com/middleware/coherence/index.html), [Hazelcast](http://hazelcast.org/), [Ignite](https://ignite.apache.org/). Hazelcast describes an IMDG as:
 
@@ -177,3 +177,5 @@ Docker takes care of networking, filesystem, and the rest of the operating syste
 I hope I’ve shown you a few neat tools to add to your kit. Now you have a starting point for distributing data with Hazelcast, caching data with JCache and Grails, containerizing your application with Docker, or writing an Angular2 front-end. Take a look at the [example application](https://github.com/mike-plummer/DistributedGrails) and try it out for yourself.
 
 Happy coding!
+
+**Updated 29 December 2015**: Rephrased cons for Redis and Databases to reflect that they can be configured to improve redundancy at the cost of additional infrastructure/maintenance.
