@@ -2,7 +2,7 @@
 layout: post
 title: "Taming Redux with Sagas"
 description: "Using Redux Sagas in a React Redux application"
-modified: 2017-07-25
+modified: 2017-11-20
 tags: [react, redux, sagas]
 comments: false
 ---
