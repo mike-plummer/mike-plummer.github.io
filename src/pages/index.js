@@ -7,21 +7,18 @@ import Layout from '../components/layout';
 export default function IndexPage({ data }) {
   return (
     <Layout>
-      {data.posts.edges.map(
-        ({ node: post }) =>
-          console.log(post.excerpt) || (
-            <div key={post.slug}>
-              <h1>
-                <Link to={post.slug}>{post.frontmatter.title}</Link>
-              </h1>
-              <p>
-                {post.excerpt
-                  .replace('This was originally posted at  Object Partners', '')
-                  .trim()}
-              </p>
-            </div>
-          )
-      )}
+      {data.posts.edges.map(({ node: post }) => (
+        <div key={post.slug}>
+          <h1>
+            <Link to={post.slug}>{post.frontmatter.title}</Link>
+          </h1>
+          <p>
+            {post.excerpt
+              .replace('This was originally posted at  Object Partners', '')
+              .trim()}
+          </p>
+        </div>
+      ))}
     </Layout>
   );
 }

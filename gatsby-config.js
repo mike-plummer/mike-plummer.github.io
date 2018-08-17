@@ -41,7 +41,12 @@ module.exports = {
       }
     },
     'gatsby-plugin-offline',
-    'gatsby-transformer-remark',
+    {
+      resolve: 'gatsby-transformer-remark',
+      options: {
+        plugins: ['gatsby-remark-prismjs']
+      }
+    },
     'gatsby-transformer-sharp',
     'gatsby-plugin-catch-links',
     'gatsby-plugin-emotion',

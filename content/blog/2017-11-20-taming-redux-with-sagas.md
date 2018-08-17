@@ -23,11 +23,9 @@ A Generator is a special function that can suspend (not block) its own execution
 
 Let’s take a look at a simple example:
 
-{% highlight javascript %}
-/\*
-
 - Define a Generator function that will generate values iteratively from the value supplied up to 10
-  _/
+
+```javascript
   function_ counter(i) {
   let increment = 0;
   while (i + increment <= 10) {
@@ -40,7 +38,7 @@ Let’s take a look at a simple example:
   myCounter.next(); // { value: 9, done: false } - input of 8 plus increment of one <= 10, so output and suspend
   myCounter.next(); // { value: 10, done: true } - input of 8 plus increment of two == 10, so generator is complete
   myCounter.next(); // { value: undefined, done: true } - further calls return undefined since there are no more yields and no explicit return statement
-  {% endhighlight %}
+```
 
 ## What are they good for
 
