@@ -8,6 +8,10 @@ const filesystemNodes = [
   {
     path: path.resolve('content/images'),
     name: 'images'
+  },
+  {
+    path: path.resolve('content'),
+    name: 'content'
   }
 ].map(options =>
   Object.assign(
@@ -37,6 +41,10 @@ module.exports = {
       }
     },
     'gatsby-plugin-offline',
-    'gatsby-transformer-remark'
+    'gatsby-transformer-remark',
+    'gatsby-transformer-sharp',
+    'gatsby-plugin-catch-links',
+    'gatsby-plugin-emotion',
+    'gatsby-plugin-sharp'
   ].concat(filesystemNodes)
 };

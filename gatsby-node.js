@@ -40,6 +40,17 @@ exports.setFieldsOnGraphQLNodeType = function setFieldsOnGraphQLNode({ type }) {
   switch (type.name) {
     case 'MarkdownRemark':
       return {
+        type: {
+          type: GraphQLString,
+          resolve(source) {
+            const { fileAbsolutePath } = source;
+            const [, folder] = fileAbsolutePath
+              .split(path.resolve('content'))
+              .pop()
+              .split('/');
+            return folder;
+          }
+        },
         slug: {
           type: GraphQLString,
           resolve(source) {
