@@ -19,4 +19,4 @@ After a few years out west I've returned to my roots in the midwest US and now w
 
 ### _About this site_
 
-Hosted by GitHub, powered by [Jekyll](http://jekyllrb.com) using the [HPSTR Theme](https://mademistakes.com/work/hpstr-jekyll-theme/)
+Hosted by GitHub, powered by [Gatsby](https://gatsbyjs.org)
