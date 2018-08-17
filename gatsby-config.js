@@ -50,6 +50,12 @@ module.exports = {
     'gatsby-transformer-sharp',
     'gatsby-plugin-catch-links',
     'gatsby-plugin-emotion',
-    'gatsby-plugin-sharp'
+    'gatsby-plugin-sharp',
+    {
+      resolve: 'gatsby-plugin-typography',
+      options: {
+        pathToConfigModule: 'src/util/typography'
+      }
+    }
   ].concat(filesystemNodes)
 };
