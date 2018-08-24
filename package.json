@@ -42,12 +42,12 @@
     "url": "https://github.com/ChangoMan/gatsby-starter-stellar.git"
   },
   "scripts": {
-    "dev": "gatsby develop",
+    "dev": "yarn develop",
     "test": "echo \"Error: no test specified\" && exit 1",
     "develop": "gatsby develop",
     "build": "gatsby build",
     "prettier": "prettier --write \"**/*.js\"",
-    "deploy": "gatsby build && gh-pages -d public -b master"
+    "deploy": "yarn build && gh-pages -d public"
   },
   "devDependencies": {
     "gh-pages": "^1.2.0",
