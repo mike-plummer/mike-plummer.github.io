@@ -4,7 +4,7 @@ module.exports = {
     author: 'Mike Plummer',
     description: 'A Gatsby.js site about Mike',
   },
-  pathPrefix: '/',
+  pathPrefix: '/gatsby-site',
   plugins: [
     {
       resolve: `gatsby-source-filesystem`,

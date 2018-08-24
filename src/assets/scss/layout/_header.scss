@@ -26,6 +26,14 @@
       opacity: 1;
     }
 
+    .icon {
+      background-color: white;
+      margin: 0;
+      &:before {
+        border: none;
+      }
+    }
+
     .logo {
       @include vendor('transition', (
               'opacity 1.25s ease',

@@ -13,7 +13,7 @@
     display: none;
   }
 
-  &.major {
+  &.major, &.minor {
     border: solid 1px;
     display: inline-block;
     border-radius: 100%;
@@ -23,13 +23,27 @@
 
     &:before {
       display: inline-block;
+      border-radius: 100%;
+      border: solid 1px;
+      text-align: center;
+    }
+  }
+
+  &.minor {
+    &:before {
+      font-size: 3.125em;
+      width: 1.125em;
+      height: 1.125em;
+      line-height: 1.1em;
+    }
+  }
+
+  &.major {
+    &:before {
       font-size: 6.25rem;
       width: 2.25em;
       height: 2.25em;
       line-height: 2.2em;
-      border-radius: 100%;
-      border: solid 1px;
-      text-align: center;
     }
   }
 

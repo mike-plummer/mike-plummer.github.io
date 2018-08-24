@@ -1,12 +1,8 @@
 import React from 'react';
 
-import logo from '../assets/images/logo.svg';
-
 const Header = props => (
   <header id="header" className="alt">
-    <span className="logo">
-      <img src={logo} alt="" />
-    </span>
+    <span className="style5 icon minor fa-bolt"/>
     <h1>Mike Plummer</h1>
     <p>
       Full-stack developer in the heart of flyover country
