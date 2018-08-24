@@ -1,6 +1,0 @@
-{
-  "name": "Java",
-  "label": "Services, auth, and infrastructure",
-  "content": "Spring Boot, Spring Security, Consul, OAuth, Zuul",
-  "logo": "java"
-}

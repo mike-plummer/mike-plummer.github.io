@@ -18,7 +18,7 @@ class Blog extends React.Component {
             {data.posts.edges.map(({ node: post }) => (
               <section key={post.slug}>
                 <h1>
-                  <Link to={post.slug}>{post.frontmatter.title}</Link>
+                  <Link to={`./${post.slug}`}>{post.frontmatter.title}</Link>
                 </h1>
                 <p>
                   {post.excerpt

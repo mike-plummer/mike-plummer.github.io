@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'gatsby-link';
 
 const Footer = props => (
   <footer id="footer">
@@ -12,7 +11,7 @@ const Footer = props => (
       </p>
       <ul className="actions">
         <li>
-          <a href="https://objectpartners.com" className="button" target="_blank">
+          <a href="https://objectpartners.com" className="button" target="_blank" rel="noopener noreferrer">
             Learn More about OPI
           </a>
         </li>
@@ -28,17 +27,17 @@ const Footer = props => (
       </dl>
       <ul className="icons">
         <li>
-          <a href="https://twitter.com/plummer_mike" className="icon fa-twitter alt">
+          <a href="https://twitter.com/plummer_mike" className="icon fa-twitter alt" rel="noopener noreferrer">
             <span className="label">Twitter</span>
           </a>
         </li>
         <li>
-          <a href="https://github.com/mike-plummer" className="icon fa-github alt">
+          <a href="https://github.com/mike-plummer" className="icon fa-github alt" rel="noopener noreferrer">
             <span className="label">GitHub</span>
           </a>
         </li>
         <li>
-          <a href="https://www.linkedin.com/in/plummermikej/" className="icon fa-linkedin alt">
+          <a href="https://www.linkedin.com/in/plummermikej/" className="icon fa-linkedin alt" rel="noopener noreferrer">
             <span className="label">LinkedIn</span>
           </a>
         </li>

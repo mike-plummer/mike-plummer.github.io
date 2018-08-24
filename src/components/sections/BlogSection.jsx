@@ -12,7 +12,7 @@ export const BlogSection = props => (
     <footer className="major">
       <ul className="actions">
         <li>
-          <Link to="/blog" className="button special">
+          <Link to="./blog" className="button special">
             Read More
           </Link>
         </li>

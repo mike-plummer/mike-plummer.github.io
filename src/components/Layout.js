@@ -40,7 +40,7 @@ class Layout extends React.Component {
 }
 
 Layout.propTypes = {
-  children: PropTypes.func,
+  children: PropTypes.node,
 };
 
 export default Layout;

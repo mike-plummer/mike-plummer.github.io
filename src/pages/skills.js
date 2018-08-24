@@ -15,14 +15,14 @@ class Skills extends React.Component {
         <HeaderGeneric title="Skills"/>
         <div id="main">
           <section id="content" className="main">
-            { data.skills.edges.map(skill => (
-              <section key={ skill.node.name }>
+            { data.skills.edges.map(edge => edge.node).map(skill => (
+              <section key={ skill.frontmatter.name }>
                 <div className="spotlight">
                   <div className="content">
-                    <h1>{ skill.node.name }</h1>
-                    <p>{ skill.node.content }</p>
+                    <h1>{ skill.frontmatter.name }</h1>
+                    <div dangerouslySetInnerHTML={{ __html: skill.html }} />
                   </div>
-                  <span className={ `image icon major logo ${skill.node.logo}` }/>
+                  <span className={ `image icon major logo ${skill.frontmatter.logo}` }/>
                 </div>
               </section>
             )) }
@@ -36,13 +36,18 @@ class Skills extends React.Component {
 export default Skills;
 
 export const pageQuery = graphql`
-  query SkillsContent {
-    skills: allSkillsJson {
+  query SkillsIndex {
+    skills: allMarkdownRemark(
+      sort: { fields: frontmatter___order, order: ASC }
+      filter: { type: { eq: "skills" } }
+    ) {
       edges {
         node {
-          name
-          content
-          logo
+          frontmatter {
+            name
+            logo
+          }
+          html
         }
       }
     }

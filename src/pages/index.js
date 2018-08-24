@@ -82,12 +82,17 @@ export const pageQuery = graphql`
         title
       }
     }
-    skills: allSkillsJson {
+    skills: allMarkdownRemark(
+      sort: { fields: frontmatter___order, order: ASC }
+      filter: { type: { eq: "skills" } }
+    ) {
       edges {
         node {
-          name
-          label
-          logo
+          frontmatter {
+            name
+            logo
+            brief
+          }
         }
       }
     }
