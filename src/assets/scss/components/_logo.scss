@@ -1,0 +1,66 @@
+.logo {
+  border: unset !important;
+  border-radius: unset !important;
+  margin: 0 !important;
+
+  &:before {
+    border: unset !important;
+    border-radius: unset !important;
+    content: '';
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  // Skills
+
+  &.java {
+    &:before {
+      background-image: url('../images/logos/java.svg');
+    }
+  }
+
+  &.javascript {
+    &:before {
+      background-image: url('../images/logos/javascript.svg');
+    }
+  }
+
+  &.typescript {
+    &:before {
+      background-image: url('../images/logos/typescript.svg');
+    }
+  }
+
+  &.react {
+    &:before {
+      background-image: url('../images/logos/react.svg');
+    }
+  }
+
+  &.kotlin {
+    &:before {
+      background-image: url('../images/logos/kotlin.svg');
+    }
+  }
+
+  // Conferences
+
+  &.amegala {
+    &:before {
+      background-image: url('../images/logos/amegala.png');
+    }
+  }
+
+  &.kcdc {
+    &:before {
+      background-image: url('../images/logos/kcdc.jpg');
+    }
+  }
+
+  &.midwestjs {
+    &:before {
+      background-image: url('../images/logos/midwestjs.png');
+    }
+  }
+}

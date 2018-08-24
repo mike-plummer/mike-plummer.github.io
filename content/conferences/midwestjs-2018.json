@@ -1,0 +1,9 @@
+{
+  "order": 5,
+  "name": "MidwestJS 2018",
+  "logo": "midwestjs",
+  "talks": [
+    "Automated Testing with Cypress",
+    "Taming Redux with Sagas"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "order": 1,
+  "name": "Prairie.Code() 2016",
+  "logo": "amegala",
+  "talks": [
+    "Intro to Angular 2",
+    "Intro to JUnit 5"
+  ]
+}

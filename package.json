@@ -1,0 +1,57 @@
+{
+  "name": "gatsby-starter-stellar",
+  "description": "Gatsby Starter - Stellar by HTML5 UP",
+  "version": "1.0.0",
+  "author": "Hunter Chang",
+  "dependencies": {
+    "font-awesome": "^4.7.0",
+    "gatsby": "next",
+    "gatsby-image": "next",
+    "gatsby-link": "next",
+    "gatsby-plugin-google-analytics": "next",
+    "gatsby-plugin-manifest": "next",
+    "gatsby-plugin-offline": "next",
+    "gatsby-plugin-react-helmet": "next",
+    "gatsby-plugin-sass": "next",
+    "gatsby-plugin-sharp": "next",
+    "gatsby-remark-copy-linked-files": "next",
+    "gatsby-remark-images": "next",
+    "gatsby-remark-prismjs": "next",
+    "gatsby-source-filesystem": "next",
+    "gatsby-transformer-json": "next",
+    "gatsby-transformer-remark": "next",
+    "gatsby-transformer-sharp": "next",
+    "lodash": "^4.17.5",
+    "node-sass": "^4.9.3",
+    "prismjs": "^1.15.0",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-helmet": "^5.2.0",
+    "react-scroll-to-element": "^0.2.0",
+    "react-scrollspy": "^3.3.5",
+    "react-waypoint": "^8.0.1"
+  },
+  "homepage": "https://github.com/ChangoMan/gatsby-starter-stellar",
+  "keywords": [
+    "gatsby"
+  ],
+  "license": "MIT",
+  "main": "n/a",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChangoMan/gatsby-starter-stellar.git"
+  },
+  "scripts": {
+    "dev": "gatsby develop",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "develop": "gatsby develop",
+    "build": "gatsby build",
+    "prettier": "prettier --write \"**/*.js\""
+  },
+  "devDependencies": {
+    "husky": "~0.14.3",
+    "limax": "~1.6.0",
+    "prettier": "~1.14.2",
+    "pretty-quick": "~1.6.0"
+  }
+}
