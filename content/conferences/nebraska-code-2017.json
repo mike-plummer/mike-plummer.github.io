@@ -1,9 +1,0 @@
-{
-  "order": 2,
-  "name": "Nebraska.Code() 2017",
-  "logo": "amegala",
-  "talks": [
-    "Intro to Kotlin",
-    "Intro to JUnit 5"
-  ]
-}

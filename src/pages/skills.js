@@ -22,7 +22,7 @@ class Skills extends React.Component {
                     <h1>{ skill.frontmatter.name }</h1>
                     <div dangerouslySetInnerHTML={{ __html: skill.html }} />
                   </div>
-                  <span className={ `image icon major logo ${skill.frontmatter.logo}` }/>
+                  <span className={ `image icon major ${skill.frontmatter.icon}` }/>
                 </div>
               </section>
             )) }
@@ -45,7 +45,7 @@ export const pageQuery = graphql`
         node {
           frontmatter {
             name
-            logo
+            icon
           }
           html
         }

@@ -10,22 +10,26 @@ export const StatsSection = props => (
     </header>
     <ul className="statistics">
       <li className="style1">
+        <span className="icon fa-calendar" />
+        <strong>9</strong> Years Experience
+      </li>
+      <li className="style2">
         <span className="icon fa-code-fork" />
         <strong>&gt; 10000</strong> Commits
       </li>
-      <li className="style2">
+      <li className="style3">
         <span className="icon fa-building" />
         <strong>4</strong> Clients
       </li>
-      <li className="style3">
-        <span className="icon fa-briefcase" />
-        <strong>9</strong> Projects
-      </li>
       <li className="style4">
+        <span className="icon fa-briefcase" />
+        <strong>8</strong> Projects
+      </li>
+      <li className="style5">
         <span className="icon fa-github" />
         <strong>32</strong> Repositories
       </li>
-      <li className="style5">
+      <li className="style6">
         <span className="icon fa-comment" />
         <strong>9</strong> Conference Talks
       </li>

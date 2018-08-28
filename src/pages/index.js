@@ -90,18 +90,23 @@ export const pageQuery = graphql`
         node {
           frontmatter {
             name
-            logo
+            icon
             brief
           }
         }
       }
     }
-    conferences: allConferencesJson(sort: { fields: [order], order: ASC } ) {
+    conferences: allMarkdownRemark(
+      sort: { fields: frontmatter___order, order: ASC }
+      filter: { type: { eq: "conferences" } }
+    ) {
       edges {
         node {
-          name
-          logo
-          talks
+          frontmatter {
+            name
+            icon
+          }
+          html
         }
       }
     }

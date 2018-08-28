@@ -1,9 +1,0 @@
-{
-  "order": 3,
-  "name": "KCDC 2017",
-  "logo": "kcdc",
-  "talks": [
-    "Intro to Kotlin",
-    "Intro to JUnit 5"
-  ]
-}

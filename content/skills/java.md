@@ -1,12 +1,11 @@
 ---
 name: Java
-logo: java
+icon: logo java
 order: 3
 brief: Services, auth, and infrastructure
 ---
 
-- Spring Boot
-- Spring Security
-- Consul
-- OAuth
-- Zuul
+[Spring Suite](https://spring.io): Framework, Boot, Security, Cloud  
+[Consul](https://www.consul.io/)  
+[OAuth](https://oauth.net/2/)  
+[Zuul](https://github.com/Netflix/zuul)  

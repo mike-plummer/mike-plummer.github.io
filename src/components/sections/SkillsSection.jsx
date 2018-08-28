@@ -9,7 +9,7 @@ export const SkillsSection = props => (
     <ul className="features">
       {props.skills.map(edge => edge.node).map(skill => (
         <li key={skill.frontmatter.name}>
-          <span className={`icon major style1 logo ${skill.frontmatter.logo}`}/>
+          <span className={`icon major style5 ${skill.frontmatter.icon}`}/>
           <h3>{skill.frontmatter.name}</h3>
           <p>{skill.frontmatter.brief}</p>
         </li>

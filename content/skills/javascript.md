@@ -1,10 +1,10 @@
 ---
 name: Javascript
-logo: javascript
+icon: logo javascript
 order: 2
 brief: All the Javascript things!
 ---
 
-- Webpack
-- ES2015+
-- Moar
+[Webpack](https://webpack.js.org/)  
+ES2015+  
+[Yarn](https://yarnpkg.com/en/)  

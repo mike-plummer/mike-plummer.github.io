@@ -82,6 +82,10 @@
     color: _palette(accent5);
   }
 
+  &.style6 {
+    color: _palette(accent6);
+  }
+
   @include breakpoint(xlarge) {
     &.major {
       &:before {

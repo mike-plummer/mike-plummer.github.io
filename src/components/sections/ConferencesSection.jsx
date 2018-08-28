@@ -7,13 +7,11 @@ export const ConferencesSection = props => (
       <p>Conferences I have spoken at</p>
     </header>
     <ul className="features">
-      {props.conferences.map(conference => (
-        <li key={conference.node.order}>
-          <span className={`icon major style1 logo ${conference.node.logo}`}/>
-          <h3>{conference.node.name}</h3>
-          {conference.node.talks.map((talk, index) => (
-            <div key={index}>{talk}</div>
-          ))}
+      {props.conferences.map(conference => conference.node).map(conference => (
+        <li key={conference.frontmatter.order}>
+          <span className={`icon major style5 ${conference.frontmatter.icon}`}/>
+          <h3>{conference.frontmatter.name}</h3>
+          <div dangerouslySetInnerHTML={{ __html: conference.html }} />
         </li>
       ))}
     </ul>
