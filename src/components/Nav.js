@@ -16,7 +16,7 @@ const Nav = props => (
         ['third', 'Conferences'],
         ['cta', 'Blog']
       ].map(entry => (
-        <li>
+        <li key={entry[0]}>
           <Scroll type="id" element={entry[0]}>
             <a href="#">{entry[1]}</a>
           </Scroll>

@@ -105,6 +105,7 @@ export const pageQuery = graphql`
           frontmatter {
             name
             icon
+            order
           }
           html
         }
