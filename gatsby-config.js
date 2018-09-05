@@ -3,6 +3,7 @@ module.exports = {
     title: 'Mike Plummer',
     author: 'Mike Plummer',
     description: 'A Gatsby.js site about Mike',
+    siteUrl: `https://mike-plummer.github.io`
   },
   pathPrefix: '/',
   plugins: [
