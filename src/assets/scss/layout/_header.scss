@@ -21,8 +21,8 @@
     }
 
     > * {
-      @include vendor('transition', 'opacity 3s ease');
-      @include vendor('transition-delay', '0.5s');
+      @include vendor('transition', 'opacity 2s ease');
+      @include vendor('transition-delay', '0.25s');
       opacity: 1;
     }
 
