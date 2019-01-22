@@ -91,16 +91,23 @@ React 16 added a new capability known as an [Error Boundary](https://reactjs.org
 ```
 
 # Last step
-`yarn remove react-loadable` 🎉
+```
+yarn remove react-loadable
+```
+🎉
  
 
 # What’s the benefit?
 Obviously we always have to balance the value of “it works just fine the way it is” when we consider upgrades or refactors. So, is this a worthwhile upgrade?
 
 **Bundle savings:** react-loadable is about 2KB once gzipped. Removing this library is not going to have massive impacts on your build time or bundle size, but then again, 2KB is a measurable decrease.
+
 **Fewer dependencies:** JS apps have _so many dependencies_. Each one is a separate set of documentation, updates, and API’s you have to manage. More importantly, each one is an additional attack surface for a potentially malicious actor.
+
 **Maintainability:** Sticking to the core React library when possible usually means you’ll get easier integration and fewer maintenance headaches.
+
 **Bragging rights:** Let’s be honest – it’s cool to be using the latest features.
+
 **Testing:** One huge downside at the moment is that [Enzyme](https://airbnb.io/enzyme/) is not Suspense-aware, so unit testing these async components may be tricky until that support is added. ([This issue](https://github.com/airbnb/enzyme/issues/1553) is tracking progress)
 
 #Conclusion
