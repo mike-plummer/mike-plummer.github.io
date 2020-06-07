@@ -5,7 +5,7 @@ const Header = props => (
     <span className="style5 icon minor fa-bolt"/>
     <h1>Mike Plummer</h1>
     <p>
-      Full-stack developer in the heart of flyover country
+      Full-stack developer, North Texas
     </p>
   </header>
 );
