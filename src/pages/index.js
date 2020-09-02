@@ -2,16 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import get from 'lodash/get';
 import Helmet from 'react-helmet';
-import Waypoint from 'react-waypoint';
+import { Waypoint } from 'react-waypoint';
 import { graphql } from 'gatsby';
 import Header from '../components/Header';
 import Nav from '../components/Nav';
 import Layout from '../components/Layout';
-import { AboutSection } from "../components/sections/AboutSection";
-import { StatsSection } from "../components/sections/StatsSection";
-import { BlogSection } from "../components/sections/BlogSection";
-import { SkillsSection } from "../components/sections/SkillsSection";
-import { ConferencesSection } from "../components/sections/ConferencesSection";
+import { AboutSection } from '../components/sections/AboutSection';
+import { StatsSection } from '../components/sections/StatsSection';
+import { BlogSection } from '../components/sections/BlogSection';
+import { SkillsSection } from '../components/sections/SkillsSection';
+import { ConferencesSection } from '../components/sections/ConferencesSection';
 
 class Index extends React.Component {
   _handleWaypointEnter = () => {
@@ -24,7 +24,7 @@ class Index extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      stickyNav: false,
+      stickyNav: false
     };
   }
 
@@ -36,19 +36,16 @@ class Index extends React.Component {
 
         <Header />
 
-        <Waypoint
-          onEnter={this._handleWaypointEnter}
-          onLeave={this._handleWaypointLeave}
-        />
+        <Waypoint onEnter={this._handleWaypointEnter} onLeave={this._handleWaypointLeave} />
         <Nav sticky={this.state.stickyNav} />
 
         <div id="main">
           <section id="intro" className="main">
-            <AboutSection/>
+            <AboutSection />
           </section>
 
           <section id="first" className="main special">
-            <SkillsSection skills={data.skills.edges}/>
+            <SkillsSection skills={data.skills.edges} />
           </section>
 
           <section id="second" className="main special">
@@ -56,13 +53,12 @@ class Index extends React.Component {
           </section>
 
           <section id="third" className="main special">
-            <ConferencesSection conferences={data.conferences.edges}/>
+            <ConferencesSection conferences={data.conferences.edges} />
           </section>
 
           <section id="cta" className="main special">
             <BlogSection />
           </section>
-
         </div>
       </Layout>
     );
@@ -70,7 +66,7 @@ class Index extends React.Component {
 }
 
 Index.propTypes = {
-  route: PropTypes.object,
+  route: PropTypes.object
 };
 
 export default Index;
@@ -82,10 +78,7 @@ export const pageQuery = graphql`
         title
       }
     }
-    skills: allMarkdownRemark(
-      sort: { fields: frontmatter___order, order: ASC }
-      filter: { type: { eq: "skills" } }
-    ) {
+    skills: allMarkdownRemark(sort: { fields: frontmatter___order, order: ASC }, filter: { type: { eq: "skills" } }) {
       edges {
         node {
           frontmatter {

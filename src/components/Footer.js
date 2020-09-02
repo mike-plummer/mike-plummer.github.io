@@ -1,13 +1,13 @@
 import React from 'react';
 
-const Footer = props => (
+const Footer = (props) => (
   <footer id="footer">
     <section>
       <h2>Object Partners</h2>
       <p>
-        Mike works for Object Partners Inc. (OPI), a custom software consultancy based in Minneapolis.
-        OPI specializes in JVM, UI, and Mobile development by partnering with clients to provide
-        expertise and/or deliver full solutions.
+        Mike works for Object Partners Inc. (OPI), a custom software consultancy based in Minneapolis. OPI specializes
+        in JVM, UI, and Mobile development by partnering with clients to provide expertise and/or deliver full
+        solutions.
       </p>
       <ul className="actions">
         <li>
@@ -37,15 +37,17 @@ const Footer = props => (
           </a>
         </li>
         <li>
-          <a href="https://www.linkedin.com/in/plummermikej/" className="icon fa-linkedin alt" rel="noopener noreferrer">
+          <a
+            href="https://www.linkedin.com/in/plummermikej/"
+            className="icon fa-linkedin alt"
+            rel="noopener noreferrer"
+          >
             <span className="label">LinkedIn</span>
           </a>
         </li>
       </ul>
     </section>
-    <p className="copyright">
-      &copy; {new Date().getFullYear()} -  Mike Plummer
-    </p>
+    <p className="copyright">&copy; {new Date().getFullYear()} - Mike Plummer</p>
   </footer>
 );
 

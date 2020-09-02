@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import 'font-awesome/css/font-awesome.css'
+import 'font-awesome/css/font-awesome.css';
 import '../assets/scss/main.scss';
 
 import Footer from '../components/Footer';
@@ -9,7 +9,7 @@ class Layout extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: 'is-loading',
+      loading: 'is-loading'
     };
   }
 
@@ -40,7 +40,7 @@ class Layout extends React.Component {
 }
 
 Layout.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node
 };
 
 export default Layout;

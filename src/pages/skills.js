@@ -10,22 +10,24 @@ class Skills extends React.Component {
     const { data } = this.props;
     return (
       <Layout>
-        <Helmet title={ get(this, 'props.data.site.siteMetadata.title') }/>
+        <Helmet title={get(this, 'props.data.site.siteMetadata.title')} />
 
-        <HeaderGeneric title="Skills"/>
+        <HeaderGeneric title="Skills" />
         <div id="main">
           <section id="content" className="main">
-            { data.skills.edges.map(edge => edge.node).map(skill => (
-              <section key={ skill.frontmatter.name }>
-                <div className="spotlight">
-                  <div className="content">
-                    <h1>{ skill.frontmatter.name }</h1>
-                    <div dangerouslySetInnerHTML={{ __html: skill.html }} />
+            {data.skills.edges
+              .map((edge) => edge.node)
+              .map((skill) => (
+                <section key={skill.frontmatter.name}>
+                  <div className="spotlight">
+                    <div className="content">
+                      <h1>{skill.frontmatter.name}</h1>
+                      <div dangerouslySetInnerHTML={{ __html: skill.html }} />
+                    </div>
+                    <span className={`image icon major ${skill.frontmatter.icon}`} />
                   </div>
-                  <span className={ `image icon major ${skill.frontmatter.icon}` }/>
-                </div>
-              </section>
-            )) }
+                </section>
+              ))}
           </section>
         </div>
       </Layout>
@@ -37,10 +39,7 @@ export default Skills;
 
 export const pageQuery = graphql`
   query SkillsIndex {
-    skills: allMarkdownRemark(
-      sort: { fields: frontmatter___order, order: ASC }
-      filter: { type: { eq: "skills" } }
-    ) {
+    skills: allMarkdownRemark(sort: { fields: frontmatter___order, order: ASC }, filter: { type: { eq: "skills" } }) {
       edges {
         node {
           frontmatter {

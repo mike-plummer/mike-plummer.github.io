@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Link from "gatsby-link";
+import { Link } from "gatsby";
 
 export const SkillsSection = props => (
   <React.Fragment>
@@ -18,7 +18,7 @@ export const SkillsSection = props => (
     <footer className="major">
       <ul className="actions">
         <li>
-          <Link to="./skills" className="button">
+          <Link to="/skills" className="button">
             Learn More
           </Link>
         </li>

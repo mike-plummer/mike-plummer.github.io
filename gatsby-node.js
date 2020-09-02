@@ -15,7 +15,7 @@ exports.createPages = async function createPages({ actions, graphql }) {
         }
       }
     }
-  `).then(result => {
+  `).then((result) => {
     if (result.errors) {
       return Promise.reject(result.errors);
     }
@@ -44,10 +44,7 @@ exports.setFieldsOnGraphQLNodeType = function setFieldsOnGraphQLNode({ type }) {
           type: GraphQLString,
           resolve(source) {
             const { fileAbsolutePath } = source;
-            const [, folder] = fileAbsolutePath
-              .split(path.resolve('content'))
-              .pop()
-              .split('/');
+            const [, folder] = fileAbsolutePath.split(path.resolve('content')).pop().split('/');
             return folder;
           }
         },
@@ -55,11 +52,7 @@ exports.setFieldsOnGraphQLNodeType = function setFieldsOnGraphQLNode({ type }) {
           type: GraphQLString,
           resolve(source) {
             const { frontmatter } = source;
-            return (
-              frontmatter.path ||
-              frontmatter.slug ||
-              `/${slugify(frontmatter.title)}`
-            );
+            return frontmatter.path || frontmatter.slug || `/${slugify(frontmatter.title)}`;
           }
         }
       };

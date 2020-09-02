@@ -2,7 +2,7 @@ import smoothscroll from 'smoothscroll-polyfill';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Element = props => {
+const Element = (props) => {
   return props.children;
 };
 
@@ -12,7 +12,7 @@ class Scroll extends React.Component {
     element: PropTypes.string,
     offset: PropTypes.number,
     timeout: PropTypes.number,
-    children: PropTypes.node.isRequired,
+    children: PropTypes.node.isRequired
   };
 
   constructor() {
@@ -42,15 +42,11 @@ class Scroll extends React.Component {
         default:
       }
     }
-    scroll
-      ? this.scrollTo(elem, offset, timeout)
-      : console.log(`Element not found: ${element}`); // eslint-disable-line
+    scroll ? this.scrollTo(elem, offset, timeout) : console.log(`Element not found: ${element}`); // eslint-disable-line
   }
 
   scrollTo(element, offSet = 0, timeout = null) {
-    const elemPos = element
-      ? element.getBoundingClientRect().top + window.pageYOffset
-      : 0;
+    const elemPos = element ? element.getBoundingClientRect().top + window.pageYOffset : 0;
     if (timeout) {
       setTimeout(() => {
         window.scroll({ top: elemPos + offSet, left: 0, behavior: 'smooth' });

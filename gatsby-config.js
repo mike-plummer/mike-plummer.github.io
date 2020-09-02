@@ -11,29 +11,29 @@ module.exports = {
       resolve: `gatsby-source-filesystem`,
       options: {
         path: `${__dirname}/content/posts`,
-        name: 'posts',
-      },
+        name: 'posts'
+      }
     },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
         path: `${__dirname}/content/skills`,
-        name: 'skills',
-      },
+        name: 'skills'
+      }
     },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
         path: `${__dirname}/content/conferences`,
-        name: 'conferences',
-      },
+        name: 'conferences'
+      }
     },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
         name: `images`,
-        path: `${__dirname}/src/assets/images`,
-      },
+        path: `${__dirname}/src/assets/images`
+      }
     },
     `gatsby-transformer-sharp`,
     {
@@ -43,12 +43,12 @@ module.exports = {
           {
             resolve: `gatsby-remark-images`,
             options: {
-              maxWidth: 590,
-            },
+              maxWidth: 590
+            }
           },
-          `gatsby-remark-prismjs`,
-        ],
-      },
+          `gatsby-remark-prismjs`
+        ]
+      }
     },
     `gatsby-plugin-react-helmet`,
     `gatsby-plugin-sass`,
@@ -60,19 +60,20 @@ module.exports = {
         start_url: '/',
         background_color: '#663399',
         theme_color: '#663399',
-        display: 'minimal-ui',
+        display: 'minimal-ui'
         // icon: 'static/favicon.ico' // This path is relative to the root of the site.
       }
     },
     'gatsby-plugin-offline',
+    'gatsby-plugin-sharp',
     'gatsby-transformer-sharp',
     'gatsby-transformer-json',
     {
       resolve: `gatsby-plugin-google-analytics`,
       options: {
-        trackingId: "UA-70902651-1"
+        trackingId: 'UA-70902651-1'
       }
     },
     `gatsby-plugin-sitemap`
-  ],
+  ]
 };

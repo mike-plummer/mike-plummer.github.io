@@ -11,7 +11,8 @@ Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with Ga
 
 ## Dev Process
 
-Node version 11.2.0
+Node version 12.5.0
 
-1. Commit changes to `develop` & push
-2. `yarn deploy`
+1. Make changes, preview with `npm run develop`
+1. Commit & push changes to `develop`
+1. Deploy changes with `npm run deploy`

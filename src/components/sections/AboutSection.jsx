@@ -18,7 +18,7 @@ export const AboutSection = props => (
 
       <p>
         After a few years out west I’ve returned to my roots in the midwest US and now work as a Principal
-        Technologist at <a href="https://objectpartners.com" rel="noopener noreferrer">Object Partners</a> in Plano, Texas.
+        Technologist at <a href="https://objectpartners.com" rel="noopener noreferrer">Object Partners</a> in Dallas, Texas.
       </p>
     </div>
     <span className="image">
