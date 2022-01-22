@@ -3,16 +3,16 @@ import React from 'react';
 const Footer = (props) => (
   <footer id="footer">
     <section>
-      <h2>Object Partners</h2>
+      <h2>Improving</h2>
       <p>
-        Mike works for Object Partners Inc. (OPI), a custom software consultancy based in Minneapolis. OPI specializes
+        Mike works for Improving (formerly Object Partners), a custom software consultancy. We specialize
         in JVM, UI, and Mobile development by partnering with clients to provide expertise and/or deliver full
         solutions.
       </p>
       <ul className="actions">
         <li>
-          <a href="https://objectpartners.com" className="button" target="_blank" rel="noopener noreferrer">
-            Learn More about OPI
+          <a href="https://www.improving.com" className="button" target="_blank" rel="noopener noreferrer">
+            Learn More about Improving
           </a>
         </li>
       </ul>

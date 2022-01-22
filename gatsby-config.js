@@ -35,6 +35,7 @@ module.exports = {
         path: `${__dirname}/src/assets/images`
       }
     },
+    `gatsby-plugin-image`,
     `gatsby-transformer-sharp`,
     {
       resolve: `gatsby-transformer-remark`,
@@ -55,13 +56,13 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: 'gatsby-starter-default',
-        short_name: 'starter',
+        name: 'Mike Plummer - Portfolio',
+        short_name: 'Mike Plummer',
         start_url: '/',
-        background_color: '#663399',
-        theme_color: '#663399',
-        display: 'minimal-ui'
-        // icon: 'static/favicon.ico' // This path is relative to the root of the site.
+        background_color: '#334b99',
+        theme_color: '#334b99',
+        display: 'minimal-ui',
+        icon: 'src/assets/images/texas.png' // This path is relative to the project root
       }
     },
     'gatsby-plugin-offline',

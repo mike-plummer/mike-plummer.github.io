@@ -3,7 +3,7 @@
 My [Gatsby](https://www.gatsbyjs.org/)-based website!
 
 ## Credits
-Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with Gatsby and especially examples of migrating to Gatsby v2.
+Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with Gatsby.
 
 ### [Stellar template](https://html5up.net/stellar)
 
@@ -11,7 +11,7 @@ Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with Ga
 
 ## Dev Process
 
-Node version 12.5.0
+Node version 16.13.2
 
 1. Make changes, preview with `npm run develop`
 1. Commit & push changes to `develop`

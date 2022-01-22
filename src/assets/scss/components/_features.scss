@@ -10,7 +10,7 @@
   list-style: none;
 
   li {
-    width: calc(#{(100% / 3)} - #{_size(element-margin)});
+    width: calc(#{(calc(100% / 3))} - #{_size(element-margin)});
     margin-left: _size(element-margin);
     margin-top: (_size(element-margin) * 1.5);
     padding: 0;
@@ -28,7 +28,7 @@
 
   @include breakpoint(medium) {
     li {
-      width: calc(#{(100% / 2)} - #{_size(element-margin)});
+      width: calc(#{(calc(100% / 2))} - #{_size(element-margin)});
 
       &:nth-child(3) {
         margin-top: (_size(element-margin) * 1.5);

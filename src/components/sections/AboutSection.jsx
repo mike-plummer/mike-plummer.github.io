@@ -13,16 +13,15 @@ export const AboutSection = props => (
       <p>
         I'm a full-stack developer, dabbling in a bit of everything. Mostly front-end development in React and
         Angular with a side of Java and JVM languages like Kotlin and Groovy. Graduate of Iowa State and Penn State
-        with about a decade of hobby and professional development under my belt.
+        with over a decade of hobby and professional development under my belt.
       </p>
 
       <p>
-        After a few years out west I’ve returned to my roots in the midwest US and now work as a Principal
-        Technologist at <a href="https://objectpartners.com" rel="noopener noreferrer">Object Partners</a> in Dallas, Texas.
+        I now work as a Principal Consultant at <a href="https://www.improving.com" rel="noopener noreferrer">Improving</a> in Dallas, Texas.
       </p>
     </div>
     <span className="image">
-      <img src={ profilePic } alt=""/>
+      <img src={ profilePic } alt="Picture of Mike"/>
     </span>
   </div>
 );
