@@ -8,9 +8,13 @@ import Layout from '../components/Layout';
 class Skills extends React.Component {
   render() {
     const { data } = this.props;
+    const siteTitle = get(this.props, 'data.site.siteMetadata.title');
     return (
       <Layout>
-        <Helmet title={get(this, 'props.data.site.siteMetadata.title')} />
+        <Helmet>
+          <title>{`Skills | ${siteTitle}`}</title>
+          <meta name="description" content="A description of the tools and technologies that Mike has experience with." />
+        </Helmet>
 
         <HeaderGeneric title="Skills" />
         <div id="main">
@@ -39,6 +43,11 @@ export default Skills;
 
 export const pageQuery = graphql`
   query SkillsIndex {
+    site {
+        siteMetadata {
+            title
+        }
+    }
     skills: allMarkdownRemark(sort: { fields: frontmatter___order, order: ASC }, filter: { type: { eq: "skills" } }) {
       edges {
         node {

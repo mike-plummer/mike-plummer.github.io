@@ -4,6 +4,7 @@ import 'font-awesome/css/font-awesome.css';
 import '../assets/scss/main.scss';
 
 import Footer from '../components/Footer';
+import { Helmet } from 'react-helmet';
 
 class Layout extends React.Component {
   constructor(props) {
@@ -30,6 +31,7 @@ class Layout extends React.Component {
 
     return (
       <div className={`body ${this.state.loading}`}>
+        <Helmet htmlAttributes={{ lang: 'en-US' }} />
         <div id="wrapper">
           {children}
           <Footer />

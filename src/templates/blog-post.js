@@ -11,7 +11,10 @@ class BlogPostTemplate extends React.Component {
 
     return (
       <Layout>
-        <Helmet title={`${post.frontmatter.title} | ${siteTitle}`} />
+        <Helmet>
+          <title>{`${post.frontmatter.title} | ${siteTitle}`}</title>
+          <meta name="description" content={`Blog Post: ${post.frontmatter.title}`} />
+        </Helmet>
 
         <div id="main">
           <section id="content" className="main">
@@ -32,7 +35,6 @@ export const pageQuery = graphql`
     site {
       siteMetadata {
         title
-        author
       }
     }
     markdownRemark(frontmatter: { path: { eq: $path } }) {

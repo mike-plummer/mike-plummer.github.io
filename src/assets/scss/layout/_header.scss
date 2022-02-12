@@ -20,11 +20,11 @@
       font-size: 3.25em;
     }
 
-    > * {
-      @include vendor('transition', 'opacity 2s ease');
-      @include vendor('transition-delay', '0.25s');
-      opacity: 1;
-    }
+    //> * {
+    //  @include vendor('transition', 'opacity 0.75s ease');
+    //  @include vendor('transition-delay', '0.2s');
+    //  opacity: 1;
+    //}
 
     .icon {
       background-color: white;
@@ -106,9 +106,9 @@
 
   .body.is-loading & {
     &.alt {
-      > * {
-        opacity: 0;
-      }
+      //> * {
+      //  opacity: 0;
+      //}
 
       .logo {
         @include vendor('transform', 'scale(0.8) rotate(-30deg)');

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import profilePic from "../../assets/images/mike.png";
+import { StaticImage } from 'gatsby-plugin-image';
 
 export const AboutSection = props => (
   <div className="spotlight">
@@ -21,7 +21,7 @@ export const AboutSection = props => (
       </p>
     </div>
     <span className="image">
-      <img src={ profilePic } alt="Picture of Mike"/>
+      <StaticImage src="../../assets/images/mike.png" alt="Picture of Mike" loading="eager" />
     </span>
   </div>
 );

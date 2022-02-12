@@ -1,8 +1,8 @@
 module.exports = {
   siteMetadata: {
     title: 'Mike Plummer',
+    description: 'Personal website of Mike Plummer, full-stack web developer based in North Texas.',
     author: 'Mike Plummer',
-    description: 'A Gatsby.js site about Mike',
     siteUrl: `https://mike-plummer.github.io`
   },
   pathPrefix: '/',
@@ -44,7 +44,8 @@ module.exports = {
           {
             resolve: `gatsby-remark-images`,
             options: {
-              maxWidth: 590
+              withWebp: true,
+              withAvif: true,
             }
           },
           `gatsby-remark-prismjs`
