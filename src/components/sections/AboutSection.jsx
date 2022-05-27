@@ -11,13 +11,13 @@ export const AboutSection = props => (
 
       <strong>A little bit about myself</strong>
       <p>
-        I'm a full-stack developer, dabbling in a bit of everything. Mostly front-end development in React and
-        Angular with a side of Java and JVM languages like Kotlin and Groovy. Graduate of Iowa State and Penn State
+        I'm a full-stack developer, dabbling in a bit of everything. Mostly front-end development in React and Typescript,
+        and I dabble on the server-side with Java. Graduate of Iowa State and Penn State
         with over a decade of hobby and professional development under my belt.
       </p>
 
       <p>
-        I now work as a Principal Consultant at <a href="https://www.improving.com" rel="noopener noreferrer">Improving</a> in Dallas, Texas.
+        I am currently with <a href="https://www.cypress.io" rel="noopener noreferrer">Cypress</a>, working from Dallas, Texas.
       </p>
     </div>
     <span className="image">

@@ -5,14 +5,12 @@ const Footer = (props) => (
     <section>
       <h2>Improving</h2>
       <p>
-        Mike works for Improving (formerly Object Partners), a custom software consultancy. We specialize
-        in JVM, UI, and Mobile development by partnering with clients to provide expertise and/or deliver full
-        solutions.
+        Mike works for Cypress, building software testing products.
       </p>
       <ul className="actions">
         <li>
-          <a href="https://www.improving.com" className="button" target="_blank" rel="noopener noreferrer">
-            Learn More about Improving
+          <a href="https://www.cypress.io" className="button" target="_blank" rel="noopener noreferrer">
+            Learn More about Cypress
           </a>
         </li>
       </ul>
