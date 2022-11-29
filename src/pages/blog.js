@@ -39,11 +39,14 @@ export default Blog;
 export const pageQuery = graphql`
   query BlogIndex {
     site {
-        siteMetadata {
-            title
-        }
+      siteMetadata {
+        title
+      }
     }
-    posts: allMarkdownRemark(sort: { fields: frontmatter___date, order: DESC }, filter: { type: { eq: "posts" } }) {
+    posts: allMarkdownRemark(
+      sort: {frontmatter: {date: DESC}}
+      filter: {type: {eq: "posts"}}
+    ) {
       edges {
         node {
           slug

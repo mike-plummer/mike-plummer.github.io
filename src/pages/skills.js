@@ -44,11 +44,14 @@ export default Skills;
 export const pageQuery = graphql`
   query SkillsIndex {
     site {
-        siteMetadata {
-            title
-        }
+      siteMetadata {
+        title
+      }
     }
-    skills: allMarkdownRemark(sort: { fields: frontmatter___order, order: ASC }, filter: { type: { eq: "skills" } }) {
+    skills: allMarkdownRemark(
+      sort: {frontmatter: {order: ASC}}
+      filter: {type: {eq: "skills"}}
+    ) {
       edges {
         node {
           frontmatter {

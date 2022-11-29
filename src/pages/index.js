@@ -82,7 +82,10 @@ export const pageQuery = graphql`
         description
       }
     }
-    skills: allMarkdownRemark(sort: { fields: frontmatter___order, order: ASC }, filter: { type: { eq: "skills" } }) {
+    skills: allMarkdownRemark(
+      sort: {frontmatter: {order: ASC}}
+      filter: {type: {eq: "skills"}}
+    ) {
       edges {
         node {
           frontmatter {
@@ -94,8 +97,8 @@ export const pageQuery = graphql`
       }
     }
     conferences: allMarkdownRemark(
-      sort: { fields: frontmatter___order, order: ASC }
-      filter: { type: { eq: "conferences" } }
+      sort: {frontmatter: {order: ASC}}
+      filter: {type: {eq: "conferences"}}
     ) {
       edges {
         node {
