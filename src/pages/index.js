@@ -12,6 +12,7 @@ import { StatsSection } from '../components/sections/StatsSection';
 import { BlogSection } from '../components/sections/BlogSection';
 import { SkillsSection } from '../components/sections/SkillsSection';
 import { ConferencesSection } from '../components/sections/ConferencesSection';
+import { EducationSection } from '../components/sections/EducationSection';
 
 class Index extends React.Component {
   _handleWaypointEnter = () => {
@@ -48,14 +49,18 @@ class Index extends React.Component {
           </section>
 
           <section id="first" className="main special">
-            <SkillsSection skills={data.skills.edges} />
+            <EducationSection />
           </section>
 
           <section id="second" className="main special">
-            <StatsSection />
+            <SkillsSection skills={data.skills.edges} />
           </section>
 
           <section id="third" className="main special">
+            <StatsSection />
+          </section>
+
+          <section id="fourth" className="main special">
             <ConferencesSection conferences={data.conferences.edges} />
           </section>
 
