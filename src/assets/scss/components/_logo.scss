@@ -52,6 +52,12 @@
     }
   }
 
+  &.cypress {
+    &:before {
+      background-image: url('../images/logos/cypress.png');
+    }
+  }
+
   &.kcdc {
     &:before {
       background-image: url('../images/logos/kcdc.jpg');

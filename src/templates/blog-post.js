@@ -9,6 +9,10 @@ class BlogPostTemplate extends React.Component {
     const post = this.props.data.markdownRemark;
     const siteTitle = get(this.props, 'data.site.siteMetadata.title');
 
+    if (!post) {
+      return null
+    }
+
     return (
       <Layout>
         <Helmet>
