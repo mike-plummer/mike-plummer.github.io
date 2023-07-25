@@ -7,9 +7,10 @@ const Nav = (props) => (
     <Scrollspy items={['intro', 'first', 'second', 'cta']} currentClassName="is-active" offset={-300}>
       {[
         ['intro', 'About'],
-        ['first', 'Skills'],
-        ['second', 'Stats'],
-        ['third', 'Conferences'],
+        ['first', 'Education'],
+        ['second', 'Skills'],
+        ['third', 'Stats'],
+        ['fourth', 'Conferences'],
         ['cta', 'Blog']
       ].map((entry) => (
         <li key={entry[0]}>
