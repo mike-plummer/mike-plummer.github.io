@@ -13,7 +13,7 @@ export const BlogSection = props => (
       <ul className="actions">
         <li>
           <Link to="/blog" className="button special">
-            Read More
+            Blog Posts
           </Link>
         </li>
       </ul>

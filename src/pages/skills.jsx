@@ -1,21 +1,24 @@
 import React from 'react';
-import get from 'lodash/get';
-import Helmet from 'react-helmet';
 import HeaderGeneric from '../components/HeaderGeneric';
 import { graphql } from 'gatsby';
 import Layout from '../components/Layout';
 
+export const Head = ({ data }) => {
+  const siteTitle = data.site.siteMetadata.title
+
+  return (
+    <>
+      <title>{`Skills | ${siteTitle}`}</title>
+      <meta name="description" content="A description of the tools and technologies that Mike has experience with." />
+    </>
+  )
+}
+
 class Skills extends React.Component {
   render() {
     const { data } = this.props;
-    const siteTitle = get(this.props, 'data.site.siteMetadata.title');
     return (
       <Layout>
-        <Helmet>
-          <title>{`Skills | ${siteTitle}`}</title>
-          <meta name="description" content="A description of the tools and technologies that Mike has experience with." />
-        </Helmet>
-
         <HeaderGeneric title="Skills" />
         <div id="main">
           <section id="content" className="main">

@@ -3,9 +3,9 @@ import React from 'react';
 const Footer = (props) => (
   <footer id="footer">
     <section>
-      <h2>Improving</h2>
+      <h2>Status</h2>
       <p>
-        Mike works for Cypress, building software testing products.
+        Mike works for Cypress.io, building tools to enable seamlessly fast, incredibly reliable, and delightfully easy testing for anything you can render in a browser.
       </p>
       <ul className="actions">
         <li>

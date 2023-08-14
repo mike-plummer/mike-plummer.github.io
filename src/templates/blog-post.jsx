@@ -1,13 +1,23 @@
 import React from 'react';
-import Helmet from 'react-helmet';
-import get from 'lodash/get';
 import { graphql } from 'gatsby';
 import Layout from '../components/Layout';
+
+export const Head = ({ data }) => {
+  const post = data.markdownRemark;
+  const siteTitle = data.site.siteMetadata.title
+
+  return (
+    <>
+      <title>{`${post.frontmatter.title} | ${siteTitle}`}</title>
+      <meta name="description" content={`Blog Post: ${post.frontmatter.title}`} />
+    </>
+  )
+}
 
 class BlogPostTemplate extends React.Component {
   render() {
     const post = this.props.data.markdownRemark;
-    const siteTitle = get(this.props, 'data.site.siteMetadata.title');
+    
 
     if (!post) {
       return null
@@ -15,11 +25,6 @@ class BlogPostTemplate extends React.Component {
 
     return (
       <Layout>
-        <Helmet>
-          <title>{`${post.frontmatter.title} | ${siteTitle}`}</title>
-          <meta name="description" content={`Blog Post: ${post.frontmatter.title}`} />
-        </Helmet>
-
         <div id="main">
           <section id="content" className="main">
             <h1>{post.frontmatter.title}</h1>

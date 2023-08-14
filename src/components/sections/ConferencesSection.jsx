@@ -7,7 +7,7 @@ export const ConferencesSection = props => (
       <p>Conferences I have spoken at</p>
     </header>
     <ul className="features">
-      {props.conferences.map(conference => conference.node).map(conference => (
+      {props.conferences?.map(conference => conference.node).map(conference => (
         <li key={conference.frontmatter.order}>
           <span className={`icon major style5 ${conference.frontmatter.icon}`}/>
           <h3>{conference.frontmatter.name}</h3>

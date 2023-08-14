@@ -24,6 +24,10 @@
     > :last-child {
       margin-bottom: 0;
     }
+
+    a {
+      line-height: 2em;
+    }
   }
 
   @include breakpoint(medium) {

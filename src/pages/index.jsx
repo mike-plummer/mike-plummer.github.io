@@ -1,7 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import get from 'lodash/get';
-import Helmet from 'react-helmet';
 import { Waypoint } from 'react-waypoint';
 import { graphql } from 'gatsby';
 import Header from '../components/Header';
@@ -13,6 +11,18 @@ import { BlogSection } from '../components/sections/BlogSection';
 import { SkillsSection } from '../components/sections/SkillsSection';
 import { ConferencesSection } from '../components/sections/ConferencesSection';
 import { EducationSection } from '../components/sections/EducationSection';
+
+export const Head = ({ data }) => {
+  const siteTitle = data.site.siteMetadata.title
+  const description = data.site.siteMetadata.description
+
+  return (
+    <>
+      <title>{siteTitle}</title>
+      <meta name="description" content={description} />
+    </>
+  )
+}
 
 class Index extends React.Component {
   _handleWaypointEnter = () => {
@@ -33,11 +43,6 @@ class Index extends React.Component {
     const { data } = this.props;
     return (
       <Layout>
-        <Helmet>
-          <title>{get(this, 'props.data.site.siteMetadata.title')}</title>
-          <meta name="description" content={get(this, 'props.data.site.siteMetadata.description')} />
-        </Helmet>
-
         <Header />
 
         <Waypoint onEnter={this._handleWaypointEnter} onLeave={this._handleWaypointLeave} />
@@ -53,7 +58,7 @@ class Index extends React.Component {
           </section>
 
           <section id="second" className="main special">
-            <SkillsSection skills={data.skills.edges} />
+            <SkillsSection skills={data.skills?.edges} />
           </section>
 
           <section id="third" className="main special">
@@ -61,7 +66,7 @@ class Index extends React.Component {
           </section>
 
           <section id="fourth" className="main special">
-            <ConferencesSection conferences={data.conferences.edges} />
+            <ConferencesSection conferences={data.conferences?.edges} />
           </section>
 
           <section id="cta" className="main special">

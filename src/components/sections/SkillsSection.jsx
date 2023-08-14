@@ -7,7 +7,7 @@ export const SkillsSection = props => (
       <h2>What I do</h2>
     </header>
     <ul className="features">
-      {props.skills.map(edge => edge.node).map(skill => (
+      {props.skills?.map(edge => edge.node).map(skill => (
         <li key={skill.frontmatter.name}>
           <span className={`icon major style5 ${skill.frontmatter.icon}`}/>
           <h3>{skill.frontmatter.name}</h3>
@@ -19,7 +19,7 @@ export const SkillsSection = props => (
       <ul className="actions">
         <li>
           <Link to="/skills" className="button">
-            Learn More
+            My Skills
           </Link>
         </li>
       </ul>

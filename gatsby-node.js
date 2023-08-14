@@ -2,10 +2,13 @@ const { GraphQLString } = require('gatsby/graphql');
 const slugify = require('limax');
 const path = require('path');
 
+const contentDirectoryAbsolutePath = path.resolve('content')
+const postTemplateAbsolutePath = path.resolve('src/templates/blog-post.jsx')
+
 exports.createPages = async function createPages({ actions, graphql }) {
   const { createPage } = actions;
 
-  const { posts } = await graphql(`
+  const results = await graphql(`
     {
       posts: allMarkdownRemark {
         edges {
@@ -15,23 +18,16 @@ exports.createPages = async function createPages({ actions, graphql }) {
         }
       }
     }
-  `).then((result) => {
-    if (result.errors) {
-      return Promise.reject(result.errors);
-    }
-    return result.data;
-  });
+  `)
 
-  const postTemplate = path.resolve('src/templates/blog-post.js');
-
-  posts.edges.forEach(({ node: post }) => {
+  results.data.posts.edges.forEach(({ node: post }) => {
     const { slug } = post;
     createPage({
-      component: postTemplate,
-      path: post.slug,
+      component: postTemplateAbsolutePath,
+      path: slug,
       context: {
         slug
-      } // add next/prev or whatever you want here
+      }
     });
   });
 };
@@ -44,14 +40,25 @@ exports.setFieldsOnGraphQLNodeType = function setFieldsOnGraphQLNode({ type }) {
           type: GraphQLString,
           resolve(source) {
             const { fileAbsolutePath } = source;
-            const [, folder] = fileAbsolutePath.split(path.resolve('content')).pop().split('/');
-            return folder;
+            const relativePathToSource = path.relative(contentDirectoryAbsolutePath, fileAbsolutePath)
+            const type = relativePathToSource.split(path.sep)[0]
+
+            return type
           }
         },
         slug: {
           type: GraphQLString,
           resolve(source) {
+            if (!source) {
+              return null
+            }
+
             const { frontmatter } = source;
+
+            if (!frontmatter) {
+              return null
+            }
+
             return frontmatter.path || frontmatter.slug || `/${slugify(frontmatter.title)}`;
           }
         }
