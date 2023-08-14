@@ -5,14 +5,6 @@ import '../assets/scss/main.scss';
 
 import Footer from '../components/Footer';
 
-export const Head = () => {
-  return (
-    <>
-      <html lang='en-US' />
-    </>
-  )
-}
-
 class Layout extends React.Component {
   constructor(props) {
     super(props);

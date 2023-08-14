@@ -25,12 +25,22 @@ const Footer = (props) => (
       </dl>
       <ul className="icons">
         <li>
-          <a href="https://twitter.com/plummer_mike" className="icon fa-twitter alt" rel="noopener noreferrer">
+          <a
+            href="https://twitter.com/plummer_mike"
+            className="icon fa-twitter alt"
+            rel="noopener noreferrer"
+            aria-label="Twitter"
+          >
             <span className="label">Twitter</span>
           </a>
         </li>
         <li>
-          <a href="https://github.com/mike-plummer" className="icon fa-github alt" rel="noopener noreferrer">
+          <a
+            href="https://github.com/mike-plummer"
+            className="icon fa-github alt"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >
             <span className="label">GitHub</span>
           </a>
         </li>
@@ -39,6 +49,7 @@ const Footer = (props) => (
             href="https://www.linkedin.com/in/plummermikej/"
             className="icon fa-linkedin alt"
             rel="noopener noreferrer"
+            aria-label="LinkedIn"
           >
             <span className="label">LinkedIn</span>
           </a>

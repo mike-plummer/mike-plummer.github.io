@@ -8,6 +8,7 @@ export const Head = ({ data }) => {
 
   return (
     <>
+      <html lang="en-US" />
       <title>{`Blog | ${siteTitle}`}</title>
       <meta name="description" content="Blog posts that Mike has written." />
     </>

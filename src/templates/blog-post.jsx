@@ -6,10 +6,14 @@ export const Head = ({ data }) => {
   const post = data.markdownRemark;
   const siteTitle = data.site.siteMetadata.title
 
+  if (!post) {
+    return null
+  }
+
   return (
     <>
-      <title>{`${post.frontmatter.title} | ${siteTitle}`}</title>
-      <meta name="description" content={`Blog Post: ${post.frontmatter.title}`} />
+      <title>{`${post.frontmatter?.title} | ${siteTitle}`}</title>
+      <meta name="description" content={`Blog Post: ${post.frontmatter?.title}`} />
     </>
   )
 }
@@ -18,7 +22,6 @@ class BlogPostTemplate extends React.Component {
   render() {
     const post = this.props.data.markdownRemark;
     
-
     if (!post) {
       return null
     }
@@ -27,8 +30,8 @@ class BlogPostTemplate extends React.Component {
       <Layout>
         <div id="main">
           <section id="content" className="main">
-            <h1>{post.frontmatter.title}</h1>
-            <p>{post.frontmatter.date}</p>
+            <h1>{post.frontmatter?.title}</h1>
+            <p>{post.frontmatter?.date}</p>
             <div dangerouslySetInnerHTML={{ __html: post.html }} />
           </section>
         </div>

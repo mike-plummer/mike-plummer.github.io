@@ -18,6 +18,7 @@ export const Head = ({ data }) => {
 
   return (
     <>
+      <html lang="en-US" />
       <title>{siteTitle}</title>
       <meta name="description" content={description} />
     </>
