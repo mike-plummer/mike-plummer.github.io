@@ -70,9 +70,10 @@ module.exports = {
     'gatsby-transformer-sharp',
     'gatsby-transformer-json',
     {
-      resolve: `gatsby-plugin-google-analytics`,
+    resolve: 'gatsby-plugin-google-tagmanager',
       options: {
-        trackingId: 'UA-70902651-1'
+        id: 'GTM-NGN2V65M',
+        includeInDevelopment: true,
       }
     },
     `gatsby-plugin-sitemap`

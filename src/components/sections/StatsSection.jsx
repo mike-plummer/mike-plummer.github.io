@@ -11,7 +11,7 @@ export const StatsSection = props => (
     <ul className="statistics">
       <li className="style1">
         <span className="icon fa-calendar" />
-        <strong>14</strong> Years Experience
+        <strong>15</strong> Years Experience
       </li>
       <li className="style2">
         <span className="icon fa-code-fork" />
@@ -19,7 +19,7 @@ export const StatsSection = props => (
       </li>
       <li className="style3">
         <span className="icon fa-building" />
-        <strong>8</strong> Clients & Companies
+        <strong>10</strong> Clients & Companies
       </li>
       <li className="style4">
         <span className="icon fa-briefcase" />
