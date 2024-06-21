@@ -17,12 +17,6 @@ const Footer = (props) => (
     </section>
     <section>
       <h2>Get in touch!</h2>
-      <dl className="alt">
-        <dt>Email</dt>
-        <dd>
-          <a href="#">plummer.mike.j-at-gmail.com</a>
-        </dd>
-      </dl>
       <ul className="icons">
         <li>
           <a

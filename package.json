@@ -5,12 +5,12 @@
   "author": "Mike Plummer",
   "dependencies": {
     "font-awesome": "^4.7.0",
-    "gatsby": "^5.13.3",
+    "gatsby": "^5.13.6",
     "gatsby-link": "^5.13.1",
     "gatsby-plugin-google-tagmanager": "^5.13.1",
     "gatsby-plugin-image": "^3.13.1",
     "gatsby-plugin-manifest": "^5.13.1",
-    "gatsby-plugin-offline": "^6.13.1",
+    "gatsby-plugin-offline": "^6.13.2",
     "gatsby-plugin-sass": "^6.13.1",
     "gatsby-plugin-sharp": "^5.13.1",
     "gatsby-plugin-sitemap": "^6.13.1",
@@ -23,12 +23,12 @@
     "gatsby-transformer-sharp": "^5.13.1",
     "lodash": "^4.17.21",
     "prismjs": "^1.29.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-scroll-to-element": "^0.2.0",
     "react-scrollspy": "^3.4.3",
     "react-waypoint": "^10.3.0",
-    "sass": "^1.72.0"
+    "sass": "^1.77.6"
   },
   "homepage": "https://github.com/mike-plummer/mike-plummer.github.io",
   "keywords": [
@@ -55,7 +55,7 @@
     "gh-pages": "^6.1.1",
     "husky": "^9.0.11",
     "limax": "^4.1.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.2",
     "pretty-quick": "^4.0.0"
   }
 }
