@@ -5,7 +5,7 @@
   "author": "Mike Plummer",
   "dependencies": {
     "font-awesome": "^4.7.0",
-    "gatsby": "^5.13.6",
+    "gatsby": "^5.13.7",
     "gatsby-link": "^5.13.1",
     "gatsby-plugin-google-tagmanager": "^5.13.1",
     "gatsby-plugin-image": "^3.13.1",
@@ -28,7 +28,7 @@
     "react-scroll-to-element": "^0.2.0",
     "react-scrollspy": "^3.4.3",
     "react-waypoint": "^10.3.0",
-    "sass": "^1.77.6"
+    "sass": "^1.77.8"
   },
   "homepage": "https://github.com/mike-plummer/mike-plummer.github.io",
   "keywords": [
@@ -53,9 +53,9 @@
   },
   "devDependencies": {
     "gh-pages": "^6.1.1",
-    "husky": "^9.0.11",
+    "husky": "^9.1.4",
     "limax": "^4.1.0",
-    "prettier": "^3.3.2",
+    "prettier": "^3.3.3",
     "pretty-quick": "^4.0.0"
   }
 }
