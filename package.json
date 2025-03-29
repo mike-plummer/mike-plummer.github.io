@@ -5,30 +5,30 @@
   "author": "Mike Plummer",
   "dependencies": {
     "font-awesome": "^4.7.0",
-    "gatsby": "^5.13.7",
-    "gatsby-link": "^5.13.1",
-    "gatsby-plugin-google-tagmanager": "^5.13.1",
-    "gatsby-plugin-image": "^3.13.1",
-    "gatsby-plugin-manifest": "^5.13.1",
-    "gatsby-plugin-offline": "^6.13.3",
-    "gatsby-plugin-sass": "^6.13.1",
-    "gatsby-plugin-sharp": "^5.13.1",
-    "gatsby-plugin-sitemap": "^6.13.1",
-    "gatsby-remark-copy-linked-files": "^6.13.2",
-    "gatsby-remark-images": "^7.13.2",
-    "gatsby-remark-prismjs": "^7.13.2",
-    "gatsby-source-filesystem": "^5.13.1",
-    "gatsby-transformer-json": "^5.13.1",
-    "gatsby-transformer-remark": "^6.13.1",
-    "gatsby-transformer-sharp": "^5.13.1",
+    "gatsby": "^5.14.1",
+    "gatsby-link": "^5.14.1",
+    "gatsby-plugin-google-tagmanager": "^5.14.0",
+    "gatsby-plugin-image": "^3.14.0",
+    "gatsby-plugin-manifest": "^5.14.0",
+    "gatsby-plugin-offline": "^6.14.0",
+    "gatsby-plugin-sass": "^6.14.0",
+    "gatsby-plugin-sharp": "^5.14.0",
+    "gatsby-plugin-sitemap": "^6.14.0",
+    "gatsby-remark-copy-linked-files": "^6.14.0",
+    "gatsby-remark-images": "^7.14.0",
+    "gatsby-remark-prismjs": "^7.14.0",
+    "gatsby-source-filesystem": "^5.14.0",
+    "gatsby-transformer-json": "^5.14.0",
+    "gatsby-transformer-remark": "^6.14.0",
+    "gatsby-transformer-sharp": "^5.14.0",
     "lodash": "^4.17.21",
-    "prismjs": "^1.29.0",
+    "prismjs": "^1.30.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scroll-to-element": "^0.2.0",
     "react-scrollspy": "^3.4.3",
     "react-waypoint": "^10.3.0",
-    "sass": "^1.79.4"
+    "sass": "^1.86.0"
   },
   "homepage": "https://github.com/mike-plummer/mike-plummer.github.io",
   "keywords": [
@@ -52,10 +52,10 @@
     "upgrade": "npx npm-check -u"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1",
-    "husky": "^9.1.6",
+    "gh-pages": "^6.3.0",
+    "husky": "^9.1.7",
     "limax": "^4.1.0",
-    "prettier": "^3.3.3",
-    "pretty-quick": "^4.0.0"
+    "prettier": "^3.5.3",
+    "pretty-quick": "^4.1.1"
   }
 }
