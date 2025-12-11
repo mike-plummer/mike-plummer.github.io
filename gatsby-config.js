@@ -65,7 +65,6 @@ module.exports = {
         icon: 'src/assets/images/texas.png' // This path is relative to the project root
       }
     },
-    'gatsby-plugin-offline',
     'gatsby-plugin-sharp',
     'gatsby-transformer-sharp',
     'gatsby-transformer-json',
