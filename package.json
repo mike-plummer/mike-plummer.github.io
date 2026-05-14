@@ -54,7 +54,7 @@
     "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
     "limax": "^4.2.3",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.3",
     "pretty-quick": "^4.2.2"
   }
 }
