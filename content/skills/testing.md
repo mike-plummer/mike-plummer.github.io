@@ -1,7 +1,7 @@
 ---
 name: Testing
 icon: logo cypress
-order: 4
+order: 5
 brief: Unit & E2E Testing
 ---
 

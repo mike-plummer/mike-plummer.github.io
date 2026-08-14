@@ -11,9 +11,10 @@ export const AboutSection = props => (
 
       <strong>A little bit about myself</strong>
       <p>
-        I'm a full-stack developer, dabbling in a bit of everything. Mostly front-end development in React and Typescript,
-        and I dabble on the server-side with Java. Graduate of Iowa State and Penn State
-        with over a decade of hobby and professional development under my belt.
+        I'm a full-stack developer, dabbling in a bit of everything. Lots of front-end development 
+        in React and Vue, and a fair share of backend crunching with Typescript in Node.js. Graduate 
+        of Iowa State and Penn State with almost 20 years of hobby and professional development 
+        under my belt.
       </p>
 
       <p>

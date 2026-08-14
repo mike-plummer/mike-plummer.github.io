@@ -3,7 +3,7 @@ module.exports = {
     title: 'Mike Plummer',
     description: 'Personal website of Mike Plummer, full-stack web developer based in North Texas.',
     author: 'Mike Plummer',
-    siteUrl: `https://mike-plummer.github.io`
+    siteUrl: `https://mike.plummerfamily.org`
   },
   pathPrefix: '/',
   plugins: [
@@ -45,7 +45,7 @@ module.exports = {
             resolve: `gatsby-remark-images`,
             options: {
               withWebp: true,
-              withAvif: true,
+              withAvif: true
             }
           },
           `gatsby-remark-prismjs`
@@ -69,10 +69,10 @@ module.exports = {
     'gatsby-transformer-sharp',
     'gatsby-transformer-json',
     {
-    resolve: 'gatsby-plugin-google-tagmanager',
+      resolve: 'gatsby-plugin-google-tagmanager',
       options: {
         id: 'GTM-NGN2V65M',
-        includeInDevelopment: true,
+        includeInDevelopment: true
       }
     },
     `gatsby-plugin-sitemap`

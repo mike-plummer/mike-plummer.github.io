@@ -107,20 +107,5 @@ export const pageQuery = graphql`
         }
       }
     }
-    conferences: allMarkdownRemark(
-      sort: {frontmatter: {order: ASC}}
-      filter: {type: {eq: "conferences"}}
-    ) {
-      edges {
-        node {
-          frontmatter {
-            name
-            icon
-            order
-          }
-          html
-        }
-      }
-    }
   }
 `;

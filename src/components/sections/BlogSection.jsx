@@ -7,13 +7,13 @@ export const BlogSection = props => (
       <h2>Blog</h2>
     </header>
     <p>
-      Read the latest of my (infrequent) blog posts
+      I also (used to) write blog posts
     </p>
     <footer className="major">
       <ul className="actions">
         <li>
           <Link to="/blog" className="button special">
-            Blog Posts
+            Archive
           </Link>
         </li>
       </ul>

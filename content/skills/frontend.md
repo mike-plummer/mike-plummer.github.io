@@ -1,7 +1,7 @@
 ---
 name: Front End Development
 icon: logo react
-order: 1
+order: 2
 brief: React/Vue UIs using Javascript & Typescript
 ---
 

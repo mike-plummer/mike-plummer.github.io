@@ -1,7 +1,7 @@
 ---
 name: Back End Development
 icon: logo java
-order: 2
+order: 3
 brief: Services, auth, and infrastructure in Java and Kotlin
 ---
 

@@ -1,19 +1,20 @@
 import * as React from 'react';
+import { Link } from "gatsby";
 
 export const ConferencesSection = props => (
   <React.Fragment>
     <header className="major">
       <h2>Conferences</h2>
-      <p>Conferences I have spoken at</p>
+      <p>I used to speak at conferences (no longer)</p>
     </header>
-    <ul className="features">
-      {props.conferences?.map(conference => conference.node).map(conference => (
-        <li key={conference.frontmatter.order}>
-          <span className={`icon major style5 ${conference.frontmatter.icon}`}/>
-          <h3>{conference.frontmatter.name}</h3>
-          <div dangerouslySetInnerHTML={{ __html: conference.html }} />
+    <footer className="major">
+      <ul className="actions">
+        <li>
+          <Link to="/conferences" className="button special">
+            Archive
+          </Link>
         </li>
-      ))}
-    </ul>
+      </ul>
+    </footer>
   </React.Fragment>
 );

@@ -1,7 +1,7 @@
 ---
 name: Tools
 icon: fa-cogs
-order: 3
+order: 4
 brief: Git, Jira, etc, etc
 ---
 
