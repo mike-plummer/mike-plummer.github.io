@@ -2,5 +2,5 @@
 module.exports = {
   siteUrl: 'https://mike.plummerfamily.org',
   generateRobotsTxt: false,
-  outDir: 'out',
+  outDir: 'out'
 };

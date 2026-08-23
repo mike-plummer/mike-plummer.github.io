@@ -6,7 +6,7 @@ import { iconClassNames } from '@/lib/icons';
 
 export const metadata: Metadata = {
   title: 'Skills',
-  description: 'A description of the tools and technologies that Mike has experience with.',
+  description: 'A description of the tools and technologies that Mike has experience with.'
 };
 
 export default async function SkillsPage() {

@@ -5,7 +5,7 @@ import { siteMetadata } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: siteMetadata.title,
-  description: siteMetadata.description,
+  description: siteMetadata.description
 };
 
 export default async function Page() {

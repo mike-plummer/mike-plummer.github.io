@@ -1,6 +1,6 @@
 'use client';
 
-import { cloneElement, useCallback, type MouseEvent, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, type MouseEvent, type ReactElement, useCallback } from 'react';
 
 interface ScrollProps {
   type?: 'class' | 'id';
@@ -29,7 +29,7 @@ export default function Scroll({ type, element, offset = 0, timeout, children }:
         performScroll();
       }
     },
-    [offset, timeout],
+    [offset, timeout]
   );
 
   const handleClick = useCallback(
@@ -50,7 +50,7 @@ export default function Scroll({ type, element, offset = 0, timeout, children }:
 
       scrollTo(target);
     },
-    [element, scrollTo, type],
+    [element, scrollTo, type]
   );
 
   return cloneElement(children, { onClick: handleClick });

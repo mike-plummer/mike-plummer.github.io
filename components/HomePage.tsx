@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { Skill } from '@/lib/types';
 import Header from './Header';
 import Layout from './Layout';
 import Nav from './Nav';
@@ -10,7 +11,6 @@ import { ConferencesSection } from './sections/ConferencesSection';
 import { EducationSection } from './sections/EducationSection';
 import { SkillsSection } from './sections/SkillsSection';
 import { StatsSection } from './sections/StatsSection';
-import type { Skill } from '@/lib/types';
 
 interface HomePageProps {
   skills: Skill[];
@@ -31,7 +31,7 @@ export default function HomePage({ skills }: HomePageProps) {
       ([entry]) => {
         setStickyNav(!entry.isIntersecting);
       },
-      { threshold: 0 },
+      { threshold: 0 }
     );
 
     observer.observe(sentinel);

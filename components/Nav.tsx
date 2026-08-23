@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   ['second', 'Skills'],
   ['third', 'Stats'],
   ['fourth', 'Conferences'],
-  ['cta', 'Blog'],
+  ['cta', 'Blog']
 ] as const;
 
 interface NavProps {
@@ -41,8 +41,8 @@ export default function Nav({ sticky }: NavProps) {
       },
       {
         rootMargin: '-300px 0px -40% 0px',
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      },
+        threshold: [0, 0.25, 0.5, 0.75, 1]
+      }
     );
 
     for (const section of sections) {

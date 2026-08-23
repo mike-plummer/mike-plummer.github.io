@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { getAllPosts } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'Blog posts that Mike has written.',
+  description: 'Blog posts that Mike has written.'
 };
 
 export default async function BlogPage() {

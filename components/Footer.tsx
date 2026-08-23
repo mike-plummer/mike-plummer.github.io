@@ -4,8 +4,8 @@ export default function Footer() {
       <section>
         <h2>Status</h2>
         <p>
-          Mike works for Cypress.io, building tools to enable seamlessly fast, incredibly reliable, and delightfully easy
-          testing for anything you can render in a browser.
+          Mike works for Cypress.io, building tools to enable seamlessly fast, incredibly reliable, and delightfully
+          easy testing for anything you can render in a browser.
         </p>
         <ul className="actions">
           <li>

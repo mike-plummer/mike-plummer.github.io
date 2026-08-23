@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { getAllPosts, getPostBySlugSegments, getPostStaticParams } from '@/lib/content';
+
 interface BlogPostPageProps {
   params: Promise<{ slug: string[] }>;
 }
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: post.title,
-    description: `Blog Post: ${post.title}`,
+    description: `Blog Post: ${post.title}`
   };
 }
 

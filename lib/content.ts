@@ -1,12 +1,12 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import matter from 'gray-matter';
 import slugify from 'limax';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkRehype from 'remark-rehype';
 import rehypePrism from 'rehype-prism-plus';
 import rehypeStringify from 'rehype-stringify';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import { unified } from 'unified';
 import type { Conference, ConferenceFrontmatter, Post, PostFrontmatter, Skill, SkillFrontmatter } from './types';
 
 const contentDirectory = path.join(process.cwd(), 'content');
@@ -28,7 +28,10 @@ function resolveSlug(frontmatter: PostFrontmatter): string {
 }
 
 function slugToSegments(slug: string): string[] {
-  return slug.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+  return slug
+    .replace(/^\/|\/$/g, '')
+    .split('/')
+    .filter(Boolean);
 }
 
 function formatDate(dateString: string): string {
@@ -36,7 +39,7 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString('en-US', {
     month: 'long',
     day: '2-digit',
-    year: 'numeric',
+    year: 'numeric'
   });
 }
 
@@ -95,7 +98,7 @@ async function parseMarkdownFile<T>(filePath: string): Promise<{ frontmatter: T;
 
   return {
     frontmatter: data as T,
-    html,
+    html
   };
 }
 
@@ -129,9 +132,9 @@ export async function getAllPosts(): Promise<Post[]> {
         dateFormatted: formatDate(frontmatter.date),
         html,
         excerpt: createExcerpt(content),
-        filePath,
+        filePath
       };
-    }),
+    })
   );
 
   return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -156,9 +159,9 @@ export async function getAllSkills(): Promise<Skill[]> {
         icon: frontmatter.icon,
         order: frontmatter.order,
         brief: frontmatter.brief,
-        html,
+        html
       };
-    }),
+    })
   );
 
   return skills.sort((a, b) => a.order - b.order);
@@ -176,9 +179,9 @@ export async function getAllConferences(): Promise<Conference[]> {
         order: frontmatter.order,
         name: frontmatter.name,
         icon: frontmatter.icon,
-        html,
+        html
       };
-    }),
+    })
   );
 
   return conferences.sort((a, b) => a.order - b.order);
@@ -187,6 +190,6 @@ export async function getAllConferences(): Promise<Conference[]> {
 export async function getPostStaticParams(): Promise<{ slug: string[] }[]> {
   const posts = await getAllPosts();
   return posts.map((post) => ({
-    slug: getPostSlugSegments(post.slug),
+    slug: getPostSlugSegments(post.slug)
   }));
 }
