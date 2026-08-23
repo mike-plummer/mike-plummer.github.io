@@ -25,7 +25,7 @@ export function AboutSection() {
         </p>
       </div>
       <span className="image">
-        <Image src="/images/mike.png" alt="Picture of Mike" width={400} height={400} priority />
+        <Image src="/images/mike.png" alt="Picture of Mike" width={460} height={460} priority />
       </span>
     </div>
   );

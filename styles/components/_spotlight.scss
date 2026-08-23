@@ -29,6 +29,9 @@
     img {
       display: block;
       border-radius: 100%;
+      width: 20em;
+      height: 20em;
+      object-fit: cover;
     }
   }
 
@@ -59,12 +62,22 @@
     }
   }
 
+  @include breakpoint(medium) {
+    .image {
+      img {
+        width: 16em;
+        height: 16em;
+      }
+    }
+  }
+
   @include breakpoint(small) {
     .image {
       padding: 0.35em;
 
       img {
         width: 12em;
+        height: 12em;
       }
     }
   }
