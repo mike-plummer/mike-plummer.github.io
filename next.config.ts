@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   images: {
     unoptimized: true
+  },
+  sassOptions: {
+    silenceDeprecations: ['import']
   }
 };
 

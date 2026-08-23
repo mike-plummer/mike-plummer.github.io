@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 /* Nav */
 
 #nav {
@@ -70,7 +72,7 @@
     position: fixed;
     top: 0;
     padding: 0.5em 1em;
-    background-color: transparentize(_palette(invert, bg-alt), 0.05);
+    background-color: color.adjust(_palette(invert, bg-alt), $alpha: -0.05);
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     z-index: _misc(z-index-base);

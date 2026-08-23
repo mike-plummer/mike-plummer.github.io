@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 /* Button */
 
 input[type="submit"],
@@ -86,11 +88,11 @@ button,
       box-shadow: none;
 
       &:hover {
-        background-color: lighten(_palette(accent), 3);
+        background-color: color.scale(_palette(accent), $lightness: 3%);
       }
 
       &:active {
-        background-color: darken(_palette(accent), 3);
+        background-color: color.scale(_palette(accent), $lightness: -3%);
       }
 
       &.icon {

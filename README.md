@@ -2,13 +2,7 @@
 
 Personal website built with [Next.js](https://nextjs.org/) (static export), React 19, and TypeScript.
 
-## Credits
-
-Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with the original Gatsby version.
-
 ### [Stellar template](https://html5up.net/stellar)
-
-### [Gatsby Starter](http://gatsby-stellar.surge.sh/) (original foundation)
 
 ## Requirements
 
