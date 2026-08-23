@@ -1,0 +1,349 @@
+1:"$Sreact.fragment"
+2:I[9766,[],""]
+3:I[8924,[],""]
+4:I[8202,["177","static/chunks/app/layout-dcd3c4a6ef823935.js"],"GoogleTagManager"]
+6:I[4431,[],"OutletBoundary"]
+8:I[5278,[],"AsyncMetadataOutlet"]
+a:I[4431,[],"ViewportBoundary"]
+c:I[4431,[],"MetadataBoundary"]
+d:"$Sreact.suspense"
+f:I[7150,[],""]
+:HL["/_next/static/css/014d69f673875f24.css","style"]
+:HL["/_next/static/css/5046e899553f75ab.css","style"]
+0:{"P":null,"b":"iLwdQusvyJlBdi4IxfcP1","p":"","c":["","2019-05-21-speed-up-spock-spring-tests",""],"i":false,"f":[[["",{"children":[["slug","2019-05-21-speed-up-spock-spring-tests","c"],{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/014d69f673875f24.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","link","1",{"rel":"stylesheet","href":"/_next/static/css/5046e899553f75ab.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]],"forbidden":"$undefined","unauthorized":"$undefined"}],["$","$L4",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}],{"children":[["slug","2019-05-21-speed-up-spock-spring-tests","c"],["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":["__PAGE__",["$","$1","c",{"children":["$L5",null,["$","$L6",null,{"children":["$L7",["$","$L8",null,{"promise":"$@9"}]]}]]}],{},null,false]},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$La",null,{"children":"$Lb"}],null],["$","$Lc",null,{"children":["$","div",null,{"hidden":true,"children":["$","$d",null,{"fallback":null,"children":"$Le"}]}]}]]}],false]],"m":"$undefined","G":["$f",[]],"s":false,"S":true}
+10:I[6105,["48","static/chunks/app/%5B...slug%5D/page-e21f30c6dae27733.js"],"default"]
+11:Te80d,<blockquote>
+<p><em>This was originally posted at <a href="https://objectpartners.com/2019/05/21/speed-up-spock-spring-tests/">Object Partners</a></em></p>
+</blockquote>
+<p>This article follows up some excellent info on testing Spring with Spock here and here.</p>
+<p>Developing with Spring and testing with Spock means you're using two of the best tools available on the JVM today. One downside, however, is that some test easy test patterns have serious performance drawbacks. We all know that tests that fire up a Spring context are <strong>much</strong> slower than those that don't, but perhaps we don't have a firm grasp of why and how we can help control that overhead.</p>
+<p>For the purposes of this post, I have a contrived example application: a controller with two endpoints, each of which uses a different service, with a couple other beans in the context that are very expensive to build. We'll walk through where you might start writing tests, and examine a few paths towards making them more efficient while identifying the limitations of each approach.</p>
+<h1>How can we test a Spring app in Spock?</h1>
+<p>Turns out that there's a bunch of different ways we can write Spring tests in Spock, each with differing levels of complexity, maintenance, and performance. We'll go through a half-dozen of them here and identify which are the best fit for your application.</p>
+<h2>Custom Contexts</h2>
+<p>The first test we'll set up tries to test each controller independently, mocking out the service dependency so we can validate interactions. Firing up a Spring context allows us to validate HTTP pathing and method configuration using MockMVC.</p>
+<p>Our test would look something like this:</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token annotation punctuation">@AutoConfigureMockMvc</span>
+</span><span class="code-line"><span class="token annotation punctuation">@SpringBootTest</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>Application<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">static</span> DetachedMockFactory factory <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DetachedMockFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> MockMvc mockMvc
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token annotation punctuation">@ContextConfiguration</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>GetAllConfig<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> DataListService service
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'["1","2","3"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@TestConfiguration</span>
+</span><span class="code-line">    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAllConfig</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token annotation punctuation">@Bean</span> <span class="token annotation punctuation">@Primary</span>
+</span><span class="code-line">        DataListService <span class="token function">mockDataService</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">            factory<span class="token punctuation">.</span><span class="token function">Mock</span><span class="token punctuation">(</span>DataListService<span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token punctuation">}</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token annotation punctuation">@ContextConfiguration</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>GetByIdConfig<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> DataByIdService service
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data/1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'123'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@TestConfiguration</span>
+</span><span class="code-line">    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetByIdConfig</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token annotation punctuation">@Bean</span> <span class="token annotation punctuation">@Primary</span>
+</span><span class="code-line">        DataByIdService <span class="token function">mockDataService</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">            factory<span class="token punctuation">.</span><span class="token function">Mock</span><span class="token punctuation">(</span>DataByIdService<span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token punctuation">}</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>We have two test classes that share a base class. Each one creates a Spock mock for the service it's interested in, and publishes that into the Spring context using a TestConfiguration. Each test makes a mock MVC call to the controller, verifying that it's at the correct path and method, verifies that it calls the service, and verifies that the resulting value is handed back appropriately. It's very complete, and very slow.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 6.6s |
+| GetById | 4.6s |
+| Total | 11.2s |</p>
+<p>What's going on here?! Why is it so slow? The first test takes a long time since it's the first time that Spring has booted up - there's a lot of initialization that needs to get done. However, Spring is smart and will attempt to cache a lot of this context so it doesn't have to repeat that same setup for future tests. Unfortunately, these tests are setup in a way that prevents optimal caching - each test is providing a custom @TestConfiguration which results in a unique context, thus making it ineligible for reuse on other tests.</p>
+<p>Obviously this is a contrived example - we could easily combine these two @TestConfiguration instances into a single one that's shared between tests. Unfortunately, as your application grows in complexity this often isn't an option; it's often easier to build lots of small configurations rather than consolidating.</p>
+<p><strong>Advantages:</strong> Good isolation from other tests, excellent coverage</p>
+<p><strong>Disadvantages:</strong> Slow!</p>
+<h2>Spock's @SpringBean</h2>
+<p>Spock recently improved its support for Spring testing by giving us the @SpringBean annotation to mark a manually-constructed bean that should be automatically injected into the context. This drastically improves the readability and maintainability of our tests.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token annotation punctuation">@AutoConfigureMockMvc</span>
+</span><span class="code-line"><span class="token annotation punctuation">@SpringBootTest</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>Application<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> MockMvc mockMvc
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@SpringBean</span> DataListService service <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'["1","2","3"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@SpringBean</span> DataByIdService service <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data/1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'123'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>Note that we don't have any @TestConfiguration classes anymore, and no static mock factory either. The code is much cleaner and easier to work with. Unfortunately, there's no such thing as a free lunch. While it looks simpler, in reality Spock is doing nearly the exact same same context dirtying as in our previous example, albeit with some optimizations. This means that our tests are still pretty slow.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 5.4s |
+| GetById | 3.5s |
+| Total | 8.9s |</p>
+<p><strong>Advantages:</strong> Same capabilities as custom Spring contexts, clean</p>
+<p><strong>Disadvantages:</strong> Still slow!</p>
+<h2>Manual Mocks</h2>
+<p>Okay, so custom configs for each test can be bad. Let's get try to get rid of that.</p>
+<p>A simple solution would be to manually create and populate our mocks without telling Spring about it. That way we don't need the unique context per test, thus Spring can just reuse the same one for each test. Let's see what that looks like:</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token annotation punctuation">@AutoConfigureMockMvc</span>
+</span><span class="code-line"><span class="token annotation punctuation">@SpringBootTest</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>Application<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> MockMvc mockMvc
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> DataController controller
+</span><span class="code-line">
+</span><span class="code-line">    DataListService _dataListService
+</span><span class="code-line">    DataListService dataListService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    DataByIdService _dataByIdService
+</span><span class="code-line">    DataByIdService dataByIdService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token comment">// Save off the original services and replace with mock instances</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        _dataListService <span class="token operator">=</span> controller<span class="token punctuation">.</span>dataListService
+</span><span class="code-line">        controller<span class="token punctuation">.</span>dataListService <span class="token operator">=</span> dataListService
+</span><span class="code-line">        _dataByIdService <span class="token operator">=</span> controller<span class="token punctuation">.</span>dataByIdService
+</span><span class="code-line">        controller<span class="token punctuation">.</span>dataByIdService <span class="token operator">=</span> dataByIdService
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token comment">// Put original service instances back</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        controller<span class="token punctuation">.</span>dataListService <span class="token operator">=</span> _dataListService
+</span><span class="code-line">        controller<span class="token punctuation">.</span>dataByIdService <span class="token operator">=</span> _dataByIdService
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataListService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'["1","2","3"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data/1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataByIdService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'123'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>We let Spring initialize a Context, get the controller it built for us, then shove our own mocks into it. Since by default the Controller is built as a Singleton we're modifying the instance that will be used in the test. Neat, huh? Then, when we're done, we just put the original services back in place.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 6.5s |
+| GetById | 0.1s |
+| Total | 6.6s |</p>
+<p>Whoa! Look at that second test! Since the tests don't have unique context configurations Spring will happily re-use the first Context for the second test, making it blazing fast.</p>
+<p>Just one problem....we <strong><em>are</em></strong> polluting the context, we just aren't telling Spring about it. This may let our test pass for now, but what if we tried to parallelize tests, or forgot to clean up after ourselves? Doing this sort of manual adjustment to Spring-managed resources can lead to some extremely odd behaviors that are near-impossible to debug and track down.</p>
+<p><strong>Advantages:</strong> Faster, easier to create/manage mocks manually than doing so via Spring configs</p>
+<p><strong>Disadvantages:</strong> Dangerous - almost guaranteed to cause problems down the line</p>
+<p>##Targeted Contexts
+Okay, so we shouldn't change the context once it's built. Is there a way to build the context faster?</p>
+<p>Absolutely! Right now our tests are trying to instantiate every single bean in our app even if they aren't being tested. Let's slim that down to exclude some things aren't needed for these tests.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token annotation punctuation">@EnableWebMvc</span>
+</span><span class="code-line"><span class="token annotation punctuation">@AutoConfigureMockMvc</span>
+</span><span class="code-line"><span class="token annotation punctuation">@SpringBootTest</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> Config<span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> MockMvc mockMvc
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">static</span> DetachedMockFactory factory <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DetachedMockFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@Configuration</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@ComponentScan</span><span class="token punctuation">(</span><span class="token punctuation">[</span>
+</span><span class="code-line">            <span class="token interpolation-string"><span class="token string">"com.objectpartners.plummer.spockctx.controllers"</span></span><span class="token punctuation">,</span>
+</span><span class="code-line">            <span class="token interpolation-string"><span class="token string">"com.objectpartners.plummer.spockctx.services"</span></span><span class="token punctuation">,</span>
+</span><span class="code-line">    <span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Config</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token annotation punctuation">@ContextConfiguration</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>GetAllConfig<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> DataListService service
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'["1","2","3"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@TestConfiguration</span>
+</span><span class="code-line">    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAllConfig</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token annotation punctuation">@Bean</span> <span class="token annotation punctuation">@Primary</span>
+</span><span class="code-line">        DataListService <span class="token function">mockDataService</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">            factory<span class="token punctuation">.</span><span class="token function">Mock</span><span class="token punctuation">(</span>DataListService<span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token punctuation">}</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token annotation punctuation">@ContextConfiguration</span><span class="token punctuation">(</span>classes <span class="token operator">=</span> <span class="token punctuation">[</span>GetByIdConfig<span class="token punctuation">]</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token annotation punctuation">@Autowired</span> DataByIdService service
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data/1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> service<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'123'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@TestConfiguration</span>
+</span><span class="code-line">    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetByIdConfig</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token annotation punctuation">@Bean</span> <span class="token annotation punctuation">@Primary</span>
+</span><span class="code-line">        DataByIdService <span class="token function">mockDataService</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">            factory<span class="token punctuation">.</span><span class="token function">Mock</span><span class="token punctuation">(</span>DataByIdService<span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token punctuation">}</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>Here we're telling Spring to, instead of using our Application class to construct a Context, instead only scan two packages that we're going to test. This happens to exclude the <code>beans</code> package which has some very expensive logic.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 3.4s |
+| GetById | 2.2s |
+| Total | 5.6s |</p>
+<p>Okay, our second test is back to taking some time because we're using TestConfiguration again, but no big deal because our small context fires up much faster than before. This definitely yields results, but you can imagine the perils of premature optimization here - what if you change package names, or move logic around, or add new logic into those packages? Your tests would start to break in ways that aren't immediately obvious which is one of the things that can make testing very tedious.</p>
+<p><strong>Advantages:</strong> Even faster, safer since we aren't modifying Spring resources</p>
+<p><strong>Disadvantages:</strong> Labor intensive to set up, hard to maintain</p>
+<h2>Who needs Context anyways?</h2>
+<p>Well, context, it's been fun but you're holding us back. We can write a test without you.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    DataListService dataListService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    DataByIdService dataByIdService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    DataController controller <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DataController</span><span class="token punctuation">(</span>dataByIdService<span class="token punctuation">,</span> dataListService<span class="token punctuation">)</span>
+</span><span class="code-line">    MockMvc mockMvc <span class="token operator">=</span> MockMvcBuilders<span class="token punctuation">.</span><span class="token function">standaloneSetup</span><span class="token punctuation">(</span>controller<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataListService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'["1","2","3"]'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        ResultActions result <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>mockMvc<span class="token punctuation">.</span><span class="token function">perform</span><span class="token punctuation">(</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"/data/1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataByIdService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result<span class="token punctuation">.</span><span class="token function">andExpect</span><span class="token punctuation">(</span><span class="token function">content</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">string</span><span class="token punctuation">(</span><span class="token string">'123'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>No more Spring annotations, no more context. Here, we're manually building our controller, populating it with our mocks, and building a single-controller MockMVC instance. We're effectively doing Spring autowiring ourselves.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 1.1s |
+| GetById | 0.1s |
+| Total | 1.2s |</p>
+<p>Okay, now we're getting somewhere. The first test is doing a lot of classpath and Spock initialization, but after that things get <strong>fast</strong>. All we give up is the sanity check from Spring that it can autowire the beans the way we expect. In my personal experience, this can be easily tested by just booting up the app - if Spring can't autowire things it will fail very loudly on startup.</p>
+<p><strong>Advantages:</strong> Very fast while still validating Spring controller behaviors</p>
+<p><strong>Disadvantages:</strong> No testing of Spring dependency injection, can get tricky to test @Secured and other Spring-managed aspects</p>
+<h2>Moving beyond Spring</h2>
+<p>Maybe we need to ask ourselves why we're using Spring in these tests anyways? What is it we're really trying to test?</p>
+<p>If I wanted to verify that my controller is at the right path and the right HTTP method, I could write a much simpler test using Reflection to verify the annotations. If I'm trying to validate that my dependencies autowire correctly, instead just fire up the application and let Spring tell you if it can't satisfy some of your injected dependencies. The vast majority of the time, you're writing tests of <strong>your</strong> logic, not Spring's, so your tests should spend as little time on Spring as possible.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BaseSpec</span> <span class="token keyword">extends</span> <span class="token class-name">Specification</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    DataListService dataListService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    DataByIdService dataByIdService <span class="token operator">=</span> <span class="token function">Mock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    DataController controller <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DataController</span><span class="token punctuation">(</span>dataByIdService<span class="token punctuation">,</span> dataListService<span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetAll</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'get'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        <span class="token keyword">def</span> result <span class="token operator">=</span> controller<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataListService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result <span class="token operator">==</span> <span class="token punctuation">[</span><span class="token string">'1'</span><span class="token punctuation">,</span> <span class="token string">'2'</span><span class="token punctuation">,</span> <span class="token string">'3'</span><span class="token punctuation">]</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">GetById</span> <span class="token keyword">extends</span> <span class="token class-name">BaseSpec</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> <span class="token string">'getById'</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token spock-block">when:</span>
+</span><span class="code-line">        <span class="token keyword">def</span> result <span class="token operator">=</span> controller<span class="token punctuation">.</span><span class="token function">getById</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token spock-block">then:</span>
+</span><span class="code-line">        <span class="token number">1</span> <span class="token operator">*</span> dataByIdService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">'1'</span><span class="token punctuation">)</span> <span class="token operator">>></span> <span class="token string">'123'</span>
+</span><span class="code-line">        <span class="token number">0</span> <span class="token operator">*</span> <span class="token number">_</span>
+</span><span class="code-line">        result <span class="token operator">==</span> <span class="token string">'123'</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>Nice, clean, simple unit test. No mock MVC, no Spring. We get 100% coverage of our logic without any Spring context or MVC.</p>
+<p>| Test | Time |
+| ---- | ---- |
+| GetAll | 0.5s |
+| GetById | 0.1s |
+| Total | 0.6s |</p>
+<p>That's about as low as it will go. Granted, we have given up a bit here. We aren't validating that content will serialize/deserialize to our controller as expected, we aren't validating HTTP pathing and method, we won't detect path duplication problems, or any of a million other Spring-related things. Those definitely need to be tested, but they don't need to be part of every test.</p>
+<p><strong>Advantages:</strong> Super fast</p>
+<p><strong>Disadvantages:</strong> Lose testing of Spring controller behaviors (serialization/deserialization, pathing, etc)</p>
+<h1>Wrap Up</h1>
+<p>The vast majority of your unit tests in a Spring application should probably look like these last tests. They should not fire up a context, and they don't need to go through mock MVC. Those should be few and far between, testing the true Spring-centric spots in your application. Any time you find yourself adding @SpringBootTest to your tests you should ask yourself if you really need to, and if it is, then try to reuse the existing context wherever possible.</p>
+<p>Code examples from this article are <a href="https://github.com/mike-plummer/spock-spring-performance">available here</a>.</p>5:["$","$L10",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Speed Up Spock Spring Tests"}],["$","p",null,{"children":"May 20, 2019"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$11"}}]]}]}]}]
+b:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]
+7:null
+9:{"metadata":[["$","title","0",{"children":"Speed Up Spock Spring Tests | Mike Plummer"}],["$","meta","1",{"name":"description","content":"Blog Post: Speed Up Spock Spring Tests"}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest","crossOrigin":"$undefined"}]],"error":null,"digest":"$undefined"}
+e:"$9:metadata"

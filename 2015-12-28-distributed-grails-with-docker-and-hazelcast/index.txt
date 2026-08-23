@@ -1,0 +1,148 @@
+1:"$Sreact.fragment"
+2:I[9766,[],""]
+3:I[8924,[],""]
+4:I[8202,["177","static/chunks/app/layout-dcd3c4a6ef823935.js"],"GoogleTagManager"]
+6:I[4431,[],"OutletBoundary"]
+8:I[5278,[],"AsyncMetadataOutlet"]
+a:I[4431,[],"ViewportBoundary"]
+c:I[4431,[],"MetadataBoundary"]
+d:"$Sreact.suspense"
+f:I[7150,[],""]
+:HL["/_next/static/css/014d69f673875f24.css","style"]
+:HL["/_next/static/css/5046e899553f75ab.css","style"]
+0:{"P":null,"b":"iLwdQusvyJlBdi4IxfcP1","p":"","c":["","2015-12-28-distributed-grails-with-docker-and-hazelcast",""],"i":false,"f":[[["",{"children":[["slug","2015-12-28-distributed-grails-with-docker-and-hazelcast","c"],{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/014d69f673875f24.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","link","1",{"rel":"stylesheet","href":"/_next/static/css/5046e899553f75ab.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]],"forbidden":"$undefined","unauthorized":"$undefined"}],["$","$L4",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}],{"children":[["slug","2015-12-28-distributed-grails-with-docker-and-hazelcast","c"],["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":["__PAGE__",["$","$1","c",{"children":["$L5",null,["$","$L6",null,{"children":["$L7",["$","$L8",null,{"promise":"$@9"}]]}]]}],{},null,false]},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$La",null,{"children":"$Lb"}],null],["$","$Lc",null,{"children":["$","div",null,{"hidden":true,"children":["$","$d",null,{"fallback":null,"children":"$Le"}]}]}]]}],false]],"m":"$undefined","G":["$f",[]],"s":false,"S":true}
+10:I[6105,["48","static/chunks/app/%5B...slug%5D/page-e21f30c6dae27733.js"],"default"]
+11:T6296,<blockquote>
+<p><em>This was originally posted at <a href="https://objectpartners.com/2015/12/28/distributed-grails-with-docker-and-hazelcast/">Object Partners</a></em></p>
+</blockquote>
+<p>Normally a clustered application can be designed in a stateless manner which allows requests to be dispatched to any combination of nodes, but sometimes it is desirable to share data across the cluster. This post will discuss one way you can easily cluster a Grails application and has an <a href="https://github.com/mike-plummer/DistributedGrails">example application</a> if you prefer to jump straight into some code.</p>
+<h1>Data Sharing Options</h1>
+<p>I’ve used a variety of products and designs in the past to tackle this problem, each with advantages and disadvantages.</p>
+<p>| Solution        |	Pros                                                 |	Cons                                             |
+|:----------------|:-----------------------------------------------------|:--------------------------------------------------|
+| Sticky Sessions | Simple                                               | Risk of data loss if cluster node dies, can cause unequal load-balancing |
+| Database	      | Reliable, persistent, and can handle large data volume | Requires additional infrastructure, relatively slow |
+| Redis           | Fast, persistent, easy to integrate | Requires additional infrastructure |
+| JMS/Inter-node messaging | Push vs. pull/poll for data changes, no single point of failure | Complex, manual configuration |</p>
+<h1>In-Memory Data Grid</h1>
+<p>While each of those data sharing options have solid use cases and can get the job done none of them provide the same capabilities, redundancy, and ease-of-use as an In-Memory Data Grid. IMDGs have been around for quite a while and I’m sure you’ve heard of some of the more popular products: <a href="https://pivotal.io/big-data/pivotal-gemfire">Gemfire</a>, <a href="https://www.oracle.com/middleware/coherence/index.html">Coherence</a>, <a href="http://hazelcast.org/">Hazelcast</a>, <a href="https://ignite.apache.org/">Ignite</a>. Hazelcast describes an IMDG as:</p>
+<blockquote>
+<p>An In-Memory Data Grid is data management software that enables:
+<br/><strong>Scale-out Computing</strong>: every node adds their CPU to the cluster
+<br/><strong>Resilience</strong>: nodes can fail randomly without data loss or significant performance impact to running applications
+<br/><strong>Programming Model</strong>: A way for developers to easily program the cluster of machines as if it were a single machine
+<br/><strong>Fast, Big Data</strong>: it enables very large data sets to be manipulated in main memory
+<br/><strong>Dynamic Scalability</strong>: nodes (computers) can dynamically join the other computers in a grid (cluster)
+<br/><strong>Elastic Main Memory</strong>: every node adds their RAM to the cluster’s memory pool</p>
+</blockquote>
+<p>Coherence is a commercial-only product, the API is showing its age, and can be unreliable in virtualized environments. Gemfire also is commercial-centric and can be daunting to configure and deploy. Apache Ignite was tempting since it’s fully-backed by Apache and is fairly new, but it is still undergoing rapid changes and has a few rough edges on its API. For these reasons I chose to go with Hazelcast.</p>
+<h1>What can you use an IMDG for?</h1>
+<h2>Data Management</h2>
+<p>As the name implies, IMDGs store data in-memory (not on disk) which makes them incredibly fast. Most products support automatic cluster discovery via <a href="https://en.wikipedia.org/wiki/Multicast">Multicast</a> or a service discovery product like <a href="https://github.com/Netflix/eureka">Eureka</a>. When members join or leave the cluster the IMDG will automatically redistribute data using a technique known as ‘sharding’ or ‘partitioning’ to spread data while also maintaining a backup of item on n nodes; in this way any cluster member can leave without losing any data. The sharding strategy also gives the IMDG insight into what node hosts each data item – this allows requests to be efficiently routed. Familiar data structures like Maps, Lists, and Counters are made available by the API allowing your code to easily interface with the data store.</p>
+<h2>Distributed Computing</h2>
+<p>Let’s say you have a Banking application and at the end of each day you need to total up the debits and credits for each account. In a standard single datastore solution you would retrieve the list of accounts and iterate across them to perform this calculation. Since data is stored on multiple systems in an IMDG you can craft a job that gets dispatched and executed on each node concurrently in the style of <a href="https://en.wikipedia.org/wiki/MapReduce">MapReduce</a>. In this way each cluster node performs the job on the data it locally holds which distributes processing to multiple systems while also keeping logic close to the data it operates on.</p>
+<h2>Caching</h2>
+<p>One of the most frequent uses of an IMDG is to serve as a caching layer for a backing database. Hazelcast has built-in support to act as a second-layer cache for Hibernate and also is fully-compliant with <a href="https://jcp.org/en/jsr/detail?id=107">JSR-107</a> (JCache). For more information on JCache I recommend this <a href="https://spring.io/blog/2014/04/14/cache-abstraction-jcache-jsr-107-annotations-support">great article</a> which compares it with the Spring caching abstraction that you may be more familiar with.</p>
+<h1>Implementation</h1>
+<p>So, now that we know what an IMDG is, how can we use it? The good news is that Hazelcast is extremely easy to integrate into a Java/Groovy environment (it also happens to support .NET, C++, and Python clients connecting to it).</p>
+<p>To give you can example of how Hazelcast can be integrated with Grails I’ve created an <a href="https://github.com/mike-plummer/DistributedGrails">example application out on GitHub</a>. The application uses Docker to create a single load-balancer in front that round-robins traffic to a dynamically scalable set of Tomcat nodes. Each Tomcat node deploys the same Grails app and forms part of a Hazelcast cluster for data storage and caching.</p>
+<p>Each instance’s Hazelcast logic finds the others via multicast and two data tiers are established: caching and data storage. Each layer is partitioned and shared across the cluster so each node is in effect sharing the same cache and data storage. Network requests are round-robined between the nodes by the load balancer to demonstrate the ability of any node in the cluster to handle any request.</p>
+<h2>Caching</h2>
+<p>The example routes all data requests through a Grails service that is configured to use JCache. The annotations on each method control cache behaviors and allow you to add caching with very little code.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token annotation punctuation">@CacheDefaults</span><span class="token punctuation">(</span>cacheName <span class="token operator">=</span> CityCache<span class="token punctuation">.</span>CITY_CACHE_NAME<span class="token punctuation">,</span> cacheResolverFactory <span class="token operator">=</span> CustomCacheResolverFactory<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token keyword">class</span> <span class="token class-name">CityService</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> cityDataService
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@CachePut</span><span class="token punctuation">(</span>cacheKeyGenerator <span class="token operator">=</span> CustomCacheKeyGenerator<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+</span><span class="code-line">    City create <span class="token punctuation">(</span><span class="token annotation punctuation">@CacheValue</span> City city<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        cityDataService<span class="token punctuation">.</span><span class="token function">addOrUpdate</span><span class="token punctuation">(</span>city<span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@CachePut</span><span class="token punctuation">(</span>cacheKeyGenerator <span class="token operator">=</span> CustomCacheKeyGenerator<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+</span><span class="code-line">    City update <span class="token punctuation">(</span><span class="token annotation punctuation">@CacheValue</span> City city<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        cityDataService<span class="token punctuation">.</span><span class="token function">addOrUpdate</span><span class="token punctuation">(</span>city<span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@CacheResult</span>
+</span><span class="code-line">    City get <span class="token punctuation">(</span><span class="token annotation punctuation">@CacheKey</span> <span class="token keyword">long</span> id<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        cityDataService<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@CacheRemove</span>
+</span><span class="code-line">    <span class="token keyword">void</span> delete <span class="token punctuation">(</span><span class="token annotation punctuation">@CacheKey</span> <span class="token keyword">long</span> id<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        cityDataService<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line">    <span class="token annotation punctuation">@CacheRemoveAll</span>
+</span><span class="code-line">    <span class="token keyword">void</span> deleteAll <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        cityDataService<span class="token punctuation">.</span><span class="token function">removeAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>JCache intercepts each of the annotated methods and updates a Hazelcast-managed distributed map with data as it changes. On future retrievals the cache will supply the data rather than continuing on to the database which decreases load on the data store while improving performance.</p>
+<h2>Backing data storage</h2>
+<p>In the Grails example I have used Hazelcast as my data storage layer rather than Hibernate. This demonstrates the use of Hazelcast distributed data structures outside of a construct like JCache and how data is partitioned across the cluster. In addition to storing data Hazelcast also supplies several useful constructs like a cluster-wide atomic ID generator which allows us to safely and easily generate unique identifiers as well as other features like Locks and eventing Queues and Topics.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token keyword">class</span> <span class="token class-name">DataService</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">def</span> hazelcastService
+</span><span class="code-line">
+</span><span class="code-line">    E addOrUpdate <span class="token punctuation">(</span>E entity<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token keyword">if</span> <span class="token punctuation">(</span>entity<span class="token punctuation">.</span>id <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">            entity<span class="token punctuation">.</span>id <span class="token operator">=</span> hazelcastService<span class="token punctuation">.</span><span class="token function">getIdGenerator</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"ID_GENERATOR_NAME"</span></span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">newId</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line">        <span class="token punctuation">}</span>
+</span><span class="code-line">        hazelcastService<span class="token punctuation">.</span><span class="token function">getMap</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"MAP_NAME"</span></span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>entity<span class="token punctuation">.</span>id<span class="token punctuation">,</span> entity<span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<h2>Distributed Computing</h2>
+<p>A single distributed job to total up the population of all the cities in the dataset has been configured. This job is dispatched to each node to be run in parallel against the data stored on that node and the results from each node are returned to the originating node to be combined and returned to the user.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token keyword">def</span> <span class="token function">distributedSumPopulation</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    JobTracker tracker <span class="token operator">=</span> hazelcastService<span class="token punctuation">.</span><span class="token function">getJobTracker</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"CITY_POPULATION_SUM"</span></span><span class="token punctuation">)</span>
+</span><span class="code-line">    KeyValueSource source <span class="token operator">=</span> KeyValueSource<span class="token punctuation">.</span><span class="token function">fromMap</span><span class="token punctuation">(</span><span class="token function">getHazelcastMap</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span><span class="code-line">    Job job <span class="token operator">=</span> tracker<span class="token punctuation">.</span><span class="token function">newJob</span><span class="token punctuation">(</span>source<span class="token punctuation">)</span>
+</span><span class="code-line">    ICompletableFuture future <span class="token operator">=</span> job
+</span><span class="code-line">            <span class="token punctuation">.</span><span class="token function">mapper</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">PopulationMapper</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">            <span class="token punctuation">.</span><span class="token function">reducer</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">LongSumAggregation<span class="token punctuation">.</span>LongSumReducerFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">            <span class="token punctuation">.</span><span class="token function">submit</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">PopulationCollator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line">    <span class="token keyword">return</span> future<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">class</span> <span class="token class-name">PopulationMapper</span> <span class="token keyword">implements</span> <span class="token class-name">Mapper</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">map</span><span class="token punctuation">(</span>Long key<span class="token punctuation">,</span> City value<span class="token punctuation">,</span> Context context<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        context<span class="token punctuation">.</span><span class="token function">emit</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"populationsum"</span></span><span class="token punctuation">,</span> value<span class="token punctuation">.</span>population<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">class</span> <span class="token class-name">PopulationCollator</span> <span class="token keyword">implements</span> <span class="token class-name">Collator</span><span class="token operator">&#x26;</span>lt<span class="token punctuation">;</span>Map<span class="token punctuation">.</span>Entry<span class="token punctuation">,</span> Long<span class="token operator">&#x26;</span>gt<span class="token punctuation">;</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword">public</span> Long <span class="token function">collate</span><span class="token punctuation">(</span>Iterable<span class="token operator">&#x26;</span>lt<span class="token punctuation">;</span>Map<span class="token punctuation">.</span>Entry<span class="token operator">&#x26;</span>gt<span class="token punctuation">;</span> values<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">        <span class="token keyword">return</span> <span class="token punctuation">(</span>Long<span class="token punctuation">)</span> values<span class="token punctuation">.</span>sum <span class="token punctuation">{</span> value <span class="token operator">-</span><span class="token operator">&#x26;</span>gt<span class="token punctuation">;</span> <span class="token keyword">return</span> value<span class="token punctuation">.</span><span class="token function">getValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">}</span>
+</span><span class="code-line">    <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<h2>Angular 2</h2>
+<p>The user interface for this application is Angular 2 written in TypeScript. To simplify project setup and the compilation process I chose to transpile TypeScript in-browser using System.js. Typically Typescript would be transpiled to nicely-minified ES5-compliant JavaScript during application packaging. Note that Angular 2 is still in Beta so all of the APIs are still subject to change.</p>
+<h2>Docker &#x26; Docker Compose</h2>
+<p>As mentioned above I used Docker and Docker Compose to achieve an easy ‘clustering’ simulation. The application can be run as a standard Grails application if desired but will obviously not have any of the advertised cluster behaviors. The Docker Compose file below defines the Tomcat and Load Balancer containers and allows us to dynamically scale our application in a cluster. Each container acts like a miniature virtual machine and allows us to simulate a complex network of connected systems without extra hardware or the expense of a full-on virtualization solution.</p>
+<pre class="language-yaml"><code class="language-yaml code-highlight"><span class="code-line"><span class="token key atrule">node</span><span class="token punctuation">:</span>
+</span><span class="code-line">  <span class="token key atrule">image</span><span class="token punctuation">:</span> tomcat<span class="token punctuation">:</span>8.0.28<span class="token punctuation">-</span>jre8
+</span><span class="code-line">  <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+</span><span class="code-line">    <span class="token punctuation">-</span> ./build/libs/DistributedGrails.war<span class="token punctuation">:</span>/usr/local/tomcat/webapps/DistributedGrails.war<span class="token punctuation">:</span>ro
+</span><span class="code-line"><span class="token key atrule">proxy</span><span class="token punctuation">:</span>
+</span><span class="code-line">  <span class="token key atrule">image</span><span class="token punctuation">:</span> tutum/haproxy
+</span><span class="code-line">  <span class="token key atrule">links</span><span class="token punctuation">:</span>
+</span><span class="code-line">    <span class="token punctuation">-</span> node
+</span><span class="code-line">  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+</span><span class="code-line">    <span class="token punctuation">-</span> <span class="token string">"8080:80"</span>
+</span><span class="code-line">    <span class="token punctuation">-</span> <span class="token string">"1936:1936"</span>
+</span><span class="code-line">  <span class="token key atrule">environment</span><span class="token punctuation">:</span>
+</span><span class="code-line">    <span class="token punctuation">-</span> BALANCE=roundrobin
+</span><span class="code-line">    <span class="token punctuation">-</span> STATS_PORT=1936
+</span></code></pre>
+<p>Docker takes care of networking, filesystem, and the rest of the operating system by acting as a shallow interface layer atop your host operating system. Without going into specifics this basically means that Docker containers start up very quickly and consume fewer resources than standard virtual machines. Combine this with the thousands of downloadable images from <a href="https://hub.docker.com/">DockerHub</a> and Docker becomes a very attractive solution for virtualization, especially during development.</p>
+<h1>Wrap Up</h1>
+<p>I hope I’ve shown you a few neat tools to add to your kit. Now you have a starting point for distributing data with Hazelcast, caching data with JCache and Grails, containerizing your application with Docker, or writing an Angular2 front-end. Take a look at the <a href="https://github.com/mike-plummer/DistributedGrails">example application</a> and try it out for yourself.</p>
+<p>Happy coding!</p>
+<p><strong>Updated 29 December 2015</strong>: Rephrased cons for Redis and Databases to reflect that they can be configured to improve redundancy at the cost of additional infrastructure/maintenance.</p>5:["$","$L10",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Distributed Grails with Docker and Hazelcast"}],["$","p",null,{"children":"December 27, 2015"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$11"}}]]}]}]}]
+b:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]
+7:null
+9:{"metadata":[["$","title","0",{"children":"Distributed Grails with Docker and Hazelcast | Mike Plummer"}],["$","meta","1",{"name":"description","content":"Blog Post: Distributed Grails with Docker and Hazelcast"}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest","crossOrigin":"$undefined"}]],"error":null,"digest":"$undefined"}
+e:"$9:metadata"

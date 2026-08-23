@@ -1,0 +1,103 @@
+1:"$Sreact.fragment"
+2:I[9766,[],""]
+3:I[8924,[],""]
+4:I[8202,["177","static/chunks/app/layout-dcd3c4a6ef823935.js"],"GoogleTagManager"]
+6:I[4431,[],"OutletBoundary"]
+8:I[5278,[],"AsyncMetadataOutlet"]
+a:I[4431,[],"ViewportBoundary"]
+c:I[4431,[],"MetadataBoundary"]
+d:"$Sreact.suspense"
+f:I[7150,[],""]
+:HL["/_next/static/css/014d69f673875f24.css","style"]
+:HL["/_next/static/css/5046e899553f75ab.css","style"]
+0:{"P":null,"b":"iLwdQusvyJlBdi4IxfcP1","p":"","c":["","2018-12-05-migrate-from-react-loadable",""],"i":false,"f":[[["",{"children":[["slug","2018-12-05-migrate-from-react-loadable","c"],{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/014d69f673875f24.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","link","1",{"rel":"stylesheet","href":"/_next/static/css/5046e899553f75ab.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]],"forbidden":"$undefined","unauthorized":"$undefined"}],["$","$L4",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}],{"children":[["slug","2018-12-05-migrate-from-react-loadable","c"],["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":["__PAGE__",["$","$1","c",{"children":["$L5",null,["$","$L6",null,{"children":["$L7",["$","$L8",null,{"promise":"$@9"}]]}]]}],{},null,false]},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$La",null,{"children":"$Lb"}],null],["$","$Lc",null,{"children":["$","div",null,{"hidden":true,"children":["$","$d",null,{"fallback":null,"children":"$Le"}]}]}]]}],false]],"m":"$undefined","G":["$f",[]],"s":false,"S":true}
+10:I[6105,["48","static/chunks/app/%5B...slug%5D/page-e21f30c6dae27733.js"],"default"]
+11:T3e26,<blockquote>
+<p><em>This was originally posted at <a href="https://objectpartners.com/2018/12/05/migrate-from-react-loadable-to-react-suspense/">Object Partners</a></em></p>
+</blockquote>
+<p>React apps using code splitting often use the excellent <a href="https://github.com/jamiebuilds/react-loadable">react-loadable</a> library which handles detecting whether a code segment has been loaded and, if not, putting up a spinner or other “wait” indicator while that code is asynchronously fetched from the server. With the release of React v16.6, however, we Javascript developers have a very rare opportunity – we can actually remove one of our third-party dependencies!</p>
+<p><a href="https://reactjs.org/docs/code-splitting.html">React.Suspense</a> is a new capability added to the core React library that you get for free which does almost the exact same thing as react-loadable, so without further ado, let’s look at how to swap them out.</p>
+<h1>Code Splitting?</h1>
+<p>If you aren’t familiar with this capability, basically it’s possible to use your code bundler (namely, Webpack) to bundle your code up into multiple chunks. A main chunk will be downloaded when the user loads your app, then as they navigate around additional chunks containing the assets and logic for those sections can be asynchronously loaded on-demand. This is obviously more complicated, but can dramatically improve the initial loading time of your app and also helps out mobile users by using less bandwidth. The good news is that Webpack (and other solutions as well) handle all the complexity here as far as creating the bundles and requesting them when necessary, so all we need to do is incorporate that capability into our app so that users are left with a seamless experience.</p>
+<h1>Step One: Upgrade to React 16.6</h1>
+<p>If you aren’t already on 16.6 you’ll have to update. If you’re on an earlier version of v16 then it will likely be a transparent update, but if you’re coming from v15 you’ll probably need to refer to the React release notes for migration info.</p>
+<h1>Step Two: Identify your async components</h1>
+<p>Most react-loadable uses end up looking something like this:</p>
+<pre class="language-javascript"><code class="language-javascript code-highlight"><span class="code-line"><span class="token keyword">const</span> <span class="token function-variable function"><span class="token maybe-class-name">Loading</span></span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter"><span class="token punctuation">{</span> pastDelay <span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token arrow operator">=></span> <span class="token punctuation">{</span>
+</span><span class="code-line">  <span class="token keyword control-flow">if</span> <span class="token punctuation">(</span>pastDelay<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword control-flow">return</span> <span class="token operator">&#x3C;</span><span class="token maybe-class-name">Spinner</span> <span class="token operator">/</span><span class="token operator">></span><span class="token punctuation">;</span>
+</span><span class="code-line">  <span class="token punctuation">}</span>
+</span><span class="code-line">  <span class="token keyword control-flow">return</span> <span class="token keyword null nil">null</span><span class="token punctuation">;</span>
+</span><span class="code-line"><span class="token punctuation">}</span><span class="token punctuation">;</span>
+</span><span class="code-line"> 
+</span><span class="code-line"><span class="token keyword module">export</span> <span class="token keyword">const</span> <span class="token maybe-class-name">MyAwesomeAsyncComponent</span> <span class="token operator">=</span> <span class="token function"><span class="token maybe-class-name">Loadable</span></span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+</span><span class="code-line">  <span class="token function-variable function">loader</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token arrow operator">=></span> <span class="token keyword module">import</span><span class="token punctuation">(</span><span class="token comment">/* webpackChunkName: "myAwesomeComponent" */</span> <span class="token string">'./myAwesome.component'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+</span><span class="code-line">  <span class="token literal-property property">loading</span><span class="token operator">:</span> <span class="token maybe-class-name">Loading</span><span class="token punctuation">,</span>
+</span><span class="code-line">  <span class="token literal-property property">delay</span><span class="token operator">:</span> <span class="token number">200</span>
+</span><span class="code-line"><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span></code></pre>
+<p>In this block we’re doing a few things:</p>
+<ul>
+<li>We define a component to display between the time the component is requested and when it is loaded and ready for render.</li>
+<li>We define a Loadable component, which has a couple pieces to it:
+<ol>
+<li>The ‘loader’ function uses a dynamic import to specify the code location to request. Webpack takes care of the magic here, so all we need to know is that a bundle with the specified resource will be loaded over the network when this function is requested. The special comment is a hint to webpack to give that file a meaningful name.</li>
+<li>The ‘loading’ parameter is a component to display during that request/response cycle – here we provide our custom Loading component.</li>
+<li>In this instance we’re defining a delay – we only want to display the Spinner if the loading takes longer than 200 milliseconds. This is to avoid “flashing” the loading in and out if the request completes very quickly.</li>
+</ol>
+</li>
+</ul>
+<p>That’s it. The component itself will be bundled separately and only loaded over the network once an attempt is made to render it.</p>
+<h1>Step Three: Convert to Suspense</h1>
+<p>Converting to React.Suspense is actually pretty easy.</p>
+<pre class="language-javascript"><code class="language-javascript code-highlight"><span class="code-line"><span class="token keyword">const</span> <span class="token maybe-class-name">MyAwesomeComponent</span> <span class="token operator">=</span> <span class="token maybe-class-name">React</span><span class="token punctuation">.</span><span class="token method function property-access">lazy</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token arrow operator">=></span> <span class="token keyword module">import</span><span class="token punctuation">(</span><span class="token comment">/* webpackChunkName: "myAwesomeComponent" */</span> <span class="token string">'./myAwesome.component'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span><span class="code-line"> 
+</span><span class="code-line"><span class="token keyword module">export</span> <span class="token keyword">const</span> <span class="token function-variable function"><span class="token maybe-class-name">MyAwesomeAsyncComponent</span></span> <span class="token operator">=</span> <span class="token parameter">props</span> <span class="token arrow operator">=></span> <span class="token punctuation">(</span>
+</span><span class="code-line">  <span class="token operator">&#x3C;</span><span class="token maybe-class-name">React</span><span class="token punctuation">.</span><span class="token property-access"><span class="token maybe-class-name">Suspense</span></span> fallback<span class="token operator">=</span><span class="token punctuation">{</span><span class="token operator">&#x3C;</span><span class="token maybe-class-name">Spinner</span> <span class="token operator">/</span><span class="token operator">></span><span class="token punctuation">}</span><span class="token operator">></span>
+</span><span class="code-line">    <span class="token operator">&#x3C;</span><span class="token maybe-class-name">MyAwesomeComponent</span> <span class="token punctuation">{</span><span class="token spread operator">...</span>props<span class="token punctuation">}</span> <span class="token operator">/</span><span class="token operator">></span>
+</span><span class="code-line">  <span class="token operator">&#x3C;</span><span class="token operator">/</span><span class="token maybe-class-name">React</span><span class="token punctuation">.</span><span class="token property-access"><span class="token maybe-class-name">Suspense</span></span><span class="token operator">></span>
+</span><span class="code-line"><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span></code></pre>
+<ol>
+<li>We use React.lazy to encapsulate the dynamic import, similar to the ‘loading’ parameter in the first example.</li>
+<li>We define a React.Suspense component with a set of ‘fallback’ JSX to render while we await the asynchronous loading. Typically this will be a spinner or other wait indicator.</li>
+<li>We define the JSX we want to render as children – this uses the React.lazy-wrapped component reference.</li>
+</ol>
+<p>Ta-Da! This will do the exact same thing as our first example with one notable exception – React.Suspense does not have built-in support for a delay, so the fallback JSX will render immediately even if the loading process only takes a few milliseconds. You can work around this by creating custom logic in your fallback component so that it starts a timer in componentDidMount that causes it to not render until a future time.</p>
+<h1>Step Four: What if something goes wrong?</h1>
+<p>What happens if the code chunk fails to load, or some other error condition occurs?</p>
+<h2>react-loadable</h2>
+<p>The library has built-in support for handling loading errors.</p>
+<pre class="language-javascript"><code class="language-javascript code-highlight"><span class="code-line"><span class="token keyword">const</span> <span class="token function-variable function"><span class="token maybe-class-name">Loading</span></span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">props</span><span class="token punctuation">)</span> <span class="token arrow operator">=></span> <span class="token punctuation">{</span>
+</span><span class="code-line">  <span class="token keyword control-flow">if</span> <span class="token punctuation">(</span>props<span class="token punctuation">.</span><span class="token property-access">error</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword control-flow">return</span> <span class="token operator">&#x3C;</span>p<span class="token operator">></span><span class="token known-class-name class-name">Error</span><span class="token operator">!</span><span class="token operator">&#x3C;</span><span class="token operator">/</span>p<span class="token operator">></span><span class="token punctuation">;</span>
+</span><span class="code-line">  <span class="token punctuation">}</span> <span class="token keyword control-flow">else</span> <span class="token keyword control-flow">if</span> <span class="token punctuation">(</span>props<span class="token punctuation">.</span><span class="token property-access">pastDelay</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword control-flow">return</span> <span class="token operator">&#x3C;</span>p<span class="token operator">></span><span class="token maybe-class-name">Loading</span><span class="token spread operator">...</span><span class="token operator">&#x3C;</span><span class="token operator">/</span>p<span class="token operator">></span><span class="token punctuation">;</span>
+</span><span class="code-line">  <span class="token punctuation">}</span> <span class="token keyword control-flow">else</span> <span class="token punctuation">{</span>
+</span><span class="code-line">    <span class="token keyword control-flow">return</span> <span class="token keyword null nil">null</span><span class="token punctuation">;</span>
+</span><span class="code-line">  <span class="token punctuation">}</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<h2>Suspense</h2>
+<p>React 16 added a new capability known as an <a href="https://reactjs.org/docs/error-boundaries.html">Error Boundary</a>. This is just an error-aware component that is capable of catching and handling errors from its children. To handle issues with async loading we can simply define a custom ErrorBoundary component and wrap our usage of async components within them.</p>
+<pre class="language-javascript"><code class="language-javascript code-highlight"><span class="code-line"><span class="token operator">&#x3C;</span><span class="token maybe-class-name">MyCustomErrorBoundary</span><span class="token operator">></span>
+</span><span class="code-line">  <span class="token operator">&#x3C;</span><span class="token maybe-class-name">MyAwesomeAsyncComponent</span> <span class="token operator">/</span><span class="token operator">></span>
+</span><span class="code-line"><span class="token operator">&#x3C;</span><span class="token operator">/</span><span class="token maybe-class-name">MyCustomErrorBoundary</span><span class="token operator">></span>
+</span></code></pre>
+<h1>Last step</h1>
+<pre><code class="code-highlight"><span class="code-line">yarn remove react-loadable
+</span></code></pre>
+<p>🎉</p>
+<h1>What’s the benefit?</h1>
+<p>Obviously we always have to balance the value of “it works just fine the way it is” when we consider upgrades or refactors. So, is this a worthwhile upgrade?</p>
+<p><strong>Bundle savings:</strong> react-loadable is about 2KB once gzipped. Removing this library is not going to have massive impacts on your build time or bundle size, but then again, 2KB is a measurable decrease.</p>
+<p><strong>Fewer dependencies:</strong> JS apps have <em>so many dependencies</em>. Each one is a separate set of documentation, updates, and API’s you have to manage. More importantly, each one is an additional attack surface for a potentially malicious actor.</p>
+<p><strong>Maintainability:</strong> Sticking to the core React library when possible usually means you’ll get easier integration and fewer maintenance headaches.</p>
+<p><strong>Bragging rights:</strong> Let’s be honest – it’s cool to be using the latest features.</p>
+<p><strong>Testing:</strong> One huge downside at the moment is that <a href="https://airbnb.io/enzyme/">Enzyme</a> is not Suspense-aware, so unit testing these async components may be tricky until that support is added. (<a href="https://github.com/airbnb/enzyme/issues/1553">This issue</a> is tracking progress)</p>
+<p>#Conclusion
+I’m not going to claim that this is a must-change capability, but all things considered the functionality is almost identical, the impact is targeted and easily-tested, and the code changes are relatively simple and require no significant refactors. I was able to swap out about 20 async components in about an hour, and 45 minutes of that was figuring out why my Enzyme tests wouldn’t work. Questions, comments, concerns? Let me know in the comments, otherwise happy coding!</p>5:["$","$L10",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Migrate from react-loadable to React.Suspense"}],["$","p",null,{"children":"December 04, 2018"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$11"}}]]}]}]}]
+b:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]
+7:null
+9:{"metadata":[["$","title","0",{"children":"Migrate from react-loadable to React.Suspense | Mike Plummer"}],["$","meta","1",{"name":"description","content":"Blog Post: Migrate from react-loadable to React.Suspense"}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest","crossOrigin":"$undefined"}]],"error":null,"digest":"$undefined"}
+e:"$9:metadata"
