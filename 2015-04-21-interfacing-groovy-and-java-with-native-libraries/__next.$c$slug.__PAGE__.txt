@@ -1,0 +1,96 @@
+1:"$Sreact.fragment"
+2:I[59015,["/_next/static/chunks/3ocujvpr1b0_b.js","/_next/static/chunks/15i7ebhk4kdb2.js"],"default"]
+3:T3662,<blockquote>
+<p><em>This was originally posted at <a href="https://objectpartners.com/2015/04/21/interfacing-groovy-and-java-with-native-libraries/">Object Partners</a></em></p>
+</blockquote>
+<p>As much as we hate to admit it, from time to time there are benefits to languages that operate outside the JVM. Whether it’s interfacing with hardware or simply being faster compiled code, C/C++ provide some advantages that Groovy just doesn’t have out of the box. Luckily for us there are plenty of ways we can have our cake and eat it too: Java has had the ability to execute Native code for quite a while, thus Groovy has it too.</p>
+<p>Most seasoned Java developers are already cringing as they read this – Java Native Interface (JNI) is the method Java supplies to interact with Native libraries and has a well-deserved reputation for being unwieldy and heavy on the boilerplate. Over the years a variety of new frameworks have arisen that take a lot of the effort out of JNI and go a long way towards reducing the “rinse-lather-repeat” code that unnecessarily clutters your baseline. I’ve coded up an example out on <a href="https://github.com/mike-plummer/NativeGroovy">GitHub</a> that demonstrates three quick uses of two different frameworks that allow you to invoke C/C++ code from a Groovy or Java program – the code will give you the full story but I’ll hit the high points here.</p>
+<p>For this example I’m going to execute a very simple C program that simply prints a String to standard out – obviously this is a trivial piece of logic that doesn’t warrant a Native Library on its own but it helps keep things simple since we’re focusing on how to interface with a library.</p>
+<pre class="language-c"><code class="language-c code-highlight"><span class="code-line"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&#x3C;stdio.h></span></span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">void</span> <span class="token function">printValue</span><span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span> value<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span><span class="code-line">	<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n%s\n\n"</span><span class="token punctuation">,</span> value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span><span class="code-line"><span class="token punctuation">}</span>
+</span></code></pre>
+<p>This function has a corresponding header file (which will be very important in just a minute):</p>
+<pre class="language-c"><code class="language-c code-highlight"><span class="code-line"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">ifndef</span> <span class="token expression">nativegroovy_h__</span></span>
+</span><span class="code-line"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">nativegroovy_h__</span></span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token keyword">extern</span> <span class="token keyword">void</span> <span class="token function">printValue</span><span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span> value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">endif</span> <span class="token comment">//nativegroovy_h__</span></span>
+</span></code></pre>
+<p>Using GCC we can quickly compile this into a shared library (a .dll, .so, or .dylib depending on your flavor of OS). I won’t go into detail on this process, but included in the example is a <a href="https://github.com/mike-plummer/NativeGroovy/blob/master/buildLibrary.sh">bash script</a> that attempts to compile the appropriate type based on your OS (assuming you’re on a Linux or Mac system).</p>
+<p>Great, so we have a shared library. Now what?</p>
+<p>The example makes use of two different frameworks: <a href="https://github.com/twall/jna">JNA</a> and <a href="https://github.com/nativelibs4java/BridJ">BridJ</a>. JNA (Java Native Access) is slightly older (no automatic support of generics) but more robust while BridJ is relatively new (generics support, potentially more performant depending on your setup) but is still a work in progress.</p>
+<p>The first approach from the example shows a manual setup of JNA. Being a smart person intimately familiar with C/C++ syntax (aren’t we all?) you can manually inspect the header file from above and create an interface that exactly matches the functions that the library supplies. This works best for simple datatypes for obvious reasons – Strings, ints, and floats but stay away from structs. Once we have that interface we can ask JNA to load the NativeLibrary and map it to an instance of the interface we just created and presto, any calls we make to the interface will get dispatched to the library to be executed.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token comment">//Define an Interface that exactly matches our header file</span>
+</span><span class="code-line"><span class="token keyword">interface</span> <span class="token class-name">NativeExample</span> <span class="token keyword">extends</span> <span class="token class-name">Library</span> <span class="token punctuation">{</span>
+</span><span class="code-line">	<span class="token keyword">void</span> <span class="token function">printValue</span><span class="token punctuation">(</span>String value<span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token punctuation">}</span><span class="token punctuation">;</span>
+</span><span class="code-line">
+</span><span class="code-line"><span class="token comment">//Load library into an instance of NativeInterface</span>
+</span><span class="code-line"><span class="token keyword">def</span> nativeLibrary <span class="token operator">=</span> Native<span class="token punctuation">.</span><span class="token function">loadLibrary</span><span class="token punctuation">(</span>System<span class="token punctuation">.</span><span class="token function">getProperty</span><span class="token punctuation">(</span><span class="token string">'nativegroovy.library.path'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> NativeExample<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token comment">//Call method - JNA intercepts this and invokes the library for us</span>
+</span><span class="code-line">nativeLibrary<span class="token punctuation">.</span><span class="token function">printValue</span><span class="token punctuation">(</span><span class="token string">'Go go gadget Manual JNA'</span><span class="token punctuation">)</span>
+</span></code></pre>
+<p>This approach is fine for very simple functions, but what if you’re trying to map a very complex function or a large number of functions? Never fear, there are tools to help you. A really great library called <a href="https://github.com/nativelibs4java/JNAerator">JNAerator</a> does all the work for you – all you have to do is pass in the header file to your library and it will automatically generate a JAR file containing all the interfaces and bindings that are necessary. I’ve extracted this step in the example project’s Gradle build script so that, once that JAR is created, our code ends up even more concise.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token comment">//Build a ByteBuffer - roughly analagous to a Pointer to memory block</span>
+</span><span class="code-line"><span class="token keyword">def</span> value <span class="token operator">=</span> ByteBuffer<span class="token punctuation">.</span><span class="token function">wrap</span><span class="token punctuation">(</span>Native<span class="token punctuation">.</span><span class="token function">toByteArray</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"Go go gadget JNA"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token comment">//Tell JNA to build an interface to the Native Library</span>
+</span><span class="code-line"><span class="token keyword">def</span> library <span class="token operator">=</span> Native<span class="token punctuation">.</span><span class="token function">loadLibrary</span><span class="token punctuation">(</span>NativegroovyLibrary<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token comment">//Pass the ByteBuffer to the Native Library function</span>
+</span><span class="code-line">library<span class="token punctuation">.</span><span class="token function">printValue</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span>
+</span></code></pre>
+<p>Concise, yes, but not quite as clean. ByteBuffer? Where did that come from? The unfortunate tradeoff of the auto-generation is that the code often comes out a bit more complicated than necessary. It takes a little more work to use, but saves tons of time up front.</p>
+<p>We just used JNAerator to create JNA bindings but the tool actually by default tries to create BridJ bindings which are typically a bit cleaner and more performant. By making a quick tweak to how we call JNAerator (again, done in the Gradle script) we generate another JAR that, internally, is quite a bit different and presents a much cleaner interface.</p>
+<pre class="language-groovy"><code class="language-groovy code-highlight"><span class="code-line"><span class="token comment">//Build a pointer to your String (turn it into a more C-like String)</span>
+</span><span class="code-line"><span class="token keyword">def</span> value <span class="token operator">=</span> Pointer<span class="token punctuation">.</span><span class="token function">pointerToString</span><span class="token punctuation">(</span><span class="token interpolation-string"><span class="token string">"Go go gadget BridJ"</span></span><span class="token punctuation">,</span> StringType<span class="token punctuation">.</span>C<span class="token punctuation">,</span> Charset<span class="token punctuation">.</span><span class="token function">defaultCharset</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="code-line"><span class="token comment">//Invoke native library method (with BridJ doing the heavy lifting)</span>
+</span><span class="code-line">NativegroovyLibrary<span class="token punctuation">.</span><span class="token function">printValue</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span>
+</span></code></pre>
+<p>How cool is that? It only takes a couple lines of Groovy to execute a function in a shared library. Granted there’s an extra JAR floating around in your classpath for the bindings, but that code is safely packed away not polluting your baseline and you never once have to set eyes on it.</p>
+<p>In the example project if we call each of the three different Gradle tasks in order to perform Manual JNA, Auto-Bound JNA, and Auto-Bound BridJ we get the following sets of output:</p>
+<pre><code class="code-highlight"><span class="code-line">$ gradle -q runManualJNA
+</span><span class="code-line">Go go gadget Manual JNA
+</span><span class="code-line">$ gradle -q runBoundJNA
+</span><span class="code-line">…
+</span><span class="code-line">Go go gadget JNA
+</span><span class="code-line">$ gradle -q runBoundBridJ
+</span><span class="code-line">…
+</span><span class="code-line">Go go gadget BridJ
+</span></code></pre>
+<p>Three different executions of a shared library in a tiny little package. Now, before you get all giddy and decide to roll Native Library use into a future project you should be aware of the following shortcomings:</p>
+<ol>
+<li>Using native libraries breaks the central tenet of JVM languages – “write once, run anywhere”. Your code will only execute on systems that have the library installed.</li>
+<li>It’s difficult to analyze and test: static code analysis tools and unit tests likely won’t be able to effectively analyze libraries.</li>
+<li>You lose the protections of the JVM: you’re inherently stepping outside the sandbox so you lose the security protections it provides and you have to start thinking about memory management.</li>
+<li>Performance can be a problem: depending on how the bindings get set up and how you call the functions you could actually make things slower. Generally speaking, native calls are better left for complex functions that are called infrequently rather than high-volume simple functions.</li>
+</ol>
+<p>So there you have it – another simple way to get more done with Groovy. Questions, comments, concerns, compliments? Leave ‘em below. Otherwise, take a look at the example available on my <a href="https://github.com/mike-plummer/NativeGroovy">GitHub</a>.</p>
+<p>Happy coding!</p>7:X
+c:X
+c:C
+0:{"buildId":"dk1mci27sbvdl2tb5GucD","data":[{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Interfacing Groovy (and Java) with Native Libraries"}],["$","p",null,{"children":"April 20, 2015"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$3"}}]]}]}]}],["$L4"],"$L5"]}],"isPartial":"$@6","staleTime":"$7","varyParams":null},{"rsc":"$L8","isPartial":"$@9","staleTime":"$7","varyParams":null},{"rsc":"$La","isPartial":"$@b","staleTime":"$7","varyParams":"$c"},{"rsc":"$Ld","isPartial":"$@e","staleTime":"$7","varyParams":null}],"isUpgradeableISRFallback":false,"a":"$@f","rootVaryParams":null,"needsRuntimeRequest":"$@10"}
+11:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"OutletBoundary"]
+12:"$Sreact.suspense"
+14:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"ViewportBoundary"]
+15:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"MetadataBoundary"]
+16:I[39756,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
+17:I[37457,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
+18:I[19598,["/_next/static/chunks/3ocujvpr1b0_b.js"],"GoogleTagManager"]
+:HL["/_next/static/chunks/0t5-hpobwnl65.css","style"]
+4:["$","script","script-0",{"src":"/_next/static/chunks/15i7ebhk4kdb2.js","async":true}]
+5:["$","$L11",null,{"children":["$","$12",null,{"name":"Next.MetadataOutlet","children":"$@13"}]}]
+8:["$","$1","h",{"children":[null,["$","$L14",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]}],["$","div",null,{"hidden":true,"children":["$","$L15",null,{"children":["$","$12",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Interfacing Groovy (and Java) with Native Libraries | Mike Plummer"}],["$","meta","1",{"name":"description","content":"Blog Post: Interfacing Groovy (and Java) with Native Libraries"}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}]]}]}]}],null]}]
+a:["$","$1","c",{"children":[null,["$","$L16",null,{"parallelRouterKey":"children","template":["$","$L17",null,{}]}]]}]
+d:["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/0t5-hpobwnl65.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/3ocujvpr1b0_b.js","async":true}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L16",null,{"parallelRouterKey":"children","template":["$","$L17",null,{}],"notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]]}],["$","$L18",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}]
+13:null
+10:true
+7:300
+7:C
+f:0
+9:"$undefined"
+b:"$undefined"
+e:"$undefined"
+6:"$undefined"

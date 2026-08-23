@@ -1,0 +1,37 @@
+1:"$Sreact.fragment"
+2:I[40528,["/_next/static/chunks/3ocujvpr1b0_b.js","/_next/static/chunks/1bcwxlr65a360.js"],"default"]
+3:T455,<p>The majority of my recent work has been focused on React (and sometimes Vue) SPA development in both Javascript and Typescript.</p>
+<p>I am very strong in React; well-versed in Hooks &#x26; Context, component structure and interaction, and the ecosystem around it (Redux, Sagas, Formik, Gatsby, Routing, etc).</p>
+<p>Recent major projects:</p>
+<ul>
+<li>TD Ameritrade - internal Order Management UI for brokers &#x26; call center associates (Angular)</li>
+<li>Mutual of Omaha - rewrite of main customer service portal for Customers &#x26; call center associates (React)</li>
+<li>US Air Force - greenfield dev of prototype Weather Forecast generator UI (React)</li>
+<li>Chewy.com - rewrite of Checkout page (Vue), rewrite of Shopping Cart page (React)</li>
+<li>WoodmenLife - rewrite of external marketing website to React &#x26; Headless CMS (Contentful) static site generation (SSG) using Gatsby</li>
+</ul>
+<p><a href="https://reactjs.org/">React</a><br>
+<a href="https://redux.js.org/">Redux</a><br>
+<a href="https://redux-saga.js.org/">Redux-Saga</a><br>
+<a href="https://www.gatsbyjs.com/">Gatsby</a></p>7:X
+0:{"buildId":"dk1mci27sbvdl2tb5GucD","data":[{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"skills":[{"name":"AI / LLM","icon":"fa-magic","order":1,"brief":"AI & LLM Powered Applications and Processes","html":"<p>I do the AI. All of it.</p>\n<p>Claude Sonnet &#x26; Haiku, Gemini Flash</p>\n<p>Local models via llama.cpp</p>\n<p>AWS Bedrock, Google Vertex, Langchain.</p>\n<p>Langfuse for tracing &#x26; monitoring.</p>"},{"name":"Front End Development","icon":"logo react","order":2,"brief":"React/Vue UIs using Javascript & Typescript","html":"$3"},{"name":"Back End Development","icon":"logo java","order":3,"brief":"Services, auth, and infrastructure in Java and Kotlin","html":"<p>I started out as an enterprise Java developer. Lots of Spring-suite experience between legacy\nSpring Framework and, more recently, Sprint Boot and Spring cloud packages. ReST service development,\nunit testing with Mockito, data source interactions using Hibernate/JPA and spring-data, a bit of\nKafka, etc. I've also dabbled in Kotlin from time to time, speaking on the subject at several conferences\nand user groups in addition to doing enterprise development in the language.</p>\n<p>Major projects I've done JVM work on:</p>\n<ul>\n<li>Lockheed Martin - assorted DoD enterprise Java (US Air Force mission planning, USMC battle management)</li>\n<li>TD Ameritrade - new Order Management System for trades</li>\n<li>Chewy.com - Kafka-based event pub/sub flow for PromoCode generation/redemption, Kotlin work on existing Storefront website codebase</li>\n</ul>\n<p><a href=\"https://spring.io\">Spring Suite</a>: Framework, Boot, Security, Cloud</p>"},{"name":"Tools","icon":"fa-cogs","order":4,"brief":"Git, Jira, etc, etc","html":"<p>Over my career I've gained familiarity with a variety of DevOps tools and practices. The vast majority of my recent\nwork has used Git (BitBucket, GitHub, and Azure DevOps). Issue Tracking via JIRA and ADO. CI/CD using Jenkins and ADO pipelines.</p>\n<p><a href=\"https://git-scm.com/\">Git</a><br>\n<a href=\"https://www.atlassian.com/software/jira\">Jira</a></p>"},{"name":"Testing","icon":"logo cypress","order":5,"brief":"Unit & E2E Testing","html":"<p>Thoughout my development career I've used a variety of unit testing tools to validate business logic and component interactions, including Mocha/Chai, Jest, <code>testing-library/*</code> libraries.</p>\n<p>I worked for over a year on the Cypress.io E2E + Component Testing tool, giving me extensive expertise in automated testing.</p>\n<p><a href=\"https://jestjs.io/\">Jest</a><br>\n<a href=\"https://cypress.io/\">Cypress</a></p>"}]}],["$L4"],"$L5"]}],"isPartial":"$@6","staleTime":"$7","varyParams":null},{"rsc":"$L8","isPartial":"$@9","staleTime":"$7","varyParams":null},{"rsc":"$La","isPartial":"$@b","staleTime":"$7","varyParams":null}],"isUpgradeableISRFallback":false,"a":"$@c","rootVaryParams":null,"needsRuntimeRequest":"$@d"}
+e:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"OutletBoundary"]
+f:"$Sreact.suspense"
+11:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"ViewportBoundary"]
+12:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"MetadataBoundary"]
+13:I[39756,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
+14:I[37457,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
+15:I[19598,["/_next/static/chunks/3ocujvpr1b0_b.js"],"GoogleTagManager"]
+:HL["/_next/static/chunks/0t5-hpobwnl65.css","style"]
+4:["$","script","script-0",{"src":"/_next/static/chunks/1bcwxlr65a360.js","async":true}]
+5:["$","$Le",null,{"children":["$","$f",null,{"name":"Next.MetadataOutlet","children":"$@10"}]}]
+8:["$","$1","h",{"children":[null,["$","$L11",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]}],["$","div",null,{"hidden":true,"children":["$","$L12",null,{"children":["$","$f",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Mike Plummer"}],["$","meta","1",{"name":"description","content":"Personal website of Mike Plummer, full-stack web developer based in North Texas."}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}]]}]}]}],null]}]
+a:["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/0t5-hpobwnl65.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/3ocujvpr1b0_b.js","async":true}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L13",null,{"parallelRouterKey":"children","template":["$","$L14",null,{}],"notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]]}],["$","$L15",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}]
+10:null
+d:true
+7:300
+7:C
+c:0
+9:"$undefined"
+b:"$undefined"
+6:"$undefined"
