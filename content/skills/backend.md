@@ -2,19 +2,16 @@
 name: Back End Development
 icon: logo node
 order: 3
-brief: Services, auth, and infrastructure in Node, Java, and Kotlin
+brief: Node.js services, GraphQL APIs, and data at scale
 ---
 
-I started out as an enterprise Java developer. Lots of Spring-suite experience between legacy
-Spring Framework and, more recently, Sprint Boot and Spring cloud packages. ReST service development,
-unit testing with Mockito, data source interactions using Hibernate/JPA and spring-data, a bit of
-Kafka, etc. I've also dabbled in Kotlin from time to time, speaking on the subject at several conferences
-and user groups in addition to doing enterprise development in the language.
+My current focus is Node.js — Express and Next.js API layers — with GraphQL and REST, backed by PostgreSQL, MongoDB, and ClickHouse for analytics-heavy workloads.
 
-Major projects I've done JVM work on:
+At Cypress I built UI Coverage: ingesting full DOM snapshots from every test moment, analyzing interactive elements, and surfacing coverage gaps. That stack included Puppeteer, ClickHouse, and AWS (SQS, ECS, Lambda, S3).
 
-* Lockheed Martin - assorted DoD enterprise Java (US Air Force mission planning, USMC battle management)
-* TD Ameritrade - new Order Management System for trades
-* Chewy.com - Kafka-based event pub/sub flow for PromoCode generation/redemption, Kotlin work on existing Storefront website codebase
+Earlier in my career I was an enterprise Java developer (Spring Boot, Hibernate/JPA, Kafka) on defense and financial systems at Lockheed Martin, TD Ameritrade, and Chewy.
 
-[Spring Suite](https://spring.io): Framework, Boot, Security, Cloud
+[Node.js](https://nodejs.org/)  
+[GraphQL](https://graphql.org/)  
+[PostgreSQL](https://www.postgresql.org/)  
+[ClickHouse](https://clickhouse.com/)

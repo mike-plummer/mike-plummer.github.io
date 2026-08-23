@@ -1,12 +1,15 @@
 ---
-name: Tools
+name: Tools & Observability
 icon: fa-cogs
-order: 4
-brief: Git, Jira, etc, etc
+order: 5
+brief: AWS, CI/CD, and production monitoring
 ---
 
-Over my career I've gained familiarity with a variety of DevOps tools and practices. The vast majority of my recent
-work has used Git (BitBucket, GitHub, and Azure DevOps). Issue Tracking via JIRA and ADO. CI/CD using Jenkins and ADO pipelines.
+I work across the modern delivery stack: Git (GitHub, Bitbucket, Azure DevOps), Jira/ADO issue tracking, and Jenkins or ADO pipelines for CI/CD.
+
+For production systems I rely on observability tooling — Honeycomb for distributed tracing and Sentry for error monitoring — to keep quality high as features ship quickly.
 
 [Git](https://git-scm.com/)  
-[Jira](https://www.atlassian.com/software/jira)
+[Honeycomb](https://www.honeycomb.io/)  
+[Sentry](https://sentry.io/)  
+[AWS](https://aws.amazon.com/)
