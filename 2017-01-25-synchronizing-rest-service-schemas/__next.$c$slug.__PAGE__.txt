@@ -120,7 +120,7 @@
 <p>Happy coding!</p>7:X
 c:X
 c:C
-0:{"buildId":"w8lzfmHgUzp_qTMXODnKF","data":[{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Synchronizing Rest Service Schemas"}],["$","p",null,{"children":"January 24, 2017"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$3"}}]]}]}]}],["$L4"],"$L5"]}],"isPartial":"$@6","staleTime":"$7","varyParams":null},{"rsc":"$L8","isPartial":"$@9","staleTime":"$7","varyParams":null},{"rsc":"$La","isPartial":"$@b","staleTime":"$7","varyParams":"$c"},{"rsc":"$Ld","isPartial":"$@e","staleTime":"$7","varyParams":null}],"isUpgradeableISRFallback":false,"a":"$@f","rootVaryParams":null,"needsRuntimeRequest":"$@10"}
+0:{"buildId":"O6kuo56AfLg3msc8usD_t","data":[{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"children":["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Synchronizing Rest Service Schemas"}],["$","p",null,{"children":"January 24, 2017"}],["$","div",null,{"dangerouslySetInnerHTML":{"__html":"$3"}}]]}]}]}],["$L4"],"$L5"]}],"isPartial":"$@6","staleTime":"$7","varyParams":null},{"rsc":"$L8","isPartial":"$@9","staleTime":"$7","varyParams":null},{"rsc":"$La","isPartial":"$@b","staleTime":"$7","varyParams":"$c"},{"rsc":"$Ld","isPartial":"$@e","staleTime":"$7","varyParams":null}],"isUpgradeableISRFallback":false,"a":"$@f","rootVaryParams":null,"needsRuntimeRequest":"$@10"}
 11:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"OutletBoundary"]
 12:"$Sreact.suspense"
 14:I[97367,["/_next/static/chunks/3ocujvpr1b0_b.js"],"ViewportBoundary"]
@@ -128,12 +128,12 @@ c:C
 16:I[39756,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
 17:I[37457,["/_next/static/chunks/3ocujvpr1b0_b.js"],"default"]
 18:I[19598,["/_next/static/chunks/3ocujvpr1b0_b.js"],"GoogleTagManager"]
-:HL["/_next/static/chunks/16_xrof29vvve.css","style"]
+:HL["/_next/static/chunks/19ykmtuubs89c.css","style"]
 4:["$","script","script-0",{"src":"/_next/static/chunks/15i7ebhk4kdb2.js","async":true}]
 5:["$","$L11",null,{"children":["$","$12",null,{"name":"Next.MetadataOutlet","children":"$@13"}]}]
 8:["$","$1","h",{"children":[null,["$","$L14",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#334b99"}]]}],["$","div",null,{"hidden":true,"children":["$","$L15",null,{"children":["$","$12",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Synchronizing Rest Service Schemas | Mike Plummer"}],["$","meta","1",{"name":"description","content":"Blog Post: Synchronizing Rest Service Schemas"}],["$","meta","2",{"name":"author","content":"Mike Plummer"}],["$","link","3",{"rel":"manifest","href":"/manifest.webmanifest"}]]}]}]}],null]}]
 a:["$","$1","c",{"children":[null,["$","$L16",null,{"parallelRouterKey":"children","template":["$","$L17",null,{}]}]]}]
-d:["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/16_xrof29vvve.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/3ocujvpr1b0_b.js","async":true}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L16",null,{"parallelRouterKey":"children","template":["$","$L17",null,{}],"notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]]}],["$","$L18",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}]
+d:["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/19ykmtuubs89c.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/3ocujvpr1b0_b.js","async":true}]],["$","html",null,{"lang":"en-US","children":["$","body",null,{"children":[["$","$L16",null,{"parallelRouterKey":"children","template":["$","$L17",null,{}],"notFound":[["$","div",null,{"id":"main","children":["$","section",null,{"id":"content","className":"main","children":[["$","h1",null,{"children":"Page Not Found"}],["$","p",null,{"children":"The page you are looking for does not exist."}]]}]}],[]]}],["$","$L18",null,{"gtmId":"GTM-NGN2V65M"}]]}]}]]}]
 13:null
 10:true
 7:300
