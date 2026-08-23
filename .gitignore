@@ -1,8 +1,8 @@
 node_modules/
-public
-.gatsby-context.js
-.DS_Store
-.intermediate-representation/
+out/
+.next/
 .cache/
+.DS_Store
 .idea
 *.iml
+public/post-images/

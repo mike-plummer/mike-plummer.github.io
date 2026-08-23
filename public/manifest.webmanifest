@@ -1,0 +1,15 @@
+{
+  "name": "Mike Plummer - Portfolio",
+  "short_name": "Mike Plummer",
+  "start_url": "/",
+  "background_color": "#334b99",
+  "theme_color": "#334b99",
+  "display": "minimal-ui",
+  "icons": [
+    {
+      "src": "/images/texas.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

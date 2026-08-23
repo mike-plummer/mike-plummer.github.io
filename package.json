@@ -1,60 +1,44 @@
 {
   "name": "mike-plummer.github.io",
   "description": "Mike Plummer's personal website",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": "Mike Plummer",
-  "dependencies": {
-    "font-awesome": "^4.7.0",
-    "gatsby": "^5.16.1",
-    "gatsby-link": "^5.16.0",
-    "gatsby-plugin-google-tagmanager": "^5.16.0",
-    "gatsby-plugin-image": "^3.16.0",
-    "gatsby-plugin-manifest": "^5.16.0",
-    "gatsby-plugin-sass": "^6.16.0",
-    "gatsby-plugin-sharp": "^5.16.0",
-    "gatsby-plugin-sitemap": "^6.16.0",
-    "gatsby-remark-copy-linked-files": "^6.16.0",
-    "gatsby-remark-images": "^7.16.0",
-    "gatsby-remark-prismjs": "^7.16.0",
-    "gatsby-source-filesystem": "^5.16.0",
-    "gatsby-transformer-json": "^5.16.0",
-    "gatsby-transformer-remark": "^6.16.0",
-    "gatsby-transformer-sharp": "^5.16.0",
-    "lodash": "^4.18.1",
-    "prismjs": "^1.30.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-scroll-to-element": "^0.2.0",
-    "react-scrollspy": "^3.4.3",
-    "react-waypoint": "^10.3.0",
-    "sass": "^1.101.0"
-  },
-  "homepage": "https://github.com/mike-plummer/mike-plummer.github.io",
-  "keywords": [
-    "gatsby"
-  ],
-  "license": "MIT",
-  "main": "n/a",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mike-plummer/mike-plummer.github.io.git"
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
   },
   "scripts": {
-    "clean": "gatsby clean",
-    "dev": "npm run develop",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "develop": "gatsby develop",
-    "build": "gatsby build --prefix-paths",
-    "serve": "gatsby serve",
-    "format": "prettier --write \"*.js\" \"src/**/*.js\"",
-    "deploy": "npm run build && gh-pages -d public -b master",
-    "upgrade": "npx npm-check -u"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "postbuild": "next-sitemap",
+    "start": "next start",
+    "deploy": "npm run build && gh-pages -d out -b master --dotfiles",
+    "format": "biome format --write .",
+    "check": "biome check --write ."
+  },
+  "dependencies": {
+    "@next/third-parties": "^16.3.2",
+    "font-awesome": "^4.7.0",
+    "gray-matter": "^4.0.3",
+    "limax": "^4.2.3",
+    "next": "^16.3.2",
+    "prismjs": "^1.30.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "rehype-prism-plus": "^2.0.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "sass": "^1.103.1",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.3",
     "gh-pages": "^6.3.0",
-    "husky": "^9.1.7",
-    "limax": "^4.2.3",
-    "prettier": "^3.9.4",
-    "pretty-quick": "^4.2.2"
+    "next-sitemap": "^4.2.3",
+    "@biomejs/biome": "^2.5.10",
+    "typescript": "^7.0.2"
   }
 }

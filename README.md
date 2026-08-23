@@ -1,18 +1,49 @@
 # mike-plummer.github.io
 
-My [Gatsby](https://www.gatsbyjs.org/)-based website!
+Personal website built with [Next.js](https://nextjs.org/) (static export), React 19, and TypeScript.
 
 ## Credits
-Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with Gatsby.
+
+Major thanks go to [Dustin Schau](https://dustinschau.com/) for his help with the original Gatsby version.
 
 ### [Stellar template](https://html5up.net/stellar)
 
-### [Gatsby Starter](http://gatsby-stellar.surge.sh/)
+### [Gatsby Starter](http://gatsby-stellar.surge.sh/) (original foundation)
+
+## Requirements
+
+- Node.js 20 LTS or later
 
 ## Dev Process
 
-Node version 16.13.2
+1. Make changes, preview with `npm run dev`
+2. Commit & push changes to `develop`
+3. Deploy changes with `npm run deploy` (builds to `out/` and publishes to the `master` branch via `gh-pages`)
 
-1. Make changes, preview with `npm run develop`
-1. Commit & push changes to `develop`
-1. Deploy changes with `npm run deploy`
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start local development server |
+| `npm run build` | Build static site to `out/` |
+| `npm run deploy` | Build and publish to GitHub Pages (`master` branch) |
+| `npm run format` | Format TypeScript files with Prettier |
+
+## Content
+
+Markdown content lives in `content/`:
+
+- `content/posts/` — blog posts (each in a dated folder with `index.md`)
+- `content/skills/` — skill category pages
+- `content/conferences/` — conference entries
+
+## Project Structure
+
+```
+app/           # Next.js App Router pages
+components/    # React components
+content/       # Markdown content
+lib/           # Content parsing and site config
+public/        # Static assets (CNAME, images, etc.)
+styles/        # Sass stylesheets (Stellar template)
+```
