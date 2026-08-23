@@ -1,3 +1,3 @@
-:HL["/_next/static/chunks/0t5-hpobwnl65.css","style"]
+:HL["/_next/static/chunks/3v_tn69qxg_ez.css","style"]
 :HC["/",""]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"slug","param":{"type":"c","key":"2017-07-25-angular-react-vue","siblings":["blog","conferences","skills"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"dk1mci27sbvdl2tb5GucD"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"slug","param":{"type":"c","key":"2017-07-25-angular-react-vue","siblings":["blog","conferences","skills"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"jBaa-H7vue81rtzawwqxv"}
