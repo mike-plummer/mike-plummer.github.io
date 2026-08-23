@@ -7,8 +7,9 @@ const NAV_ITEMS = [
   ['intro', 'About'],
   ['first', 'Education'],
   ['second', 'Skills'],
-  ['third', 'Stats'],
-  ['fourth', 'Conferences'],
+  ['third', 'Experience'],
+  ['fourth', 'Stats'],
+  ['fifth', 'Conferences'],
   ['cta', 'Blog']
 ] as const;
 

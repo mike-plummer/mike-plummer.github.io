@@ -9,6 +9,7 @@ import { AboutSection } from './sections/AboutSection';
 import { BlogSection } from './sections/BlogSection';
 import { ConferencesSection } from './sections/ConferencesSection';
 import { EducationSection } from './sections/EducationSection';
+import { ExperienceSection } from './sections/ExperienceSection';
 import { SkillsSection } from './sections/SkillsSection';
 import { StatsSection } from './sections/StatsSection';
 
@@ -61,10 +62,14 @@ export default function HomePage({ skills }: HomePageProps) {
         </section>
 
         <section id="third" className="main special">
-          <StatsSection />
+          <ExperienceSection />
         </section>
 
         <section id="fourth" className="main special">
+          <StatsSection />
+        </section>
+
+        <section id="fifth" className="main special">
           <ConferencesSection />
         </section>
 

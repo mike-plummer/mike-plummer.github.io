@@ -12,14 +12,10 @@
   li {
     width: calc(#{(calc(100% / 3))} - #{_size(element-margin)});
     margin-left: _size(element-margin);
-    margin-top: (_size(element-margin) * 1.5);
+    // margin-top: (_size(element-margin) * 1.5);
     padding: 0;
 
-    &:nth-child(1),
-    &:nth-child(2),
-    &:nth-child(3) {
-      margin-top: 0;
-    }
+    margin-top: 0;
 
     > :last-child {
       margin-bottom: 0;
@@ -33,10 +29,6 @@
   @include breakpoint(medium) {
     li {
       width: calc(#{(calc(100% / 2))} - #{_size(element-margin)});
-
-      &:nth-child(3) {
-        margin-top: (_size(element-margin) * 1.5);
-      }
     }
   }
 
@@ -48,11 +40,6 @@
       width: 100%;
       margin-left: 0;
       margin-top: _size(element-margin);
-
-      &:nth-child(2),
-      &:nth-child(3) {
-        margin-top: _size(element-margin);
-      }
     }
   }
 }

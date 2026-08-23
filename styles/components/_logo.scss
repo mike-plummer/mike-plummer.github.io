@@ -65,6 +65,18 @@
     }
   }
 
+  &.improving {
+    &:before {
+      background-image: url('/images/logos/improving.png');
+    }
+  }
+
+  &.lockheed {
+    &:before {
+      background-image: url('/images/logos/lockheed.svg');
+    }
+  }
+
   &.kcdc {
     &:before {
       background-image: url('/images/logos/kcdc.jpg');
