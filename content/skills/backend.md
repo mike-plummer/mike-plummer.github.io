@@ -1,8 +1,8 @@
 ---
 name: Back End Development
-icon: logo java
+icon: logo node
 order: 3
-brief: Services, auth, and infrastructure in Java and Kotlin
+brief: Services, auth, and infrastructure in Node, Java, and Kotlin
 ---
 
 I started out as an enterprise Java developer. Lots of Spring-suite experience between legacy

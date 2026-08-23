@@ -45,6 +45,12 @@
     }
   }
 
+  &.node {
+    &:before {
+      background-image: url('/images/logos/node.svg');
+    }
+  }
+
   // Conferences
 
   &.amegala {

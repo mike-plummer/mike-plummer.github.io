@@ -15,7 +15,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
       <ul className="features">
         {skills.map((skill) => (
           <li key={skill.name}>
-            <span className={iconClassNames(skill.icon, 'icon major style5')} />
+            <span className={iconClassNames(skill.icon, 'icon major style5')} style={{ margin: '0 0 0.4em 0', border: 'none', before: { border: 'none' } }} />
             <h3>{skill.name}</h3>
             <p>{skill.brief}</p>
           </li>
