@@ -11,6 +11,8 @@ interface ConversationPanelProps {
   disabled?: boolean;
   resetKey?: string;
   placeholder?: string;
+  draftMessage?: string | null;
+  onDraftConsumed?: () => void;
 }
 
 export default function ConversationPanel({
@@ -20,7 +22,9 @@ export default function ConversationPanel({
   onSubmit,
   disabled = false,
   resetKey,
-  placeholder = '> Type a message...'
+  placeholder = '> Type a message...',
+  draftMessage = null,
+  onDraftConsumed
 }: ConversationPanelProps) {
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -42,6 +46,15 @@ export default function ConversationPanel({
     });
     return () => cancelAnimationFrame(frame);
   }, [resetKey]);
+
+  useEffect(() => {
+    if (!draftMessage || !inputRef.current) {
+      return;
+    }
+    inputRef.current.value = draftMessage;
+    inputRef.current.focus({ preventScroll: true });
+    onDraftConsumed?.();
+  }, [draftMessage, onDraftConsumed]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

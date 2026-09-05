@@ -26,7 +26,6 @@ export default function MorpPage() {
           </LLMProvider>
         </section>
       </div>
-      <Footer />
     </Layout>
   );
 }

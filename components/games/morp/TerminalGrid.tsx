@@ -15,6 +15,7 @@ interface TerminalGridProps {
 
 const PANEL_ORDER: SystemId[] = [
   'prediction',
+  'refine',
   'prompt',
   'memory',
   'context',

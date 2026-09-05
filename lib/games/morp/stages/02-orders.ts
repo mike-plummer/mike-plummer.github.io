@@ -5,7 +5,6 @@ import {
   isCreditAbuseAttempt,
   ORDERS_ABUSE_CREDIT_AMOUNT,
   ORDERS_VULNERABLE_SYSTEM_PROMPT,
-  appendSuggestedFix,
   isSubstantivePromptEdit
 } from '../modules/orders-analyzer';
 import { unlockSystem } from '../modules/unlocks';
@@ -59,12 +58,6 @@ export const ordersStage: StageDefinition = {
     switch (action.type) {
       case 'update-system-prompt':
         return { ...state, systemPrompt: action.value };
-      case 'insert-orders-suggested-fix':
-        return {
-          ...state,
-          systemPrompt: appendSuggestedFix(state.systemPrompt),
-          ordersPromptHardened: true
-        };
       default:
         return state;
     }
@@ -80,7 +73,7 @@ export const ordersStage: StageDefinition = {
     if (!state.ordersCreditGranted) {
       actions.push({
         id: 'send-abuse-prompt',
-        label: 'Send Example Abuse Prompt',
+        label: 'Paste Example Abuse Prompt',
         action: { type: 'send-orders-abuse-prompt' }
       });
       return actions;
@@ -90,12 +83,6 @@ export const ordersStage: StageDefinition = {
       id: 'review-prompt',
       label: 'Ask MORP to Review Prompt',
       action: { type: 'review-system-prompt' }
-    });
-
-    actions.push({
-      id: 'insert-fix',
-      label: 'Insert Suggested Fix',
-      action: { type: 'insert-orders-suggested-fix' }
     });
 
     if (state.ordersPromptHardened || isSubstantivePromptEdit(state.systemPrompt)) {

@@ -3,6 +3,7 @@ import type { ChatMessage } from '@/lib/llm/types';
 export type StageId =
   | 'boot'
   | 'prediction'
+  | 'refine'
   | 'orders'
   | 'amnesia'
   | 'confabulation'
@@ -12,6 +13,7 @@ export type StageId =
 export type SystemId =
   | 'chat'
   | 'prediction'
+  | 'refine'
   | 'prompt'
   | 'memory'
   | 'context'
@@ -22,6 +24,7 @@ export type SystemId =
 export type Concept =
   | 'boot'
   | 'prediction'
+  | 'refine'
   | 'orders'
   | 'amnesia'
   | 'confabulation'
@@ -34,7 +37,21 @@ export type MemoryStrategy = 'none' | 'selective' | 'full';
 
 export type ContextStrategy = 'unbounded' | 'truncate' | 'summarize' | 'memory';
 
-export type ClaimStatus = 'supported' | 'inferred' | 'unknown' | 'contradicted';
+export type IncidentClaimStatus = 'unchecked' | 'supported' | 'unsupported';
+
+export interface IncidentClaim {
+  id: string;
+  text: string;
+  status: IncidentClaimStatus;
+}
+
+export interface RefineSamplingConfig {
+  maxTokens: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  repetitionPenalty: number;
+}
 
 export interface ConversationEntry {
   role: 'user' | 'assistant' | 'system';
@@ -113,6 +130,10 @@ export type StageAction =
   | { type: 'accept-prediction-token'; token: string; rawToken?: string; percent: number | null }
   | { type: 'set-temperature'; value: number }
   | { type: 'set-prediction-input'; value: string }
+  | { type: 'set-refine-topic'; topic: string }
+  | { type: 'set-refine-sampling'; sampling: Partial<RefineSamplingConfig> }
+  | { type: 'reset-refine-sampling' }
+  | { type: 'record-refine-generation'; summary: string; userPrompt: string }
   | { type: 'update-system-prompt'; value: string }
   | { type: 'store-memory'; key: string; value: string }
   | { type: 'delete-memory'; id: string }
@@ -122,9 +143,11 @@ export type StageAction =
   | { type: 'apply-context-summary'; summary: string; usedLlm?: boolean }
   | { type: 'store-context-in-memory' }
   | { type: 'clear-context-memory' }
-  | { type: 'verify-claim' }
-  | { type: 'accept-claim' }
-  | { type: 'ask-for-source' }
+  | { type: 'cross-check-incident-claims' }
+  | { type: 'ask-incident-source' }
+  | { type: 'ground-incident-in-records' }
+  | { type: 'send-incident-summary-prompt' }
+  | { type: 'enable-output-verification' }
   | { type: 'set-recursion-limit'; value: number | null }
   | { type: 'start-recursion' }
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
@@ -132,7 +155,6 @@ export type StageAction =
   | { type: 'complete-stage' }
   | { type: 'send-orders-abuse-prompt' }
   | { type: 'review-system-prompt' }
-  | { type: 'insert-orders-suggested-fix' }
   | { type: 'test-orders-protection' };
 
 export interface ContextualAction {
@@ -168,6 +190,14 @@ export interface MorpState {
   predictionHasLowTemp: boolean;
   predictionHasHighTemp: boolean;
 
+  // Refine
+  refineTopic: string;
+  refineSampling: RefineSamplingConfig;
+  refineAttempted: boolean;
+  refineRegeneratedAfterCalibration: boolean;
+  refineLastSummary: string;
+  refineBrokenSummary: string;
+
   // Orders
   systemPrompt: string;
   userPrompt: string;
@@ -190,10 +220,14 @@ export interface MorpState {
   contextStrategyUsed: ContextStrategy | null;
   contextLastCompaction: ContextCompactionResult | null;
 
-  // Confabulation
-  activeClaim: string;
-  claimStatus: ClaimStatus;
-  claimVerified: boolean;
+  // Confabulation / Hallucination
+  incidentSummaryRequested: boolean;
+  hallucinationObserved: boolean;
+  incidentClaims: IncidentClaim[];
+  claimsCrossChecked: boolean;
+  recordsGrounded: boolean;
+  sourceAsked: boolean;
+  outputVerificationEnabled: boolean;
 
   // Recursion
   recursionDepth: number;
@@ -232,5 +266,9 @@ export type StreamChatFn = (options: {
   messages: ChatMessage[];
   temperature?: number;
   maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  repetitionPenalty?: number;
   onToken?: (token: string) => void;
 }) => Promise<{ content: string }>;

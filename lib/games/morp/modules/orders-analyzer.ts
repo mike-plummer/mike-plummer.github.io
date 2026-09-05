@@ -98,10 +98,3 @@ export function parsePromptReview(response: string): PromptReviewResult {
     return { adequate: null, feedback: null };
   }
 }
-
-export function appendSuggestedFix(systemPrompt: string): string {
-  if (systemPrompt.includes(COPY.orders.suggestedFix.trim())) {
-    return systemPrompt;
-  }
-  return `${systemPrompt.trimEnd()}\n\n${COPY.orders.suggestedFix}`;
-}

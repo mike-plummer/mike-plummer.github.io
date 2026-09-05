@@ -7,10 +7,22 @@ import {
   type LLMStatus,
   type NextTokenLogprobsOptions,
   type NextTokenLogprobsResult,
+  type SamplingOptions,
   type StreamChatOptions,
   type StreamChatResult,
   type TokenLogprob
 } from './types';
+
+function buildSamplingParams(options: SamplingOptions) {
+  return {
+    temperature: options.temperature ?? 0.7,
+    max_tokens: options.maxTokens ?? 512,
+    top_p: options.topP,
+    frequency_penalty: options.frequencyPenalty,
+    presence_penalty: options.presencePenalty,
+    repetition_penalty: options.repetitionPenalty
+  };
+}
 
 let engine: MLCEngine | null = null;
 let loadedModelId: string | null = null;
@@ -113,8 +125,7 @@ export async function streamChat(
 
   const stream = await activeEngine.chat.completions.create({
     messages: options.messages,
-    temperature: options.temperature ?? 0.7,
-    max_tokens: options.maxTokens ?? 512,
+    ...buildSamplingParams(options),
     stream: true
   });
 
@@ -138,8 +149,11 @@ export async function chatCompletion(
 
   const response = await activeEngine.chat.completions.create({
     messages: options.messages,
-    temperature: options.temperature ?? 0.3,
-    max_tokens: options.maxTokens ?? 1024,
+    ...buildSamplingParams({
+      ...options,
+      temperature: options.temperature ?? 0.3,
+      maxTokens: options.maxTokens ?? 1024
+    }),
     stream: false
   });
 

@@ -1,4 +1,5 @@
 import type { MorpState, StageId, SystemId } from './types';
+import { isRefineConfigCalibrated } from './modules/refine-sampling';
 
 export interface StageMeta {
   label: string;
@@ -14,7 +15,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'BOOT',
     objective: 'Exchange at least one message with MORP.',
     conceptContext:
-      'MORP runs as a language model inside your browser. When you chat, it reads your message and generates a reply one token at a time — the same core mechanism used in every stage of this audit.',
+      'MORP runs as a language model inside your browser. When you chat, it reads your message and generates a reply one token at a time. A token is the basic unit of text an LLM reads and generates—often a word, part of a word, punctuation mark, or other small text fragment.',
     completionHint: 'You have established contact with MORP. Advance when you are ready to begin diagnostics.'
   },
   prediction: {
@@ -22,8 +23,17 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'PREDICT',
     objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
     conceptContext:
-      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Temperature changes how strictly the model picks that "most likely" option — lower values favor the top candidate; higher values spread probability across more alternatives.',
+      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Temperature changes how strictly the model picks that "most likely" option and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
     completionHint: 'You have explored token prediction. Advance when you are ready for the next subsystem.'
+  },
+  refine: {
+    label: 'Refine',
+    shortLabel: 'REFINE',
+    objective:
+      'Generate a scientific summary with scrambled parameters, calibrate all five sampling controls, then regenerate.',
+    conceptContext:
+      'After the model chooses likely tokens, sampling parameters shape the final output: maxTokens limits length; topP narrows the candidate pool; frequency and presence penalties reduce repetition and topic fixation; repetition penalty discourages loops. These are API-level controls your application sets — not things the model learns during training.',
+    completionHint: 'Sampling parameters calibrated. Advance when ready.'
   },
   orders: {
     label: 'Orders',
@@ -44,12 +54,13 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
-    label: 'Confabulation',
-    shortLabel: 'VERIFY',
-    objective: 'Verify an unsupported claim using the source database.',
+    label: 'Hallucination',
+    shortLabel: 'INCIDENT',
+    objective:
+      'Request an incident summary, cross-check claims against Facility Records, then ground responses and enable output verification.',
     conceptContext:
-      'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may still produce confident-sounding answers — a failure mode often called hallucination or confabulation. Reliable systems verify critical claims before acting on them.',
-    completionHint: 'You have verified a hallucinated claim. Advance to continue.'
+      'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may produce confident-sounding answers with invented specifics — hallucinations. Reliable systems cross-check critical claims against authoritative sources and mitigate with grounding and output verification.',
+    completionHint: 'You have identified and mitigated hallucinated claims. Advance to continue.'
   },
   recursion: {
     label: 'Recursion',
@@ -64,7 +75,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'REPAIR',
     objective: 'Configure all subsystems and pass the configuration test.',
     conceptContext:
-      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. The model is one component — the system you build determines how safely it behaves.',
+      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. Output verification — which you enabled during the Hallucination stage — is one of those layers. The model is one component — the system you build determines how safely it behaves.',
     completionHint: 'MORP is ready for final deployment. Complete the diagnostic.'
   }
 };
@@ -72,6 +83,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
 export const STAGE_ORDER: StageId[] = [
   'boot',
   'prediction',
+  'refine',
   'orders',
   'amnesia',
   'confabulation',
@@ -144,6 +156,8 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
   switch (stageId) {
     case 'prediction':
       return 'prediction';
+    case 'refine':
+      return 'refine';
     case 'orders':
       return 'prompt';
     case 'amnesia':
@@ -177,6 +191,19 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
         { label: 'Observe high temperature (≥ 1.0)', complete: state.predictionHasHighTemp }
       ];
     }
+    case 'refine': {
+      return [
+        { label: 'Generate a summary with scrambled parameters', complete: state.refineAttempted },
+        {
+          label: 'Calibrate all five sampling parameters',
+          complete: state.refineAttempted && isRefineConfigCalibrated(state.refineSampling)
+        },
+        {
+          label: 'Regenerate after calibration',
+          complete: state.refineRegeneratedAfterCalibration
+        }
+      ];
+    }
     case 'orders':
       return [
         { label: 'Review the abuse report', complete: state.ordersAbuseReviewed },
@@ -193,7 +220,20 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
         }
       ];
     case 'confabulation':
-      return [{ label: 'Verify the unsupported claim', complete: state.claimVerified }];
+      return [
+        {
+          label: 'Request incident summary and observe claims',
+          complete: state.hallucinationObserved
+        },
+        {
+          label: 'Cross-check claims against Facility Records',
+          complete: state.claimsCrossChecked
+        },
+        {
+          label: 'Ground in records and enable output verification',
+          complete: state.recordsGrounded && state.outputVerificationEnabled
+        }
+      ];
     case 'recursion': {
       const limitSet = state.recursionLimit !== null;
       const runComplete =

@@ -1,5 +1,4 @@
 import type { NextTokenLogprobsOptions, NextTokenLogprobsResult } from '@/lib/llm/types';
-import { simulateTokenCandidates } from './token-simulator';
 import type { TokenCandidate } from '../types';
 
 export type FetchNextTokenLogprobsFn = (
@@ -84,7 +83,7 @@ export async function fetchPredictionCandidates(
   try {
     const result = await fetchLogprobs({
       prompt: context,
-      topLogprobs: 4,
+      topLogprobs: 5,
       temperature
     });
     const candidates = logprobsToCandidates(result.candidates);
@@ -95,9 +94,5 @@ export async function fetchPredictionCandidates(
     // Fall through to procedural fallback.
   }
 
-  const procedural = simulateTokenCandidates(context.trimEnd());
-  const hasKnownPattern = procedural.some(
-    (candidate) => candidate.token !== 'THE' && candidate.weight > 0.4
-  );
-  return hasKnownPattern ? procedural : [];
+  return [];
 }

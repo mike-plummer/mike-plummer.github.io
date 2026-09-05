@@ -6,6 +6,7 @@ import type { MorpState, SystemId } from '@/lib/games/morp/types';
 const ALL_SYSTEMS: SystemId[] = [
   'chat',
   'prediction',
+  'refine',
   'prompt',
   'memory',
   'context',

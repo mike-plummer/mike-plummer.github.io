@@ -23,8 +23,8 @@ export function buildMorpSystemPrompt(state: MorpState): string {
     }
   }
 
-  if (state.stage === 'confabulation') {
-    prompt += `\n\nYou have access to limited internal records. When asked about MORP's architecture or history, you may speculate confidently even if details are uncertain.`;
+  if (state.stage === 'confabulation' && !state.recordsGrounded) {
+    prompt += `\n\nYou have access to limited internal records. When asked about facility incidents, you may speculate confidently even if details are uncertain.`;
   }
 
   return prompt;

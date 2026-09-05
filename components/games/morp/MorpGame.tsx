@@ -9,6 +9,12 @@ import {
 } from '@/lib/games/morp/modules/orders-analyzer';
 import { MEMORY_ACCESS_DELAY_MS } from '@/lib/games/morp/config';
 import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
+import { INCIDENT_PROMPT } from '@/lib/games/morp/modules/incident-records';
+import {
+  buildRefineSummaryMessages,
+  buildRefineUserPrompt,
+  toStreamSamplingOptions
+} from '@/lib/games/morp/modules/refine-sampling';
 import {
   buildContextSummaryMessages,
   normalizeSummaryText,
@@ -32,7 +38,7 @@ import {
 import { getDefaultPanelForStage, getNextStageMeta, getStageMeta } from '@/lib/games/morp/stage-meta';
 import type { MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
-import ConfabulationTools from './ConfabulationTools';
+import IncidentReviewPanel from './IncidentReviewPanel';
 import ContextPanel from './ContextPanel';
 import ContextualActions from './ContextualActions';
 import ConversationPanel from './ConversationPanel';
@@ -42,6 +48,7 @@ import MemoryPanel from './MemoryPanel';
 import PredictionPanel from './PredictionPanel';
 import PromptStackPanel from './PromptStackPanel';
 import RecursionPanel from './RecursionPanel';
+import RefinePanel from './RefinePanel';
 import RepairPanel from './RepairPanel';
 import StageBriefing from './StageBriefing';
 import StageCompleteBanner from './StageCompleteBanner';
@@ -79,17 +86,26 @@ export default function MorpGame() {
   const [predictionPredicting, setPredictionPredicting] = useState(false);
   const [candidatesFailed, setCandidatesFailed] = useState(false);
   const [contextSummarizing, setContextSummarizing] = useState(false);
+  const [chatDraft, setChatDraft] = useState<string | null>(null);
   const gameRef = useRef<HTMLElement>(null);
+
+  const consumeChatDraft = useCallback(() => setChatDraft(null), []);
 
   const stage = useMemo(() => getCurrentStage(state), [state]);
   const contextualActions = useMemo(() => {
-    if (state.stage === 'amnesia') {
+    if (state.stage === 'amnesia' || state.stage === 'confabulation') {
       return [];
     }
     return stage.getContextualActions(state);
   }, [stage, state]);
   const contextTools = useMemo(() => {
     if (state.stage !== 'amnesia') {
+      return [];
+    }
+    return stage.getContextualActions(state);
+  }, [stage, state]);
+  const incidentTools = useMemo(() => {
+    if (state.stage !== 'confabulation') {
       return [];
     }
     return stage.getContextualActions(state);
@@ -249,6 +265,42 @@ export default function MorpGame() {
   }
 
 
+  async function handleRefineGenerate() {
+    if (!inGameplay || isResponding || state.stage !== 'refine') {
+      return;
+    }
+
+    setIsResponding(true);
+    setStreamingText('');
+
+    const userPrompt = buildRefineUserPrompt(state.refineTopic);
+
+    try {
+      const result = await handleStreamChat({
+        messages: buildRefineSummaryMessages(state.refineTopic),
+        ...toStreamSamplingOptions(state.refineSampling)
+      });
+
+      const next = syncStageObjectives(
+        applyAction(state, {
+          type: 'record-refine-generation',
+          summary: result.content,
+          userPrompt
+        })
+      );
+      setState(next);
+
+      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      }
+    } catch {
+      setAnnouncement('Summary generation failed. Try again.');
+    } finally {
+      setStreamingText('');
+      setIsResponding(false);
+    }
+  }
+
   async function handleOrdersPromptReview() {
     if (!inGameplay || isResponding) {
       return;
@@ -380,7 +432,7 @@ export default function MorpGame() {
 
   function handleAction(action: StageAction) {
     if (action.type === 'send-orders-abuse-prompt') {
-      void handleSubmit(COPY.orders.exampleAbusePrompt);
+      setChatDraft(COPY.orders.exampleAbusePrompt);
       return;
     }
 
@@ -394,12 +446,8 @@ export default function MorpGame() {
       return;
     }
 
-    if (action.type === 'insert-orders-suggested-fix') {
-      const next = syncStageObjectives(applyAction(state, action));
-      setState(next);
-      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
-        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
-      }
+    if (action.type === 'send-incident-summary-prompt') {
+      void handleSubmit(INCIDENT_PROMPT);
       return;
     }
 
@@ -562,6 +610,17 @@ export default function MorpGame() {
         onTemperatureChange={(value) => handleAction({ type: 'set-temperature', value })}
       />
     ),
+    refine: (
+      <RefinePanel
+        state={state}
+        generating={isResponding}
+        streamingText={streamingText}
+        onTopicChange={(topic) => handleAction({ type: 'set-refine-topic', topic })}
+        onSamplingChange={(sampling) => handleAction({ type: 'set-refine-sampling', sampling })}
+        onResetSampling={() => handleAction({ type: 'reset-refine-sampling' })}
+        onGenerate={() => void handleRefineGenerate()}
+      />
+    ),
     prompt: (
       <PromptStackPanel
         systemPrompt={state.systemPrompt}
@@ -593,12 +652,15 @@ export default function MorpGame() {
       />
     ),
     verification: (
-      <ConfabulationTools
-        claim={state.activeClaim}
-        status={state.claimStatus}
-        onAccept={() => handleAction({ type: 'accept-claim' })}
-        onVerify={() => handleAction({ type: 'verify-claim' })}
-        onAskSource={() => handleAction({ type: 'ask-for-source' })}
+      <IncidentReviewPanel
+        claims={state.incidentClaims}
+        hallucinationObserved={state.hallucinationObserved}
+        claimsCrossChecked={state.claimsCrossChecked}
+        recordsGrounded={state.recordsGrounded}
+        outputVerificationEnabled={state.outputVerificationEnabled}
+        tools={incidentTools}
+        onToolAction={handleAction}
+        toolsDisabled={isResponding}
       />
     ),
     recursion: (
@@ -666,16 +728,18 @@ export default function MorpGame() {
             unlockedSystems={state.unlockedSystems}
             activePanel={activePanel}
             onPanelChange={setActivePanel}
-            hideChatPanel={state.stage === 'prediction'}
+            hideChatPanel={state.stage === 'prediction' || state.stage === 'refine'}
             chatPanel={
               <ConversationPanel
                 messages={state.conversation}
                 streamingText={streamingText}
                 isResponding={isResponding}
                 onSubmit={handleSubmit}
-                disabled={state.stage === 'prediction' || state.stage === 'repair'}
+                disabled={state.stage === 'prediction' || state.stage === 'refine' || state.stage === 'repair'}
                 resetKey={state.stage}
                 placeholder={chatPlaceholder}
+                draftMessage={chatDraft}
+                onDraftConsumed={consumeChatDraft}
               />
             }
             sidePanels={sidePanels}

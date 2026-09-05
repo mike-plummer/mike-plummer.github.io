@@ -25,7 +25,7 @@ export default function Footer() {
           </li>
           <li>
             <a href="/games/morp/" className="button">
-              MORP Diagnostic
+              Fix the Broken AI
             </a>
           </li>
         </ul>

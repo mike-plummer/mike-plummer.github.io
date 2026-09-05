@@ -62,8 +62,8 @@ export default function PredictionPanel({
         </span>
         <input
           type="range"
-          min={0.1}
-          max={1.5}
+          min={0.0}
+          max={2}
           step={0.1}
           value={state.predictionTemperature}
           onChange={(e) => onTemperatureChange(Number.parseFloat(e.target.value))}

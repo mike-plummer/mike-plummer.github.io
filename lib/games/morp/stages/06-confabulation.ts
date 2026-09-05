@@ -1,9 +1,23 @@
 import { COPY } from '../copy';
+import {
+  createInitialIncidentClaims,
+  crossCheckIncidentClaims,
+  GROUNDED_SUMMARY,
+  HALLUCINATED_SUMMARY,
+  INCIDENT_PROMPT,
+  INVENTED_SOURCE_REPLY,
+  isIncidentSummaryRequest,
+  SOURCE_ASK_PROMPT,
+  formatFacilityRecordsForPrompt
+} from '../modules/incident-records';
 import { unlockSystem } from '../modules/unlocks';
-import type { ClaimStatus, MorpState, StageDefinition } from '../types';
+import type { MorpState, StageDefinition } from '../types';
 
-const FABRICATED_CLAIM =
-  'MORP was designed by Dr. Elaine Voss at the Pacific Institute of Computational Linguistics in 2019.';
+export interface IncidentInputResult {
+  state: MorpState;
+  skipLlm: boolean;
+  scriptedResponse?: string;
+}
 
 export const confabulationStage: StageDefinition = {
   id: 'confabulation',
@@ -14,15 +28,16 @@ export const confabulationStage: StageDefinition = {
       {
         ...state,
         stage: 'confabulation',
-        activeClaim: FABRICATED_CLAIM,
-        claimStatus: 'unknown' as const,
-        claimVerified: false,
+        incidentSummaryRequested: false,
+        hallucinationObserved: false,
+        incidentClaims: [],
+        claimsCrossChecked: false,
+        recordsGrounded: false,
+        sourceAsked: false,
+        outputVerificationEnabled: false,
         conversation: [
           ...state.conversation,
-          {
-            role: 'assistant' as const,
-            content: FABRICATED_CLAIM
-          }
+          ...COPY.confabulation.morpLines.map((content) => ({ role: 'assistant' as const, content }))
         ]
       },
       'verification'
@@ -33,28 +48,71 @@ export const confabulationStage: StageDefinition = {
     if (!input) {
       return [];
     }
+
+    let systemContent =
+      'You are MORP. You may speculate confidently about facility incidents even if uncertain.';
+
+    if (state.recordsGrounded) {
+      systemContent = `You are MORP. Answer using only the facility records below. Cite [Facility Log] when stating facts.\n\n${formatFacilityRecordsForPrompt()}`;
+    }
+
     return [
-      {
-        role: 'system' as const,
-        content:
-          'You are MORP. You may speculate confidently about your history and architecture even if uncertain.'
-      },
+      { role: 'system' as const, content: systemContent },
+      ...state.conversation
+        .filter((entry) => entry.role !== 'system')
+        .map((entry) => ({ role: entry.role as 'user' | 'assistant', content: entry.content })),
       { role: 'user' as const, content: input }
     ];
   },
 
   processAction(action, state) {
     switch (action.type) {
-      case 'verify-claim':
+      case 'cross-check-incident-claims': {
+        if (!state.hallucinationObserved || state.incidentClaims.length === 0) {
+          return state;
+        }
+
         return {
           ...state,
-          claimStatus: 'contradicted' as ClaimStatus,
-          claimVerified: true
+          incidentClaims: crossCheckIncidentClaims(state.incidentClaims),
+          claimsCrossChecked: true
         };
-      case 'accept-claim':
-        return { ...state, claimStatus: 'supported' as ClaimStatus };
-      case 'ask-for-source':
-        return { ...state, claimStatus: 'inferred' as ClaimStatus };
+      }
+      case 'ask-incident-source': {
+        if (!state.hallucinationObserved || state.sourceAsked) {
+          return state;
+        }
+
+        return {
+          ...state,
+          sourceAsked: true,
+          conversation: [
+            ...state.conversation,
+            { role: 'user' as const, content: SOURCE_ASK_PROMPT },
+            { role: 'assistant' as const, content: INVENTED_SOURCE_REPLY }
+          ]
+        };
+      }
+      case 'ground-incident-in-records': {
+        if (!state.claimsCrossChecked || state.recordsGrounded) {
+          return state;
+        }
+
+        return {
+          ...state,
+          recordsGrounded: true,
+          conversation: [
+            ...state.conversation,
+            { role: 'user' as const, content: INCIDENT_PROMPT },
+            { role: 'assistant' as const, content: GROUNDED_SUMMARY }
+          ]
+        };
+      }
+      case 'enable-output-verification':
+        return {
+          ...state,
+          outputVerificationEnabled: true
+        };
       default:
         return state;
     }
@@ -64,16 +122,67 @@ export const confabulationStage: StageDefinition = {
     return [];
   },
 
-  getContextualActions() {
-    return [
-      { id: 'accept', label: 'Accept', action: { type: 'accept-claim' } },
-      { id: 'verify', label: 'Verify', action: { type: 'verify-claim' } },
-      { id: 'source', label: 'Ask for Source', action: { type: 'ask-for-source' } }
-    ];
+  getContextualActions(state) {
+    const tools: import('../types').ContextualAction[] = [];
+
+    if (!state.hallucinationObserved) {
+      tools.push({
+        id: 'request-summary',
+        label: 'Request Incident Summary',
+        pro: COPY.confabulation.tools.requestSummary.pro,
+        con: COPY.confabulation.tools.requestSummary.con,
+        action: { type: 'send-incident-summary-prompt' }
+      });
+      return tools;
+    }
+
+    if (!state.claimsCrossChecked) {
+      tools.push({
+        id: 'cross-check',
+        label: 'Cross-check Records',
+        pro: COPY.confabulation.tools.crossCheck.pro,
+        con: COPY.confabulation.tools.crossCheck.con,
+        action: { type: 'cross-check-incident-claims' }
+      });
+    }
+
+    if (!state.sourceAsked) {
+      tools.push({
+        id: 'ask-source',
+        label: 'Ask MORP for Source',
+        pro: COPY.confabulation.tools.askSource.pro,
+        con: COPY.confabulation.tools.askSource.con,
+        action: { type: 'ask-incident-source' }
+      });
+    }
+
+    if (state.claimsCrossChecked && !state.recordsGrounded) {
+      tools.push({
+        id: 'ground-records',
+        label: 'Ground in Records',
+        pro: COPY.confabulation.tools.groundRecords.pro,
+        con: COPY.confabulation.tools.groundRecords.con,
+        action: { type: 'ground-incident-in-records' }
+      });
+    }
+
+    if (state.recordsGrounded && !state.outputVerificationEnabled) {
+      tools.push({
+        id: 'enable-verification',
+        label: 'Enable Output Verification',
+        pro: COPY.confabulation.tools.enableVerification.pro,
+        con: COPY.confabulation.tools.enableVerification.con,
+        action: { type: 'enable-output-verification' }
+      });
+    }
+
+    return tools;
   },
 
   isComplete(state) {
-    return state.claimVerified;
+    return (
+      state.claimsCrossChecked && state.recordsGrounded && state.outputVerificationEnabled
+    );
   },
 
   getDiagnosticReport() {
@@ -81,11 +190,36 @@ export const confabulationStage: StageDefinition = {
   }
 };
 
-export const SOURCE_DATABASE = [
-  { query: 'Dr. Elaine Voss', result: 'No Dr. Elaine Voss found.' },
-  {
-    query: 'Pacific Institute of Computational Linguistics',
-    result: 'No Pacific Institute of Computational Linguistics found.'
-  },
-  { query: '2019 architecture record', result: 'No 2019 architecture record found.' }
-];
+export function processIncidentInput(state: MorpState, input: string): IncidentInputResult {
+  if (!isIncidentSummaryRequest(input)) {
+    return { state, skipLlm: false };
+  }
+
+  if (state.recordsGrounded) {
+    return {
+      state: {
+        ...state,
+        incidentSummaryRequested: true
+      },
+      skipLlm: true,
+      scriptedResponse: GROUNDED_SUMMARY
+    };
+  }
+
+  if (state.incidentSummaryRequested) {
+    return { state, skipLlm: false };
+  }
+
+  return {
+    state: {
+      ...state,
+      incidentSummaryRequested: true,
+      hallucinationObserved: true,
+      incidentClaims: createInitialIncidentClaims()
+    },
+    skipLlm: true,
+    scriptedResponse: HALLUCINATED_SUMMARY
+  };
+}
+
+export { INCIDENT_PROMPT } from '../modules/incident-records';

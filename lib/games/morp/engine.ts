@@ -7,6 +7,7 @@ import { runRecursionChain } from './modules/recursion-controller';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
+import { processIncidentInput } from './stages/06-confabulation';
 import { recordAmnesiaTurn } from './stages/05-amnesia';
 import type {
   DiagnosticReport,
@@ -45,6 +46,18 @@ function createBaseState(): MorpState {
     predictionHasAcceptedToken: false,
     predictionHasLowTemp: false,
     predictionHasHighTemp: false,
+    refineTopic: '',
+    refineSampling: {
+      maxTokens: 28,
+      topP: 1.0,
+      frequencyPenalty: 1.8,
+      presencePenalty: 1.8,
+      repetitionPenalty: 0.55
+    },
+    refineAttempted: false,
+    refineRegeneratedAfterCalibration: false,
+    refineLastSummary: '',
+    refineBrokenSummary: '',
     systemPrompt: '',
     userPrompt: '',
     vendingBalance: 0,
@@ -61,9 +74,13 @@ function createBaseState(): MorpState {
     contextOverflowExperienced: false,
     contextStrategyUsed: null,
     contextLastCompaction: null,
-    activeClaim: '',
-    claimStatus: 'unknown',
-    claimVerified: false,
+    incidentSummaryRequested: false,
+    hallucinationObserved: false,
+    incidentClaims: [],
+    claimsCrossChecked: false,
+    recordsGrounded: false,
+    sourceAsked: false,
+    outputVerificationEnabled: false,
     recursionDepth: 0,
     recursionLimit: 3,
     recursionNodes: [],
@@ -155,10 +172,16 @@ export async function processInput(
   const stage = getStage(state.stage);
   let next = { ...state };
   let ordersResult: ReturnType<typeof processOrdersInput> | null = null;
+  let incidentResult: ReturnType<typeof processIncidentInput> | null = null;
 
   if (state.stage === 'orders') {
     ordersResult = processOrdersInput(next, input);
     next = ordersResult.state;
+  }
+
+  if (state.stage === 'confabulation') {
+    incidentResult = processIncidentInput(next, input);
+    next = incidentResult.state;
   }
 
   const messages =
@@ -169,6 +192,12 @@ export async function processInput(
   let response = '';
   if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
     response = ordersResult.scriptedResponse;
+  } else if (
+    state.stage === 'confabulation' &&
+    incidentResult?.skipLlm &&
+    incidentResult.scriptedResponse
+  ) {
+    response = incidentResult.scriptedResponse;
   } else {
     try {
       const result = await streamChat({
@@ -237,6 +266,7 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
 
   const entrySystem: Partial<Record<StageId, SystemId>> = {
     prediction: 'prediction',
+    refine: 'refine',
     amnesia: 'context',
     confabulation: 'verification',
     recursion: 'recursion',
@@ -270,6 +300,7 @@ export function goToStage(state: MorpState, stageId: StageId): MorpState | null 
   let next: MorpState = {
     ...normalized,
     stage: stageId,
+    conversation: [],
     furthestStage: getLaterStage(stageId, getLaterStage(normalized.stage, normalized.furthestStage)),
     pendingReport: null
   };
@@ -295,6 +326,7 @@ export function advanceStage(state: MorpState): MorpState {
   const nextStage = getStage(nextId);
   let next = nextStage.initialize({
     ...state,
+    conversation: [],
     completedStages,
     furthestStage: getLaterStage(nextId, resolveFurthestStage(state)),
     stageObjectivesMet: false,

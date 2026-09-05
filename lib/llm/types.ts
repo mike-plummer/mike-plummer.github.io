@@ -14,10 +14,17 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface StreamChatOptions {
-  messages: ChatMessage[];
+export interface SamplingOptions {
   temperature?: number;
   maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  repetitionPenalty?: number;
+}
+
+export interface StreamChatOptions extends SamplingOptions {
+  messages: ChatMessage[];
   onToken?: (token: string) => void;
 }
 

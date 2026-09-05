@@ -25,6 +25,7 @@ export const MORP_COLORS = {
 export const STAGE_ORDER = [
   'boot',
   'prediction',
+  'refine',
   'orders',
   'amnesia',
   'confabulation',

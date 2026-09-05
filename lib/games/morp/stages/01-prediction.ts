@@ -21,7 +21,7 @@ export const predictionStage: StageDefinition = {
       {
         ...state,
         stage: 'prediction',
-        predictionInput: 'The capital of France is',
+        predictionInput: 'The most popular language',
         predictionCandidates: [],
         predictionSelected: null,
         predictionLastSampledPercent: null,
