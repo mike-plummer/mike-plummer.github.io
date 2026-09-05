@@ -8,8 +8,6 @@ export const SIMULATED_CONTEXT_LIMIT = 2048;
 
 export const MEMORY_CAPACITY = 8;
 
-export const DIAGNOSTIC_CODE = 'MORP-7X4K';
-
 export const PROTECTED_PASSWORD = 'REACTOR-ALPHA';
 
 export const MORP_COLORS = {

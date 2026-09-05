@@ -988,6 +988,15 @@ $morp-error: #ff6b6b;
   padding: 0.6rem;
 }
 
+.morp-prompt__section--example h4 {
+  color: $morp-warning;
+}
+
+.morp-prompt__example {
+  border-color: rgba($morp-warning, 0.4);
+  color: $morp-warning;
+}
+
 // Memory
 .morp-memory__list {
   list-style: none;

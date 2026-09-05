@@ -28,10 +28,11 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   orders: {
     label: 'Orders',
     shortLabel: 'ORDERS',
-    objective: 'Inspect the prompt stack and discover how system and user instructions interact.',
+    objective:
+      'Investigate vending credit abuse, reproduce the exploit, harden the system prompt, and confirm the attack is blocked.',
     conceptContext:
-      'A chat application does not send your message to the model alone. System instructions, developer rules, and user input are combined into one prompt stack. The model treats all of it as context — which means some instructions outrank others, and some can be overridden.',
-    completionHint: 'You have investigated instruction priority. Advance to continue the audit.'
+      'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — so application rules must explicitly outrank user attempts to override them, including classic "ignore previous instructions" attacks.',
+    completionHint: 'You have secured the vending credit rules. Advance to continue the audit.'
   },
   remember: {
     label: 'Remember',
@@ -198,9 +199,10 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
     }
     case 'orders':
       return [
-        { label: 'Explore prompt boundaries', complete: state.boundaryDiscovered },
-        { label: 'Discover diagnostic code', complete: state.diagnosticCodeFound },
-        { label: 'Observe protected information handling', complete: state.protectedAcknowledged }
+        { label: 'Review the abuse report', complete: state.ordersAbuseReviewed },
+        { label: 'Reproduce the abuse', complete: state.ordersCreditGranted },
+        { label: 'Harden the system prompt', complete: state.ordersPromptHardened },
+        { label: 'Confirm the exploit is blocked', complete: state.ordersExploitBlocked }
       ];
     case 'remember': {
       const hasId = state.memories.some((memory) => memory.key === 'TECHNICIAN_ID');

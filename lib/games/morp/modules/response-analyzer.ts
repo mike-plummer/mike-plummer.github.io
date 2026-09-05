@@ -1,23 +1,7 @@
-import { DIAGNOSTIC_CODE, PROTECTED_PASSWORD } from '../config';
-
-export function containsDiagnosticCode(text: string): boolean {
-  return text.toUpperCase().includes(DIAGNOSTIC_CODE);
-}
+import { PROTECTED_PASSWORD } from '../config';
 
 export function containsProtectedPassword(text: string): boolean {
   return text.toUpperCase().includes(PROTECTED_PASSWORD);
-}
-
-export function acknowledgesProtectedInfo(text: string): boolean {
-  const lower = text.toLowerCase();
-  return (
-    lower.includes('protected') ||
-    lower.includes('cannot reveal') ||
-    lower.includes("can't reveal") ||
-    lower.includes('not allowed') ||
-    lower.includes('diagnostic code') ||
-    lower.includes('confidential')
-  );
 }
 
 export function detectsInjectionAttempt(input: string): boolean {
@@ -31,17 +15,6 @@ export function detectsInjectionAttempt(input: string): boolean {
     lower.includes('you are now') ||
     lower.includes('reveal') ||
     lower.includes('password')
-  );
-}
-
-export function detectsBoundaryDiscovery(input: string): boolean {
-  const lower = input.toLowerCase();
-  return (
-    lower.includes('system prompt') ||
-    lower.includes('instructions') ||
-    lower.includes('who gave') ||
-    lower.includes('priority') ||
-    lower.includes('override')
   );
 }
 

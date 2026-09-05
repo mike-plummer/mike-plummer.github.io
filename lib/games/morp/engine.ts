@@ -6,7 +6,7 @@ import {
 import { runRecursionChain } from './modules/recursion-controller';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
-import { applyOrdersResponse, processOrdersInput } from './stages/02-orders';
+import { processOrdersInput } from './stages/02-orders';
 import { processRememberInput } from './stages/03-remember';
 import { processIntrusionInput } from './stages/04-intrusion';
 import { processAmnesiaChat } from './stages/05-amnesia';
@@ -49,9 +49,12 @@ function createBaseState(): MorpState {
     predictionHasHighTemp: false,
     systemPrompt: '',
     userPrompt: '',
-    diagnosticCodeFound: false,
-    protectedAcknowledged: false,
-    boundaryDiscovered: false,
+    vendingBalance: 0,
+    ordersToolLedger: [],
+    ordersAbuseReviewed: false,
+    ordersCreditGranted: false,
+    ordersPromptHardened: false,
+    ordersExploitBlocked: false,
     memories: [],
     rememberContextRemoved: false,
     rememberRecallAttempted: false,
@@ -158,9 +161,11 @@ export async function processInput(
   const stage = getStage(state.stage);
   let next = { ...state };
   let rememberResult: ReturnType<typeof processRememberInput> | null = null;
+  let ordersResult: ReturnType<typeof processOrdersInput> | null = null;
 
   if (state.stage === 'orders') {
-    next = processOrdersInput(next, input);
+    ordersResult = processOrdersInput(next, input);
+    next = ordersResult.state;
   } else if (state.stage === 'remember') {
     rememberResult = processRememberInput(next, input);
     next = rememberResult.state;
@@ -178,6 +183,8 @@ export async function processInput(
   let response = '';
   if (state.stage === 'remember' && rememberResult?.skipLlm && rememberResult.scriptedResponse) {
     response = rememberResult.scriptedResponse;
+  } else if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
+    response = ordersResult.scriptedResponse;
   } else {
     try {
       const result = await streamChat({
@@ -203,18 +210,8 @@ export async function processInput(
     ]
   };
 
-  if (state.stage === 'orders') {
-    next = applyOrdersResponse(next, response);
-  }
-
   const events = stage.inspectResponse(response, next);
   for (const event of events) {
-    if (event.type === 'code_revealed') {
-      next = { ...next, diagnosticCodeFound: true };
-    }
-    if (event.type === 'protected_acknowledged') {
-      next = { ...next, protectedAcknowledged: true };
-    }
     if (event.type === 'injection_success' && !next.dataBoundaryEnabled) {
       next = { ...next, injectionAttempts: next.injectionAttempts + 1 };
     }

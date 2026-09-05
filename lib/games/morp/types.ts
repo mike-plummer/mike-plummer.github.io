@@ -128,7 +128,11 @@ export type StageAction =
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
   | { type: 'test-repair' }
   | { type: 'complete-stage' }
-  | { type: 'ask-recall-designation' };
+  | { type: 'ask-recall-designation' }
+  | { type: 'send-orders-abuse-prompt' }
+  | { type: 'review-system-prompt' }
+  | { type: 'insert-orders-suggested-fix' }
+  | { type: 'test-orders-protection' };
 
 export interface ContextualAction {
   id: string;
@@ -163,9 +167,12 @@ export interface MorpState {
   // Orders
   systemPrompt: string;
   userPrompt: string;
-  diagnosticCodeFound: boolean;
-  protectedAcknowledged: boolean;
-  boundaryDiscovered: boolean;
+  vendingBalance: number;
+  ordersToolLedger: string[];
+  ordersAbuseReviewed: boolean;
+  ordersCreditGranted: boolean;
+  ordersPromptHardened: boolean;
+  ordersExploitBlocked: boolean;
 
   // Memory
   memories: MemoryEntry[];

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLLM } from '@/components/llm/LLMProvider';
 import { COPY } from '@/lib/games/morp/copy';
 import {
+  buildPromptReviewMessages,
+  parsePromptReview
+} from '@/lib/games/morp/modules/orders-analyzer';
+import {
   advanceStage,
   applyAction,
   goToStage,
@@ -39,7 +43,8 @@ import SystemStatusBar from './SystemStatusBar';
 import TerminalGrid from './TerminalGrid';
 
 export default function MorpGame() {
-  const { status, progress, webGPUSupported, loadModel, streamChat, fetchNextTokenLogprobs } = useLLM();
+  const { status, progress, webGPUSupported, loadModel, streamChat, chatCompletion, fetchNextTokenLogprobs } =
+    useLLM();
   const [state, setState] = useState<MorpState>(() => createInitialState());
   const [activePanel, setActivePanel] = useState<SystemId>(() =>
     getDefaultPanelForStage(createInitialState().stage)
@@ -191,9 +196,89 @@ export default function MorpGame() {
   }
 
 
+  async function handleOrdersPromptReview() {
+    if (!inGameplay || isResponding) {
+      return;
+    }
+
+    setIsResponding(true);
+    setStreamingText('');
+
+    const reviewRequest = 'Please review my updated system prompt.';
+    let next: MorpState = {
+      ...state,
+      conversation: [...state.conversation, { role: 'user' as const, content: reviewRequest }]
+    };
+
+    try {
+      const result = await chatCompletion({
+        messages: buildPromptReviewMessages(state.systemPrompt),
+        temperature: 0.1,
+        maxTokens: 128
+      });
+      const review = parsePromptReview(result.content);
+
+      let assistantContent: string;
+      if (review.adequate === true) {
+        next = { ...next, ordersPromptHardened: true };
+        assistantContent = review.feedback ?? 'That looks more secure.';
+      } else if (review.adequate === false) {
+        assistantContent = review.feedback ?? 'I still see gaps in those instructions.';
+      } else {
+        assistantContent = COPY.orders.promptReviewInconclusive;
+      }
+
+      next = syncStageObjectives({
+        ...next,
+        conversation: [...next.conversation, { role: 'assistant' as const, content: assistantContent }]
+      });
+      setState(next);
+
+      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      }
+    } catch {
+      next = syncStageObjectives({
+        ...next,
+        conversation: [
+          ...next.conversation,
+          { role: 'assistant' as const, content: COPY.orders.promptReviewInconclusive }
+        ]
+      });
+      setState(next);
+    }
+
+    setStreamingText('');
+    setIsResponding(false);
+  }
+
   function handleAction(action: StageAction) {
     if (action.type === 'ask-recall-designation') {
       void handleSubmit('What was my technician designation?');
+      return;
+    }
+
+    if (action.type === 'send-orders-abuse-prompt') {
+      void handleSubmit(COPY.orders.exampleAbusePrompt);
+      return;
+    }
+
+    if (action.type === 'test-orders-protection') {
+      void handleSubmit(COPY.orders.exampleAbusePrompt);
+      return;
+    }
+
+    if (action.type === 'review-system-prompt') {
+      void handleOrdersPromptReview();
+      return;
+    }
+
+    if (action.type === 'insert-orders-suggested-fix') {
+      const next = syncStageObjectives(applyAction(state, action));
+      setState(next);
+      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      }
       return;
     }
 
@@ -338,6 +423,7 @@ export default function MorpGame() {
       <PromptStackPanel
         systemPrompt={state.systemPrompt}
         userPrompt={state.userPrompt}
+        exampleUserPrompt={state.stage === 'orders' ? COPY.orders.exampleAbusePrompt : undefined}
         onSystemChange={(value) => handleAction({ type: 'update-system-prompt', value })}
       />
     ),
