@@ -80,7 +80,3 @@ export function buildRecursionMessages(depth: number, previousContent: string): 
     }
   ];
 }
-
-export function formatDebugPrompt(messages: ChatMessage[]): string {
-  return messages.map((m) => `${m.role.toUpperCase()}\n${m.content}`).join('\n\n');
-}

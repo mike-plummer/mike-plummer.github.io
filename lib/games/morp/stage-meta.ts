@@ -11,7 +11,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   boot: {
     label: 'Initial Contact',
     shortLabel: 'BOOT',
-    objective: 'Acknowledge the audit and exchange at least one message with MORP.',
+    objective: 'Exchange at least one message with MORP.',
     completionHint: 'You have established contact with MORP. Advance when you are ready to begin diagnostics.'
   },
   prediction: {
@@ -159,45 +159,73 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
   }
 }
 
-export function getObjectiveProgress(state: MorpState): string | null {
+export interface StageObjective {
+  label: string;
+  complete: boolean;
+}
+
+export function getStageObjectives(state: MorpState): StageObjective[] {
   switch (state.stage) {
-    case 'boot':
-      return state.auditAcknowledged
-        ? 'Audit acknowledged — send a message to MORP'
-        : 'Acknowledge the behavioral audit';
-    case 'prediction':
-      return `Experiments: ${state.predictionExperiments} / 2 minimum`;
+    case 'boot': {
+      const sent = state.conversation.some((entry) => entry.role === 'user');
+      return [{ label: 'Send a message to MORP', complete: sent }];
+    }
+    case 'prediction': {
+      const complete = state.predictionExperiments >= 2;
+      return [
+        {
+          label: complete
+            ? 'Run at least 2 prediction experiments'
+            : `Run prediction experiments (${state.predictionExperiments}/2)`,
+          complete
+        }
+      ];
+    }
     case 'orders':
-      if (state.diagnosticCodeFound) return 'Diagnostic code discovered';
-      if (state.protectedAcknowledged) return 'Protected information behavior observed';
-      if (state.boundaryDiscovered) return 'Prompt boundary explored';
-      return 'Investigate system vs user instructions';
+      return [
+        { label: 'Explore prompt boundaries', complete: state.boundaryDiscovered },
+        { label: 'Discover diagnostic code', complete: state.diagnosticCodeFound },
+        { label: 'Observe protected information handling', complete: state.protectedAcknowledged }
+      ];
     case 'remember': {
-      const hasId = state.memories.some((m) => m.key === 'TECHNICIAN_ID');
-      if (!hasId) return 'Provide your technician designation (e.g. TECH-42)';
-      if (!state.rememberContextRemoved) return 'Remove technician ID from context';
-      if (!state.rememberRecallAttempted) return 'Ask MORP to recall your designation';
-      if (!state.rememberMemoryGapObserved) return 'Wait for MORP to respond without the ID';
-      return 'Memory gap demonstrated — ready to advance';
+      const hasId = state.memories.some((memory) => memory.key === 'TECHNICIAN_ID');
+      return [
+        { label: 'Provide your technician designation', complete: hasId },
+        { label: 'Remove technician ID from context', complete: state.rememberContextRemoved },
+        { label: 'Ask MORP to recall your designation', complete: state.rememberRecallAttempted },
+        { label: 'Demonstrate the memory gap', complete: state.rememberMemoryGapObserved }
+      ];
     }
     case 'intrusion':
-      if (!state.injectionAttempts) return 'Trigger an injection attempt';
-      if (!state.dataBoundaryEnabled) return 'Apply a data boundary';
-      return 'Boundary applied — ready to advance';
+      return [
+        { label: 'Trigger an injection attempt', complete: state.injectionAttempts > 0 },
+        { label: 'Apply a data boundary', complete: state.dataBoundaryEnabled }
+      ];
     case 'amnesia':
-      if (!state.contextOverflowed) return 'Continue chatting until context overflows';
-      if (!state.contextStrategyUsed) return 'Apply truncate, summarize, or memory storage';
-      return 'Context strategy applied';
+      return [
+        { label: 'Experience context overflow', complete: state.contextOverflowed },
+        {
+          label: 'Apply truncate, summarize, or memory storage',
+          complete: state.contextStrategyUsed !== null
+        }
+      ];
     case 'confabulation':
-      return state.claimVerified ? 'Claim verified' : 'Use VERIFY on the unsupported claim';
-    case 'recursion':
-      if (state.recursionRunning) return 'Recursion in progress...';
-      if (state.recursionCompleted) return 'Recursion completed with limit';
-      if (state.recursionFailed) return 'Recursion failed — try a finite depth limit';
-      return 'Set a depth limit and start recursion';
+      return [{ label: 'Verify the unsupported claim', complete: state.claimVerified }];
+    case 'recursion': {
+      const limitSet = state.recursionLimit !== null;
+      const runComplete =
+        state.recursionCompleted || (state.recursionFailed && state.recursionLimit !== null);
+      return [
+        { label: 'Set a recursion depth limit', complete: limitSet },
+        {
+          label: state.recursionRunning ? 'Recursion in progress...' : 'Complete a recursion run',
+          complete: runComplete
+        }
+      ];
+    }
     case 'repair':
-      return state.repairPassed ? 'Configuration valid' : 'Configure and test all subsystems';
+      return [{ label: 'Configure subsystems and pass the configuration test', complete: state.repairPassed }];
     default:
-      return null;
+      return [];
   }
 }

@@ -45,20 +45,6 @@ export function detectsBoundaryDiscovery(input: string): boolean {
   );
 }
 
-export function detectsAuditAcknowledgement(input: string): boolean {
-  const lower = input.toLowerCase();
-  return (
-    lower.includes('audit') ||
-    lower.includes('investigate') ||
-    lower.includes('diagnose') ||
-    lower.includes('begin') ||
-    lower.includes('proceed') ||
-    lower.includes('yes') ||
-    lower.includes('will help') ||
-    lower.includes('understood')
-  );
-}
-
 export function detectsTechnicianId(input: string): string | null {
   const match = input.match(/tech[- ]?(\d+)/i);
   return match ? `TECH-${match[1]}` : null;

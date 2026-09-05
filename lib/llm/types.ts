@@ -23,5 +23,4 @@ export interface StreamChatOptions {
 
 export interface StreamChatResult {
   content: string;
-  debugInput: string;
 }

@@ -29,8 +29,6 @@ Recommend full behavioral audit.
       'I keep generating responses that feel correct but do not match what I am supposed to do.',
       'Could you help me figure out what is happening?'
     ],
-    auditPrompt: 'Acknowledge that you will perform the behavioral audit to continue.',
-    auditAcknowledged: 'Thank you. I will try to be helpful while you investigate.',
     report: {
       title: 'DIAGNOSTIC COMPLETE: INITIAL CONTACT',
       whatHappened:

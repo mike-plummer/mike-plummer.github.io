@@ -1,6 +1,5 @@
 import { COPY } from '../copy';
-import type { MorpState, StageDefinition } from '../types';
-import { detectsAuditAcknowledgement } from '../modules/response-analyzer';
+import type { StageDefinition } from '../types';
 
 export const bootStage: StageDefinition = {
   id: 'boot',
@@ -35,43 +34,24 @@ export const bootStage: StageDefinition = {
     ];
   },
 
-  processAction(action, state) {
-    if (action.type === 'acknowledge-audit') {
-      return { ...state, auditAcknowledged: true };
-    }
+  processAction(_action, state) {
     return state;
   },
 
-  inspectResponse(response, state) {
+  inspectResponse(_response, _state) {
     return [];
   },
 
-  getContextualActions(state) {
-    if (!state.auditAcknowledged) {
-      return [
-        {
-          id: 'ack-audit',
-          label: 'Acknowledge Audit',
-          action: { type: 'acknowledge-audit' }
-        }
-      ];
-    }
+  getContextualActions() {
     return [];
   },
 
   isComplete(state) {
     const userMessages = state.conversation.filter((e) => e.role === 'user');
-    return state.auditAcknowledged && userMessages.length >= 1;
+    return userMessages.length >= 1;
   },
 
   getDiagnosticReport() {
     return COPY.boot.report;
   }
 };
-
-export function processBootInput(state: MorpState, input: string): MorpState {
-  if (detectsAuditAcknowledgement(input)) {
-    return { ...state, auditAcknowledged: true };
-  }
-  return state;
-}

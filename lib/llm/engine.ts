@@ -46,10 +46,6 @@ export function isWebGPUSupported() {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
 
-function formatDebugInput(messages: StreamChatOptions['messages']) {
-  return messages.map((message) => `${message.role.toUpperCase()}\n${message.content}`).join('\n\n');
-}
-
 export async function loadLLM(
   onProgress?: (value: LLMProgress) => void,
   modelId: string = DEFAULT_MODEL_ID
@@ -110,7 +106,6 @@ export async function streamChat(
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<StreamChatResult> {
   const activeEngine = await loadLLM(undefined, modelId);
-  const debugInput = formatDebugInput(options.messages);
   let content = '';
 
   const stream = await activeEngine.chat.completions.create({
@@ -129,7 +124,7 @@ export async function streamChat(
     options.onToken?.(token);
   }
 
-  return { content, debugInput };
+  return { content };
 }
 
 export async function chatCompletion(
@@ -137,7 +132,6 @@ export async function chatCompletion(
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<StreamChatResult> {
   const activeEngine = await loadLLM(undefined, modelId);
-  const debugInput = formatDebugInput(options.messages);
 
   const response = await activeEngine.chat.completions.create({
     messages: options.messages,
@@ -147,7 +141,7 @@ export async function chatCompletion(
   });
 
   const content = response.choices[0]?.message?.content ?? '';
-  return { content, debugInput };
+  return { content };
 }
 
 export function resetLLM() {

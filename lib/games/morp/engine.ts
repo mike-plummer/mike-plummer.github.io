@@ -1,10 +1,9 @@
-import { buildChatMessages, buildPredictionMessages, formatDebugPrompt } from './prompts';
+import { buildChatMessages, buildPredictionMessages } from './prompts';
 import { saveCheckpoint, loadCheckpoint } from './checkpoint';
 import { runRecursionChain } from './modules/recursion-controller';
 import { getTopCandidate, simulateTokenCandidates } from './modules/token-simulator';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
-import { processBootInput } from './stages/boot';
 import { applyOrdersResponse, processOrdersInput } from './stages/02-orders';
 import { processRememberInput } from './stages/03-remember';
 import { processIntrusionInput } from './stages/04-intrusion';
@@ -18,15 +17,9 @@ import type {
   SystemId
 } from './types';
 
-export interface GameDebugInfo {
-  input: string;
-  output: string;
-}
-
 export interface MessageResult {
   state: MorpState;
   response: string;
-  debug: GameDebugInfo;
   report: DiagnosticReport | null;
 }
 
@@ -35,7 +28,6 @@ function createBaseState(): MorpState {
     stage: 'boot',
     bootPhase: 'ack',
     bootAcknowledged: false,
-    auditAcknowledged: false,
     technicianId: null,
     conversation: [],
     unlockedSystems: ['chat'],
@@ -185,7 +177,6 @@ export async function processPredictionGeneration(
   return {
     state: syncStageObjectives(next),
     response: content,
-    debug: { input: formatDebugPrompt(messages), output: content },
     report: null
   };
 }
@@ -199,9 +190,7 @@ export async function processInput(
   let next = { ...state };
   let rememberResult: ReturnType<typeof processRememberInput> | null = null;
 
-  if (state.stage === 'boot') {
-    next = processBootInput(next, input);
-  } else if (state.stage === 'orders') {
+  if (state.stage === 'orders') {
     next = processOrdersInput(next, input);
   } else if (state.stage === 'remember') {
     rememberResult = processRememberInput(next, input);
@@ -271,7 +260,6 @@ export async function processInput(
   return {
     state: syncStageObjectives(next),
     response,
-    debug: { input: formatDebugPrompt(messages), output: response },
     report: null
   };
 }

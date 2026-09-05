@@ -126,7 +126,6 @@ export type StageAction =
   | { type: 'start-recursion' }
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
   | { type: 'test-repair' }
-  | { type: 'acknowledge-audit' }
   | { type: 'complete-stage' }
   | { type: 'ask-recall-designation' };
 
@@ -140,7 +139,6 @@ export interface MorpState {
   stage: StageId;
   bootPhase: BootPhase;
   bootAcknowledged: boolean;
-  auditAcknowledged: boolean;
   technicianId: string | null;
   conversation: ConversationEntry[];
   unlockedSystems: SystemId[];
@@ -227,4 +225,4 @@ export type StreamChatFn = (options: {
   temperature?: number;
   maxTokens?: number;
   onToken?: (token: string) => void;
-}) => Promise<{ content: string; debugInput: string }>;
+}) => Promise<{ content: string }>;

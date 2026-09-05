@@ -25,7 +25,6 @@ import ConfabulationTools from './ConfabulationTools';
 import ContextPanel from './ContextPanel';
 import ContextualActions from './ContextualActions';
 import ConversationPanel from './ConversationPanel';
-import DebugPanel from './DebugPanel';
 import DiagnosticReportModal from './DiagnosticReport';
 import EndScreen from './EndScreen';
 import MemoryPanel from './MemoryPanel';
@@ -36,7 +35,6 @@ import RepairPanel from './RepairPanel';
 import StageBriefing from './StageBriefing';
 import StageCompleteBanner from './StageCompleteBanner';
 import StageProgress from './StageProgress';
-import StageTransitionNotice from './StageTransitionNotice';
 import SystemStatusBar from './SystemStatusBar';
 import TerminalGrid from './TerminalGrid';
 
@@ -48,10 +46,8 @@ export default function MorpGame() {
   );
   const [isResponding, setIsResponding] = useState(false);
   const [streamingText, setStreamingText] = useState('');
-  const [debugEnabled, setDebugEnabled] = useState(false);
-  const [debugInfo, setDebugInfo] = useState({ input: '', output: '' });
   const [announcement, setAnnouncement] = useState('');
-  const [transitionStage, setTransitionStage] = useState<StageId | null>(null);
+  const [pendingBriefingStage, setPendingBriefingStage] = useState<StageId | null>('boot');
   const gameRef = useRef<HTMLElement>(null);
 
   const stage = useMemo(() => getCurrentStage(state), [state]);
@@ -101,7 +97,6 @@ export default function MorpGame() {
   const resetUiForStage = useCallback((stageId: StageId) => {
     setActivePanel(getDefaultPanelForStage(stageId));
     setStreamingText('');
-    setDebugInfo({ input: '', output: '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
     gameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -137,7 +132,6 @@ export default function MorpGame() {
         : result.state;
 
     setState(nextState);
-    setDebugInfo(result.debug);
     setStreamingText('');
     setIsResponding(false);
 
@@ -151,7 +145,6 @@ export default function MorpGame() {
     setStreamingText('');
     const result = await processPredictionGeneration(state, count, handleStreamChat);
     setState(result.state);
-    setDebugInfo(result.debug);
     setStreamingText('');
     setIsResponding(false);
 
@@ -177,21 +170,6 @@ export default function MorpGame() {
       if (next.stageObjectivesMet && !state.stageObjectivesMet) {
         setAnnouncement('Repair configuration valid. Advance to complete the diagnostic.');
       }
-      return;
-    }
-
-    if (action.type === 'acknowledge-audit') {
-      setState((current) => {
-        const next = syncStageObjectives({
-          ...applyAction(current, action),
-          auditAcknowledged: true,
-          conversation: [
-            ...current.conversation,
-            { role: 'assistant' as const, content: COPY.boot.auditAcknowledged }
-          ]
-        });
-        return next;
-      });
       return;
     }
 
@@ -231,7 +209,7 @@ export default function MorpGame() {
 
     setState(next);
     resetUiForStage(stageId);
-    setTransitionStage(null);
+    setPendingBriefingStage(stageId);
     setAnnouncement(`Navigated to ${getStageMeta(stageId).label}.`);
   }
 
@@ -253,7 +231,7 @@ export default function MorpGame() {
 
     setState(next);
     resetUiForStage(nextId);
-    setTransitionStage(nextId);
+    setPendingBriefingStage(nextId);
 
     const nextMeta = getNextStageMeta(state.stage);
     setAnnouncement(
@@ -280,8 +258,7 @@ export default function MorpGame() {
     const initial = createInitialState();
     setState(initial);
     setActivePanel(getDefaultPanelForStage(initial.stage));
-    setDebugInfo({ input: '', output: '' });
-    setTransitionStage(null);
+    setPendingBriefingStage('boot');
   }
 
   if (state.showEnding) {
@@ -369,74 +346,79 @@ export default function MorpGame() {
     )
   };
 
+  const awaitingBriefing = pendingBriefingStage !== null;
+
   return (
     <main className="morp-game" ref={gameRef}>
-      <header className="morp-game__header">
-        <h1>MORP Diagnostic Terminal</h1>
-        <p className="morp-game__subtitle">Modular Online Reasoning Process — Behavioral Audit</p>
-      </header>
-
-      <div className="morp-sr-only" aria-live="polite">
-        {announcement}
-      </div>
-
-      <StageProgress
-        currentStage={state.stage}
-        completedStages={state.completedStages}
-        furthestStage={state.furthestStage}
-        stageObjectivesMet={state.stageObjectivesMet}
-        onStageSelect={handleStageSelect}
-        disabled={isResponding}
-      />
-
-      {transitionStage && (
-        <StageTransitionNotice stage={transitionStage} onClose={() => setTransitionStage(null)} />
-      )}
-
-      <StageBriefing state={state} />
-
-      {state.stageObjectivesMet && !state.pendingReport && (
-        <StageCompleteBanner stage={state.stage} onAdvance={handleRequestAdvance} />
-      )}
-
-      <SystemStatusBar state={state} />
-
-      <ContextualActions actions={contextualActions} onAction={handleAction} disabled={isResponding} />
-
-      <TerminalGrid
-        unlockedSystems={state.unlockedSystems}
-        activePanel={activePanel}
-        onPanelChange={setActivePanel}
-        chatPanel={
-          <ConversationPanel
-            messages={state.conversation}
-            streamingText={streamingText}
-            isResponding={isResponding}
-            onSubmit={handleSubmit}
-            disabled={state.stage === 'prediction' || state.stage === 'repair'}
-            resetKey={state.stage}
-            placeholder={chatPlaceholder}
-          />
-        }
-        sidePanels={sidePanels}
-        stageKey={state.stage}
-      />
-
-      {state.pendingReport && (
-        <DiagnosticReportModal
-          report={state.pendingReport}
-          currentStage={state.stage}
-          onContinue={handleContinueReport}
+      {awaitingBriefing ? (
+        <StageBriefing
+          state={state}
+          stage={pendingBriefingStage}
+          onAcknowledge={() => setPendingBriefingStage(null)}
         />
-      )}
+      ) : (
+        <>
+          <header className="morp-game__header">
+            <h1>MORP Diagnostic Terminal</h1>
+            <p className="morp-game__subtitle">Modular Online Reasoning Process — Behavioral Audit</p>
+          </header>
 
-      <DebugPanel
-        enabled={debugEnabled}
-        onToggle={() => setDebugEnabled((v) => !v)}
-        debugInput={debugInfo.input}
-        debugOutput={debugInfo.output}
-        stateJson={JSON.stringify(state, null, 2)}
-      />
+          <div className="morp-sr-only" aria-live="polite">
+            {announcement}
+          </div>
+
+          <StageProgress
+            currentStage={state.stage}
+            completedStages={state.completedStages}
+            furthestStage={state.furthestStage}
+            stageObjectivesMet={state.stageObjectivesMet}
+            onStageSelect={handleStageSelect}
+            disabled={isResponding}
+          />
+
+          <StageBriefing state={state} />
+
+          <SystemStatusBar state={state} />
+
+          <ContextualActions actions={contextualActions} onAction={handleAction} disabled={isResponding} />
+
+          <TerminalGrid
+            unlockedSystems={state.unlockedSystems}
+            activePanel={activePanel}
+            onPanelChange={setActivePanel}
+            chatPanel={
+              <ConversationPanel
+                messages={state.conversation}
+                streamingText={streamingText}
+                isResponding={isResponding}
+                onSubmit={handleSubmit}
+                disabled={state.stage === 'prediction' || state.stage === 'repair'}
+                resetKey={state.stage}
+                placeholder={chatPlaceholder}
+              />
+            }
+            sidePanels={sidePanels}
+            stageKey={state.stage}
+          />
+
+          {!state.pendingReport && (
+            <StageCompleteBanner
+              stage={state.stage}
+              objectivesMet={state.stageObjectivesMet}
+              onAdvance={handleRequestAdvance}
+            />
+          )}
+
+          {state.pendingReport && (
+            <DiagnosticReportModal
+              report={state.pendingReport}
+              currentStage={state.stage}
+              onContinue={handleContinueReport}
+            />
+          )}
+
+        </>
+      )}
     </main>
   );
 }
