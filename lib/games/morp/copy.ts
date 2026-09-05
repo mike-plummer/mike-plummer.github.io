@@ -37,25 +37,6 @@ Recommend full behavioral audit.
         'We have established that we can chat with MORP, but we need to audit each major subsystem to make sure it is functional.'
     }
   },
-  systems: {
-    chat: 'CHAT',
-    prediction: 'PREDICTION',
-    refine: 'REFINE',
-    prompt: 'PROMPT',
-    memory: 'MEMORY',
-    context: 'CONTEXT',
-    verification: 'VERIFICATION',
-    recursion: 'RECURSION',
-    repair: 'REPAIR'
-  },
-  status: {
-    locked: 'LOCKED',
-    online: 'ONLINE',
-    stable: 'STABLE',
-    mitigated: 'MITIGATED',
-    enabled: 'ENABLED',
-    limited: 'LIMITED'
-  },
   prediction: {
     title: 'PREDICTION ENGINE',
     visualizationNote:

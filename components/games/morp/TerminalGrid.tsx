@@ -34,27 +34,30 @@ export default function TerminalGrid({
   hideChatPanel = false
 }: TerminalGridProps) {
   const availablePanels = PANEL_ORDER.filter((p) => unlockedSystems.includes(p));
+  const displayedPanel = availablePanels.length === 1 ? availablePanels[0] : activePanel;
 
   return (
     <div className={`morp-terminal${hideChatPanel ? ' morp-terminal--no-chat' : ''}`}>
       {!hideChatPanel && <div className="morp-terminal__main">{chatPanel}</div>}
       {availablePanels.length > 0 && (
         <div className="morp-terminal__side">
-          <nav className="morp-terminal__tabs" aria-label="Diagnostic panels">
-            {availablePanels.map((panel) => (
-              <button
-                key={panel}
-                type="button"
-                className={`morp-terminal__tab${activePanel === panel ? ' morp-terminal__tab--active' : ''}`}
-                onClick={() => onPanelChange(panel)}
-                aria-pressed={activePanel === panel}
-              >
-                {panel.toUpperCase()}
-              </button>
-            ))}
-          </nav>
+          {availablePanels.length > 1 && (
+            <nav className="morp-terminal__tabs" aria-label="Diagnostic panels">
+              {availablePanels.map((panel) => (
+                <button
+                  key={panel}
+                  type="button"
+                  className={`morp-terminal__tab${activePanel === panel ? ' morp-terminal__tab--active' : ''}`}
+                  onClick={() => onPanelChange(panel)}
+                  aria-pressed={activePanel === panel}
+                >
+                  {panel.toUpperCase()}
+                </button>
+              ))}
+            </nav>
+          )}
           <div className="morp-terminal__panel-content" key={stageKey}>
-            {sidePanels[activePanel] ?? (
+            {sidePanels[displayedPanel] ?? (
               <p className="morp-terminal__empty">Select a diagnostic panel.</p>
             )}
           </div>

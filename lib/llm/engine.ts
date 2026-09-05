@@ -188,25 +188,34 @@ function extractTopLogprobs(
   content: LogprobContentEntry[] | null | undefined
 ): TokenLogprob[] {
   const entry = content?.[0];
-  if (!entry?.top_logprobs?.length) {
+  if (!entry) {
     return [];
   }
 
+  const seen = new Set<string>();
   const candidates: TokenLogprob[] = [];
 
-  for (const item of entry.top_logprobs) {
+  const add = (item: { token: unknown; logprob: number; bytes?: number[] | null }) => {
     const token = tokenFromLogprobItem(item);
-    if (!token || typeof item.logprob !== 'number') {
-      continue;
+    if (!token || typeof item.logprob !== 'number' || seen.has(token)) {
+      return;
     }
+    seen.add(token);
     candidates.push({ token, logprob: item.logprob });
+  };
+
+  add(entry);
+
+  for (const item of entry.top_logprobs ?? []) {
+    add(item);
   }
 
+  candidates.sort((a, b) => b.logprob - a.logprob);
   return candidates;
 }
 
 function hasUsableLogprobs(candidates: TokenLogprob[]): boolean {
-  return candidates.length >= 2;
+  return candidates.length >= 1;
 }
 
 export async function fetchNextTokenLogprobs(
@@ -214,7 +223,7 @@ export async function fetchNextTokenLogprobs(
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<NextTokenLogprobsResult> {
   const activeEngine = await loadLLM(undefined, modelId);
-  const topLogprobs = options.topLogprobs ?? 4;
+  const topLogprobs = Math.min(5, Math.max(1, options.topLogprobs ?? 5));
   const temperature = options.temperature ?? 1;
   // Trailing whitespace can break completion logprobs on instruct models.
   const prompt = options.prompt.trimEnd();

@@ -89,6 +89,7 @@ export interface TokenCandidate {
   token: string;
   weight: number;
   rawToken?: string;
+  startsNewWord?: boolean;
 }
 
 export interface RecursionNode {

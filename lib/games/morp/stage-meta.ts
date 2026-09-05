@@ -173,6 +173,34 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
   }
 }
 
+export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
+  switch (state.stage) {
+    case 'boot':
+      return [];
+    case 'prediction':
+      return ['prediction'];
+    case 'refine':
+      return ['refine'];
+    case 'orders':
+      return ['prompt'];
+    case 'amnesia': {
+      const panels: SystemId[] = ['context'];
+      if (state.unlockedSystems.includes('memory')) {
+        panels.push('memory');
+      }
+      return panels;
+    }
+    case 'confabulation':
+      return ['verification'];
+    case 'recursion':
+      return ['recursion'];
+    case 'repair':
+      return ['repair'];
+    default:
+      return [];
+  }
+}
+
 export interface StageObjective {
   label: string;
   complete: boolean;

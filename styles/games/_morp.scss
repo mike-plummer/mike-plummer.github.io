@@ -582,46 +582,6 @@ $morp-error: #ff6b6b;
   margin-top: 1.5rem;
 }
 
-// Status bar
-.morp-status {
-  border-bottom: 1px solid $morp-border-subtle;
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 0.875rem;
-  font-weight: 500;
-  gap: 0.75rem 1.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-}
-
-.morp-status__item {
-  color: $morp-text-muted;
-}
-
-.morp-status__item--online {
-  color: $morp-text;
-
-  .morp-status__label {
-    color: $morp-text-secondary;
-  }
-
-  .morp-status__value {
-    color: $morp-text;
-    font-weight: 600;
-  }
-}
-
-.morp-status__label {
-  color: $morp-text-muted;
-  font-weight: 500;
-}
-
-.morp-status__value {
-  color: $morp-text-secondary;
-  font-weight: 500;
-  margin-left: 0.25rem;
-}
-
 // Terminal grid
 .morp-terminal {
   display: grid;
@@ -903,6 +863,11 @@ $morp-error: #ff6b6b;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
 
+  &--new-word .morp-prediction__token {
+    border-left: 2px solid $morp-text-muted;
+    padding-left: 0.35rem;
+  }
+
   &--selected {
     .morp-prediction__token {
       color: $morp-accent;
@@ -915,7 +880,7 @@ $morp-error: #ff6b6b;
   flex-shrink: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  width: 4.5rem;
+  width: 10rem;
 }
 
 .morp-prediction__bar-track {

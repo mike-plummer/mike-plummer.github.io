@@ -94,10 +94,11 @@ export default function PredictionPanel({
           hasCandidates &&
           state.predictionCandidates.map((candidate) => {
             const isSelected = candidate.token === state.predictionSelected;
+            const rowKey = candidate.rawToken ?? candidate.token;
             return (
               <div
-                key={candidate.token}
-                className={`morp-prediction__row${isSelected ? ' morp-prediction__row--selected' : ''}`}
+                key={rowKey}
+                className={`morp-prediction__row${isSelected ? ' morp-prediction__row--selected' : ''}${candidate.startsNewWord ? ' morp-prediction__row--new-word' : ''}`}
               >
                 <span className="morp-prediction__token">{candidate.token}</span>
                 <div className="morp-prediction__bar-track">

@@ -1,18 +1,55 @@
 import type { NextTokenLogprobsOptions, NextTokenLogprobsResult } from '@/lib/llm/types';
 import type { TokenCandidate } from '../types';
 
+export const PREDICTION_DISPLAY_COUNT = 5;
+export const PREDICTION_TOP_LOGPROBS_REQUEST = 5;
+
 export type FetchNextTokenLogprobsFn = (
   options: NextTokenLogprobsOptions
 ) => Promise<NextTokenLogprobsResult>;
+
+function stripLeadingSpaceMarker(raw: string): string {
+  if (raw.startsWith('Ġ') || raw.startsWith('▁')) {
+    return raw.slice(1);
+  }
+  if (raw.startsWith(' ')) {
+    return raw.slice(1);
+  }
+  return raw;
+}
+
+function isSpecialToken(raw: string): boolean {
+  const trimmed = stripLeadingSpaceMarker(raw).trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  if (/^<[^>]*>$/.test(trimmed)) {
+    return true;
+  }
+
+  const upper = trimmed.toUpperCase();
+  return (
+    upper.includes('ENDOFTEXT') ||
+    upper.includes('IM_START') ||
+    upper.includes('IM_END') ||
+    upper.includes('REPO_NAME') ||
+    upper.startsWith('[INST]') ||
+    upper.startsWith('[/INST]')
+  );
+}
 
 function isPlausibleToken(raw: string): boolean {
   if (!raw) {
     return false;
   }
+  if (isSpecialToken(raw)) {
+    return false;
+  }
   if (raw === ' ' || raw === 'Ġ') {
     return true;
   }
-  const trimmed = raw.replace(/^Ġ/, '').trim();
+  const trimmed = stripLeadingSpaceMarker(raw).trim();
   if (!trimmed) {
     return false;
   }
@@ -22,42 +59,60 @@ function isPlausibleToken(raw: string): boolean {
   return trimmed.length <= 24;
 }
 
-function displayToken(raw: string): string | null {
+function cleanDisplayLabel(text: string): string {
+  return text.replace(/[\u0120▁]/g, '').trim();
+}
+
+function displayToken(raw: string): { label: string; startsNewWord: boolean } | null {
   if (!isPlausibleToken(raw)) {
     return null;
   }
 
-  if (raw === ' ' || raw === 'Ġ') {
-    return '␠';
+  if (raw === ' ' || raw === 'Ġ' || raw === '▁') {
+    return { label: 'space', startsNewWord: true };
   }
 
-  const withoutMarker = raw.startsWith('Ġ') ? raw.slice(1) : raw;
-  const trimmed = withoutMarker.trim();
+  const startsNewWord = raw.startsWith('Ġ') || raw.startsWith('▁') || raw.startsWith(' ');
+  const withoutMarker = stripLeadingSpaceMarker(raw);
+  const trimmed = cleanDisplayLabel(withoutMarker);
+  if (!trimmed) {
+    return { label: 'space', startsNewWord: true };
+  }
   if (trimmed === ',' || trimmed === '...' || trimmed === '.') {
-    return trimmed;
+    return { label: trimmed, startsNewWord };
   }
   if (/^[^\w\s]+$/.test(trimmed)) {
-    return trimmed;
+    return { label: trimmed, startsNewWord };
   }
 
-  return trimmed.toUpperCase();
+  return { label: trimmed, startsNewWord };
 }
 
-function logprobsToCandidates(logprobs: NextTokenLogprobsResult['candidates']): TokenCandidate[] {
+function logprobsToCandidates(
+  logprobs: NextTokenLogprobsResult['candidates'],
+  maxCount = PREDICTION_DISPLAY_COUNT
+): TokenCandidate[] {
   const seen = new Set<string>();
   const candidates: TokenCandidate[] = [];
 
   for (const entry of logprobs) {
-    const token = displayToken(entry.token);
-    if (!token || seen.has(token)) {
+    if (seen.has(entry.token)) {
       continue;
     }
-    seen.add(token);
+    const display = displayToken(entry.token);
+    if (!display) {
+      continue;
+    }
+    seen.add(entry.token);
     candidates.push({
-      token,
+      token: display.label,
+      startsNewWord: display.startsNewWord,
       weight: Math.exp(entry.logprob),
       rawToken: entry.token
     });
+    if (candidates.length >= maxCount) {
+      break;
+    }
   }
 
   if (candidates.length === 0) {
@@ -83,16 +138,11 @@ export async function fetchPredictionCandidates(
   try {
     const result = await fetchLogprobs({
       prompt: context,
-      topLogprobs: 5,
+      topLogprobs: PREDICTION_TOP_LOGPROBS_REQUEST,
       temperature
     });
-    const candidates = logprobsToCandidates(result.candidates);
-    if (candidates.length >= 2) {
-      return candidates;
-    }
+    return logprobsToCandidates(result.candidates);
   } catch {
-    // Fall through to procedural fallback.
+    return [];
   }
-
-  return [];
 }

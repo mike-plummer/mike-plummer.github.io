@@ -35,7 +35,7 @@ import {
   setBootPhase,
   syncStageObjectives
 } from '@/lib/games/morp/engine';
-import { getDefaultPanelForStage, getNextStageMeta, getStageMeta } from '@/lib/games/morp/stage-meta';
+import { getDefaultPanelForStage, getNextStageMeta, getStageMeta, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
 import type { MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
 import IncidentReviewPanel from './IncidentReviewPanel';
@@ -53,7 +53,6 @@ import RepairPanel from './RepairPanel';
 import StageBriefing from './StageBriefing';
 import StageCompleteBanner from './StageCompleteBanner';
 import StageProgress from './StageProgress';
-import SystemStatusBar from './SystemStatusBar';
 import TerminalGrid from './TerminalGrid';
 
 function sleep(ms: number) {
@@ -119,6 +118,16 @@ export default function MorpGame() {
       ? '> Context overflow — use recovery tools in the Context panel'
       : '> Type a message...';
   const inGameplay = state.bootPhase === 'ready' && status === 'ready' && !state.showEnding;
+  const visiblePanels = useMemo(() => getVisiblePanelsForStage(state), [state]);
+
+  useEffect(() => {
+    if (visiblePanels.length === 0) {
+      return;
+    }
+    if (!visiblePanels.includes(activePanel)) {
+      setActivePanel(getDefaultPanelForStage(state.stage));
+    }
+  }, [visiblePanels, activePanel, state.stage]);
 
   useEffect(() => {
     if (state.bootPhase === 'ready' && status === 'idle' && webGPUSupported) {
@@ -720,12 +729,10 @@ export default function MorpGame() {
 
           <StageBriefing state={state} />
 
-          <SystemStatusBar state={state} />
-
           <ContextualActions actions={contextualActions} onAction={handleAction} disabled={isResponding} />
 
           <TerminalGrid
-            unlockedSystems={state.unlockedSystems}
+            unlockedSystems={visiblePanels}
             activePanel={activePanel}
             onPanelChange={setActivePanel}
             hideChatPanel={state.stage === 'prediction' || state.stage === 'refine'}

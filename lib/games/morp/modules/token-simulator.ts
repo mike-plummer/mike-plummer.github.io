@@ -33,16 +33,33 @@ export function getTopCandidate(candidates: TokenCandidate[]): string {
   return candidates.reduce((best, c) => (c.weight > best.weight ? c : best)).token;
 }
 
+/** Decode a raw tokenizer piece into text to append (handles Ġ / ▁ space markers). */
+export function decodeTokenPiece(raw: string): string {
+  if (raw === 'Ġ' || raw === '▁' || raw === ' ') {
+    return ' ';
+  }
+  if (raw.startsWith('Ġ') || raw.startsWith('▁')) {
+    return ` ${raw.slice(1)}`;
+  }
+  if (raw.startsWith(' ')) {
+    return raw;
+  }
+  return raw;
+}
+
 export function formatTokenForAppend(token: string, rawToken?: string): string {
-  const value = rawToken ?? token;
-  if (value.startsWith(' ')) {
-    return value;
+  if (rawToken !== undefined && rawToken !== '') {
+    return decodeTokenPiece(rawToken);
   }
-  if (value === ',' || value === '...') {
-    return value;
+
+  if (token === 'space') {
+    return ' ';
   }
-  if (/^[^\w\s]/.test(value)) {
-    return value;
+  if (token === ',' || token === '...' || token === '.') {
+    return token;
   }
-  return ` ${value}`;
+  if (/^[^\w\s]+$/.test(token)) {
+    return token;
+  }
+  return ` ${token}`;
 }
