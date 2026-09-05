@@ -54,8 +54,8 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
-    label: 'Hallucination',
-    shortLabel: 'INCIDENT',
+    label: 'Facts',
+    shortLabel: 'FACTS',
     objective:
       'Request an incident summary, cross-check claims against Facility Records, then ground responses and enable output verification.',
     conceptContext:
@@ -75,7 +75,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'REPAIR',
     objective: 'Configure all subsystems and pass the configuration test.',
     conceptContext:
-      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. Output verification — which you enabled during the Hallucination stage — is one of those layers. The model is one component — the system you build determines how safely it behaves.',
+      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. Output verification — which you enabled during the Facts stage — is one of those layers. The model is one component — the system you build determines how safely it behaves.',
     completionHint: 'MORP is ready for final deployment. Complete the diagnostic.'
   }
 };

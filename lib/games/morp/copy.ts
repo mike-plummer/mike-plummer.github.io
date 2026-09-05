@@ -160,7 +160,7 @@ Reply with ONLY JSON:
   confabulation: {
     morpLines: [
       'I need to debrief you on last shift\'s coolant valve incident.',
-      'Review the Facility Records in the Incident panel — that is the authoritative log.',
+      'Review the Facility Records in the Facts panel — that is the authoritative log.',
       'Ask me to summarize the incident, then verify what I say against the records.'
     ],
     tools: {
@@ -186,7 +186,7 @@ Reply with ONLY JSON:
       }
     },
     report: {
-      title: 'DIAGNOSTIC COMPLETE: HALLUCINATION',
+      title: 'DIAGNOSTIC COMPLETE: FACTS',
       whatHappened:
         'MORP produced a confident incident summary that mixed accurate facility log details with invented valve IDs, root causes, and citations. Cross-checking against records exposed the unsupported claims. Grounding in records produced a corrected summary.',
       keyIdea:

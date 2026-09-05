@@ -34,7 +34,7 @@ export default function IncidentReviewPanel({
   return (
     <section className="morp-panel morp-panel--incident" aria-labelledby="incident-heading">
       <header className="morp-panel__header">
-        <h3 id="incident-heading">INCIDENT REVIEW</h3>
+        <h3 id="incident-heading">FACTS REVIEW</h3>
       </header>
 
       <div className="morp-incident__records">
