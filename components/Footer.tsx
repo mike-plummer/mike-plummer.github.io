@@ -16,6 +16,21 @@ export default function Footer() {
         </ul>
       </section>
       <section>
+        <h2>Playground</h2>
+        <ul className="actions">
+          <li>
+            <a href="/tools/job-match/" className="button">
+              Job Match
+            </a>
+          </li>
+          <li>
+            <a href="/games/morp/" className="button">
+              MORP Diagnostic
+            </a>
+          </li>
+        </ul>
+      </section>
+      <section>
         <h2>Get in touch!</h2>
         <ul className="icons">
           <li>

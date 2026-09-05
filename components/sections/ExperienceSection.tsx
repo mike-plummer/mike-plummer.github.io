@@ -23,7 +23,9 @@ export function ExperienceSection() {
             </p>
             <ul>
               {employer.highlights.map((highlight) => (
-                <li key={highlight} style={{ width: 'fit-content' }}>{highlight}</li>
+                <li key={highlight} style={{ width: 'fit-content' }}>
+                  {highlight}
+                </li>
               ))}
             </ul>
           </li>

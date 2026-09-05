@@ -1,19 +1,19 @@
+import { educationCopy } from '@/lib/profile';
+
 export function EducationSection() {
   return (
     <>
       <header className="major">
-        <h2>Education</h2>
-        <p>I&apos;ve been certified to know things</p>
+        <h2>{educationCopy.heading}</h2>
+        <p>{educationCopy.subtitle}</p>
       </header>
       <ul className="statistics">
-        <li className="style1">
-          <span className="icon fa-graduation-cap" />
-          <strong>Bachelor of Science</strong> Computer Engineering, Iowa State University
-        </li>
-        <li className="style2">
-          <span className="icon fa-graduation-cap" />
-          <strong>Master of Engineering</strong> Software Engineering, Pennsylvania State University
-        </li>
+        {educationCopy.degrees.map((degree, index) => (
+          <li key={degree.school} className={`style${index + 1}`}>
+            <span className="icon fa-graduation-cap" />
+            <strong>{degree.level}</strong> {degree.field}, {degree.school}
+          </li>
+        ))}
       </ul>
     </>
   );

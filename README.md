@@ -21,7 +21,16 @@ Personal website built with [Next.js](https://nextjs.org/) (static export), Reac
 | `npm run dev` | Start local development server |
 | `npm run build` | Build static site to `out/` |
 | `npm run deploy` | Build and publish to GitHub Pages (`master` branch) |
-| `npm run format` | Format TypeScript files with Prettier |
+| `npm run format` | Format files with Biome |
+
+## AI Features
+
+- `/tools/job-match/` — evaluate a job posting against Mike's profile using a local in-browser model (WebLLM + WebGPU)
+- `/games/morp/` — MORP Diagnostic, an interactive puzzle game about LLM failure modes
+
+These features run inference entirely in the browser.
+
+Profile context for job-match is generated at build time via `npm run prebuild` from site data, `profile.md`, and `Resume_Aug2026.2.pdf`.
 
 ## Content
 

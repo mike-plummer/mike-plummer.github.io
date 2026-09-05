@@ -1,0 +1,28 @@
+.job-match-tool {
+  label {
+    display: block;
+    margin: 1em 0 0.5em;
+  }
+
+  textarea {
+    width: 100%;
+  }
+}
+
+.job-match-tool__error {
+  color: #ff8f8f;
+  font-size: 0.9em;
+  margin-top: 0.75em;
+}
+
+.job-match-tool__results {
+  margin-top: 2em;
+
+  h4 {
+    margin-top: 1.5em;
+  }
+}
+
+.job-match-tool__gaps {
+  opacity: 0.85;
+}

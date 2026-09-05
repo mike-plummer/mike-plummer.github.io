@@ -54,6 +54,8 @@
 @import 'components/features';
 @import 'components/statistics';
 @import 'components/spotlight';
+@import 'components/llm';
+@import 'components/job-match';
 
 // Custom
 @import 'components/_logo.scss';
@@ -65,3 +67,4 @@
 @import 'layout/main';
 @import 'layout/footer';
 @import 'layout/wrapper';
+@import 'games/morp';

@@ -26,13 +26,7 @@ export const employers: Employer[] = [
     role: 'Principal Consultant',
     period: '2015 - 2022',
     icon: 'logo improving',
-    highlights: [
-      'Mutual of Omaha',
-      'TD Ameritrade',
-      'US Air Force',
-      'WoodmenLife',
-      'Chewy.com'
-    ]
+    highlights: ['Mutual of Omaha', 'TD Ameritrade', 'US Air Force', 'WoodmenLife', 'Chewy.com']
   },
   {
     company: 'Cypress.io',
@@ -46,7 +40,7 @@ export const employers: Employer[] = [
       'Cloud MCP & CLI',
       'Agentic workflow enablement'
     ]
-  },
+  }
 ];
 
 export const projects: Project[] = [

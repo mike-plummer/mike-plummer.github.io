@@ -1,0 +1,31 @@
+.llm-status {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  margin-bottom: 1.5em;
+  padding: 1em 1.25em;
+
+  p {
+    margin: 0 0 0.75em;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  progress {
+    width: 100%;
+  }
+
+  &--error {
+    border-color: rgba(#ff6b6b, 0.5);
+  }
+
+  &--ready {
+    border-color: rgba(#6bff9d, 0.35);
+  }
+}
+
+.llm-status__detail {
+  font-size: 0.85em;
+  opacity: 0.8;
+}

@@ -1,0 +1,1209 @@
+// MORP palette — tuned for contrast on dark backgrounds (WCAG AA+)
+$morp-bg: #080b0d;
+$morp-bg-panel: #111a16;
+$morp-bg-elevated: #16241e;
+$morp-text: #e8fff0;
+$morp-text-secondary: #bdd9c8;
+$morp-text-muted: #94c4a8;
+$morp-accent: #55ff99;
+$morp-accent-soft: #7dffb8;
+$morp-border: #2a5240;
+$morp-border-subtle: #1e3a2f;
+$morp-warning: #ffd166;
+$morp-error: #ff6b6b;
+
+// Scoped under #main to override the site invert theme (gray #636363 on headings/strong)
+#main .morp-game {
+  background: $morp-bg;
+  border: 1px solid $morp-border-subtle;
+  border-radius: 6px;
+  color: $morp-text;
+  font-family: 'Source Code Pro', 'Courier New', monospace;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+  padding: 1.25rem;
+
+  // Reset invert-theme typography inside the game shell
+  h1, h2, h3, h4, h5, h6 {
+    color: $morp-text;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  p, li, span, div, strong, b, label, pre, td, th {
+    color: inherit;
+  }
+
+  strong, b {
+    color: $morp-text;
+    font-weight: 600;
+  }
+
+  h4 {
+    color: $morp-accent-soft;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
+    text-transform: uppercase;
+  }
+
+  a.button,
+  .button,
+  button.button {
+    background-color: #143328 !important;
+    box-shadow: inset 0 0 0 1px $morp-accent !important;
+    color: $morp-text !important;
+    font-size: 0.9375rem;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background-color: #1e4a38 !important;
+      color: #ffffff !important;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #255a44 !important;
+    }
+
+    &.alt {
+      background-color: $morp-bg-panel !important;
+      box-shadow: inset 0 0 0 1px $morp-text-secondary !important;
+      color: $morp-text !important;
+
+      &:hover:not(:disabled) {
+        background-color: $morp-bg-elevated !important;
+        color: #ffffff !important;
+      }
+    }
+
+    &:disabled {
+      background-color: #0d1512 !important;
+      box-shadow: inset 0 0 0 1px #3d5c4f !important;
+      color: $morp-text-secondary !important;
+      opacity: 1;
+      pointer-events: none;
+    }
+  }
+
+  label {
+    color: $morp-text;
+    font-weight: 500;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: #55ff99;
+    appearance: auto;
+    cursor: pointer;
+    display: inline-block;
+    float: none;
+    height: 1.15rem;
+    margin: 0;
+    opacity: 1;
+    position: static;
+    width: 1.15rem;
+    z-index: auto;
+
+    // Undo global custom checkbox icon (expects input + label siblings)
+    & + label {
+      padding-left: 0;
+      padding-right: 0;
+
+      &:before {
+        content: none;
+        display: none;
+      }
+    }
+  }
+
+  input[type='text'],
+  input[type='number'],
+  input[type='email'],
+  input[type='password'],
+  select,
+  textarea {
+    background: #0d1512;
+    border: 1px solid #3d6b55;
+    color: $morp-text;
+
+    &:focus {
+      border-color: $morp-accent;
+      box-shadow: 0 0 0 1px $morp-accent;
+      outline: none;
+    }
+
+    &::placeholder {
+      color: $morp-text-muted;
+      opacity: 1;
+    }
+  }
+
+  select option {
+    background: #0d1512;
+    color: $morp-text;
+  }
+}
+
+// Visible checkbox / radio row
+#main .morp-control {
+  align-items: flex-start;
+  color: $morp-text;
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 0.65rem;
+  line-height: 1.5;
+  margin: 0;
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  label {
+    color: $morp-text;
+    cursor: pointer;
+    display: inline;
+    font-weight: 500;
+    margin: 0;
+  }
+}
+
+#main .morp-game__header {
+  margin-bottom: 1rem;
+
+  h1 {
+    color: $morp-accent;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+  }
+}
+
+#main .morp-game__subtitle {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.morp-sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+// Stage progress
+.morp-progress {
+  border-bottom: 1px solid #1e3a2f;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+.morp-progress__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.morp-progress__item {
+  align-items: center;
+  background: transparent;
+  border: 1px solid $morp-border-subtle;
+  color: $morp-text-muted;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  gap: 0.15rem;
+  min-width: 3.25rem;
+  padding: 0.35rem 0.4rem;
+
+  &--current {
+    border-color: $morp-accent;
+    color: $morp-accent;
+    font-weight: 600;
+  }
+
+  &--complete {
+    border-color: $morp-border-subtle;
+    color: $morp-text-secondary;
+  }
+
+  &--reached {
+    border-color: $morp-border;
+    color: $morp-text-secondary;
+  }
+
+  &--upcoming {
+    color: $morp-text-muted;
+  }
+
+  &--navigable {
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $morp-bg-elevated;
+      border-color: $morp-accent;
+      color: $morp-accent;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+}
+
+// Progress nav buttons — reset global `button` rules
+#main .morp-game .morp-progress__item--navigable {
+  appearance: none;
+  border-radius: 0;
+  box-shadow: none !important;
+  height: auto;
+  line-height: inherit;
+  text-transform: none;
+  width: auto;
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated !important;
+    box-shadow: none !important;
+  }
+}
+
+.morp-progress__number {
+  font-weight: 700;
+}
+
+.morp-progress__current {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+
+  strong {
+    color: $morp-text;
+    font-weight: 600;
+  }
+}
+
+// Stage briefing
+.morp-briefing {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  padding: 0.875rem 1rem;
+}
+
+.morp-briefing__title {
+  color: $morp-accent;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.morp-briefing__objective {
+  color: $morp-text;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.55;
+  margin: 0 0 0.5rem;
+}
+
+.morp-briefing__progress {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin: 0;
+
+  &--met {
+    color: $morp-accent;
+    font-weight: 600;
+  }
+}
+
+// Stage complete banner
+.morp-stage-complete {
+  align-items: center;
+  background: #0d1f17;
+  border: 1px solid #55ff99;
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.morp-stage-complete__title {
+  color: $morp-accent;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.morp-stage-complete__hint,
+.morp-stage-complete__next {
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0.2rem 0;
+}
+
+.morp-stage-complete__next strong {
+  color: $morp-accent-soft;
+  font-weight: 600;
+}
+
+.morp-stage-complete__button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+// Stage transition notice
+.morp-transition {
+  background: $morp-bg-elevated;
+  border-left: 3px solid $morp-accent;
+  margin-bottom: 1rem;
+  padding: 0.875rem 1rem;
+
+  p {
+    color: $morp-text;
+    margin: 0.15rem 0;
+  }
+}
+
+.morp-transition__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+
+  p {
+    flex: 1;
+    margin: 0;
+  }
+}
+
+.morp-transition__close {
+  flex-shrink: 0;
+}
+
+.morp-transition__objective {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+// Diagnostic report additions
+.morp-report__stage-complete {
+  color: $morp-accent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.morp-report__next {
+  border-top: 1px solid $morp-border-subtle;
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 1rem 0;
+  padding-top: 0.75rem;
+
+  strong {
+    color: $morp-accent;
+    font-weight: 600;
+  }
+}
+
+// Boot sequence
+.morp-boot {
+  padding: 2rem 1rem;
+}
+
+.morp-boot__frame {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  color: $morp-text;
+  margin: 0 auto;
+  max-width: 36rem;
+  padding: 2rem;
+  text-align: center;
+
+  h2 {
+    color: $morp-accent;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  p {
+    color: $morp-text;
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+}
+
+.morp-boot--error .morp-boot__frame {
+  border-color: $morp-error;
+}
+
+.morp-boot__subtitle {
+  color: $morp-accent;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.morp-boot__meta {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.morp-boot__checkbox {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  margin: 1.5rem 0;
+  text-align: left;
+
+  label {
+    color: $morp-text;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0;
+    padding-top: 0.1rem;
+  }
+}
+
+.morp-boot__progress {
+  background: #1e3a2f;
+  border-radius: 3px;
+  height: 1.25rem;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.morp-boot__progress-bar {
+  background: #55ff99;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.morp-boot__status {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.morp-boot__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+// Status bar
+.morp-status {
+  border-bottom: 1px solid $morp-border-subtle;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+.morp-status__item {
+  color: $morp-text-muted;
+}
+
+.morp-status__item--online {
+  color: $morp-text;
+
+  .morp-status__label {
+    color: $morp-text-secondary;
+  }
+
+  .morp-status__value {
+    color: $morp-text;
+    font-weight: 600;
+  }
+}
+
+.morp-status__label {
+  color: $morp-text-muted;
+  font-weight: 500;
+}
+
+.morp-status__value {
+  color: $morp-text-secondary;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+// Terminal grid
+.morp-terminal {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+
+  @include breakpoint('<=medium') {
+    grid-template-columns: 1fr;
+  }
+}
+
+.morp-terminal__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+// Tab buttons — reset global `button` rules (#main invert theme + site button sizing)
+#main .morp-game .morp-terminal__tab {
+  align-items: center;
+  appearance: none;
+  background: $morp-bg-panel !important;
+  border: 1px solid $morp-border-subtle !important;
+  border-radius: 4px;
+  box-shadow: none !important;
+  color: $morp-text-secondary !important;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  height: auto;
+  justify-content: center;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: $morp-bg-elevated !important;
+    border-color: $morp-border !important;
+    color: $morp-text !important;
+  }
+
+  &:active {
+    background: $morp-bg-elevated !important;
+  }
+
+  &--active {
+    background: $morp-bg-elevated !important;
+    border-color: $morp-accent !important;
+    color: $morp-accent !important;
+  }
+}
+
+.morp-terminal__empty {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+}
+
+// Panels
+.morp-panel {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  border-radius: 4px;
+  color: $morp-text;
+  padding: 1rem;
+}
+
+.morp-panel__header h2,
+.morp-panel__header h3 {
+  color: $morp-accent;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.morp-panel__note {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+  white-space: pre-line;
+}
+
+.morp-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+// Conversation
+.morp-panel--conversation {
+  .morp-panel__header h2 {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.morp-conversation__log {
+  height: 12rem;
+  overflow-y: auto;
+  padding: 0.35rem 0;
+}
+
+.morp-conversation__scroll-anchor {
+  height: 0;
+  overflow: hidden;
+}
+
+.morp-conversation__message {
+  color: $morp-text;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-bottom: 0.5rem;
+  white-space: pre-wrap;
+}
+
+.morp-conversation__label {
+  color: $morp-accent;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.morp-conversation__system {
+  color: $morp-warning;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.morp-conversation__typing {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.morp-conversation__form {
+  border-top: 1px solid #1e3a2f;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.morp-conversation__input {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  color: $morp-text;
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  max-height: 4rem;
+  padding: 0.45rem 0.5rem;
+  resize: vertical;
+
+  &::placeholder {
+    color: $morp-text-muted;
+    opacity: 1;
+  }
+}
+
+// Prediction
+.morp-prediction__row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.morp-prediction__token {
+  color: $morp-text;
+  flex-shrink: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  width: 5rem;
+}
+
+.morp-prediction__bar-track {
+  background: #1e3a2f;
+  flex: 1;
+  height: 0.75rem;
+}
+
+.morp-prediction__bar {
+  background: #55ff99;
+  height: 100%;
+}
+
+.morp-prediction__selected,
+.morp-prediction__generated,
+.morp-prediction__experiments {
+  color: $morp-text;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+
+.morp-prediction__experiments {
+  color: $morp-text-secondary;
+  font-weight: 500;
+}
+
+// Prompt stack
+.morp-prompt__section {
+  margin-bottom: 1rem;
+
+  h4 {
+    color: $morp-accent-soft;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+}
+
+.morp-prompt__textarea {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  color: $morp-text;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  padding: 0.6rem;
+  width: 100%;
+}
+
+.morp-prompt__readonly {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0.6rem;
+}
+
+// Memory
+.morp-memory__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.morp-memory__item {
+  border-bottom: 1px solid #1e3a2f;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.morp-memory__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+
+  strong {
+    color: $morp-accent;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  span {
+    color: $morp-text;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+}
+
+.morp-memory__actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.morp-memory__count {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
+// Context
+.morp-context__bar {
+  background: #1e3a2f;
+  border-radius: 3px;
+  height: 1rem;
+  margin: 0.5rem 0 1rem;
+  overflow: hidden;
+}
+
+.morp-context__bar-fill {
+  background: #55ff99;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.morp-context__bar--overflow .morp-context__bar-fill {
+  background: #ff6b6b;
+}
+
+.morp-context__warning {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+.morp-context__messages {
+  list-style: none;
+  margin: 0;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.morp-context__message {
+  color: $morp-text;
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 0.5rem;
+  line-height: 1.5;
+  margin-bottom: 0.35rem;
+}
+
+.morp-context__role {
+  color: $morp-accent;
+  flex-shrink: 0;
+  font-weight: 600;
+  width: 4.5rem;
+}
+
+.morp-context__tokens {
+  color: $morp-text-secondary;
+  flex-shrink: 0;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+// Verification
+.morp-claim {
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin-bottom: 0.75rem;
+}
+
+.morp-claim__status {
+  color: $morp-text;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.morp-source-db {
+  border-top: 1px solid #1e3a2f;
+  margin-top: 1rem;
+  padding-top: 1rem;
+
+  ul {
+    list-style: none;
+    margin: 0.5rem 0;
+    padding: 0;
+  }
+
+  li {
+    color: $morp-text;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.morp-source-db__verdict {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+// Recursion
+.morp-recursion__limits {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.morp-recursion__node {
+  border-left: 2px solid $morp-border-subtle;
+  margin-bottom: 0.5rem;
+  padding-left: 0.75rem;
+
+  p {
+    color: $morp-text;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0.25rem 0 0;
+  }
+}
+
+.morp-recursion__meters {
+  border-top: 1px solid $morp-border-subtle;
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+// Repair
+.morp-repair__diagram pre {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+}
+
+.morp-field {
+  display: block;
+  margin-bottom: 0.75rem;
+
+  span {
+    color: $morp-accent-soft;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+  }
+
+  &--checkbox {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.morp-field__input,
+.morp-field select,
+.morp-field input[type='number'] {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  color: $morp-text;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.morp-repair__result {
+  color: $morp-error;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+
+  &--pass {
+    color: $morp-accent;
+  }
+}
+
+// Contextual actions
+.morp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+// Diagnostic report modal
+.morp-report-overlay {
+  align-items: center;
+  background: rgba(8, 11, 13, 0.85);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 100;
+}
+
+.morp-report {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-accent;
+  border-radius: 6px;
+  color: $morp-text;
+  max-width: 32rem;
+  padding: 1.5rem;
+  width: 100%;
+
+  h2 {
+    color: $morp-accent;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+  }
+
+  h3 {
+    color: $morp-accent-soft;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  section {
+    margin-bottom: 1rem;
+  }
+}
+
+// Ending
+.morp-ending {
+  color: $morp-text;
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 2rem 1rem;
+  text-align: center;
+
+  h2 {
+    color: $morp-accent;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.morp-ending__status {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  text-align: left;
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0.35rem 0;
+  }
+}
+
+.morp-ending__operational {
+  color: $morp-accent;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 0.75rem !important;
+}
+
+.morp-ending__dialogue {
+  margin-bottom: 1.5rem;
+  text-align: left;
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0.5rem 0;
+  }
+}
+
+.morp-ending__learned {
+  border-top: 1px solid $morp-border-subtle;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  text-align: left;
+
+  h3 {
+    color: $morp-accent-soft;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+
+  li {
+    color: $morp-text;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    margin-bottom: 0.35rem;
+  }
+}
+
+// Debug
+.morp-debug {
+  border-top: 1px solid $morp-border-subtle;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.morp-debug__content {
+  margin-top: 0.75rem;
+
+  details {
+    color: $morp-text;
+    margin-bottom: 0.75rem;
+  }
+
+  summary {
+    color: $morp-text-secondary;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  pre {
+    background: $morp-bg;
+    border: 1px solid $morp-border;
+    color: $morp-text;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    max-height: 12rem;
+    overflow: auto;
+    padding: 0.6rem;
+    white-space: pre-wrap;
+  }
+}

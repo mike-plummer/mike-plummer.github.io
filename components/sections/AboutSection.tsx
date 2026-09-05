@@ -1,20 +1,17 @@
 import Image from 'next/image';
+import { aboutCopy } from '@/lib/profile';
 
 export function AboutSection() {
   return (
     <div className="spotlight">
       <div className="content">
         <header className="major">
-          <h2>About Mike</h2>
+          <h2>{aboutCopy.heading}</h2>
         </header>
-        <h3>Hello!</h3>
+        <h3>{aboutCopy.greeting}</h3>
 
-        <strong>A little bit about myself</strong>
-        <p>
-          I&apos;m a full-stack developer, dabbling in a bit of everything. Lots of front-end development in React and
-          Vue, and a fair share of backend crunching with Typescript in Node.js. Graduate of Iowa State and Penn State
-          with almost 20 years of hobby and professional development under my belt.
-        </p>
+        <strong>{aboutCopy.introTitle}</strong>
+        <p>{aboutCopy.intro}</p>
 
         <p>
           I am currently with{' '}
