@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import {
   chatCompletion,
+  fetchNextTokenLogprobs,
   getLLMError,
   getLLMProgress,
   getLLMStatus,
@@ -12,7 +13,15 @@ import {
   subscribeLLM
 } from '@/lib/llm/engine';
 import { DEFAULT_MODEL_ID } from '@/lib/llm/types';
-import type { ChatMessage, LLMProgress, LLMStatus, StreamChatOptions, StreamChatResult } from '@/lib/llm/types';
+import type {
+  ChatMessage,
+  LLMProgress,
+  LLMStatus,
+  NextTokenLogprobsOptions,
+  NextTokenLogprobsResult,
+  StreamChatOptions,
+  StreamChatResult
+} from '@/lib/llm/types';
 
 interface LLMContextValue {
   status: LLMStatus;
@@ -23,6 +32,7 @@ interface LLMContextValue {
   loadModel: () => Promise<void>;
   streamChat: (options: StreamChatOptions) => Promise<StreamChatResult>;
   chatCompletion: (options: StreamChatOptions) => Promise<StreamChatResult>;
+  fetchNextTokenLogprobs: (options: NextTokenLogprobsOptions) => Promise<NextTokenLogprobsResult>;
 }
 
 const LLMContext = createContext<LLMContextValue | null>(null);
@@ -71,7 +81,8 @@ export function LLMProvider({
         await loadLLM((nextProgress) => setProgress(nextProgress), modelId);
       },
       streamChat: (options) => streamChat(options, modelId),
-      chatCompletion: (options) => chatCompletion(options, modelId)
+      chatCompletion: (options) => chatCompletion(options, modelId),
+      fetchNextTokenLogprobs: (options) => fetchNextTokenLogprobs(options, modelId)
     }),
     [status, progress, error, webGPUSupported, modelId]
   );

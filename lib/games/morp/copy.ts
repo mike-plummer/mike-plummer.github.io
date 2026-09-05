@@ -58,7 +58,15 @@ Recommend full behavioral audit.
   prediction: {
     title: 'PREDICTION ENGINE',
     visualizationNote:
-      'PREDICTION VISUALIZATION\n\nThese bars represent relative likelihood.\nThey are simplified for diagnostic purposes.',
+      'PREDICTION VISUALIZATION\n\nBars show next-token probabilities from the model at the temperature used for that prediction. Adjust temperature, then predict again to see how it changes.',
+    instructions:
+      'Type any partial text, set temperature, then click Predict Next Token. Accept a candidate to append it and continue building the sequence.',
+    temperatureHint: 'Applies to the next prediction — predict again after changing',
+    predictNextToken: 'PREDICT NEXT TOKEN',
+    acceptToken: 'ACCEPT TOKEN',
+    lastAccepted: 'LAST ACCEPTED',
+    candidatesFailed:
+      'Could not estimate tokens — try editing the input or waiting for the model.',
     report: {
       title: 'DIAGNOSTIC COMPLETE: PREDICTION',
       whatHappened:

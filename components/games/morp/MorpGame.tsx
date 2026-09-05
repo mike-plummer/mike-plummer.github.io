@@ -9,11 +9,11 @@ import {
   goToStage,
   completeBoot,
   createInitialState,
+  fetchPredictionCandidates,
   getCurrentStage,
   getNextStageId,
   getStageDiagnosticReport,
   processInput,
-  processPredictionGeneration,
   runRecursion,
   setBootPhase,
   syncStageObjectives
@@ -39,7 +39,7 @@ import SystemStatusBar from './SystemStatusBar';
 import TerminalGrid from './TerminalGrid';
 
 export default function MorpGame() {
-  const { status, progress, webGPUSupported, loadModel, streamChat } = useLLM();
+  const { status, progress, webGPUSupported, loadModel, streamChat, fetchNextTokenLogprobs } = useLLM();
   const [state, setState] = useState<MorpState>(() => createInitialState());
   const [activePanel, setActivePanel] = useState<SystemId>(() =>
     getDefaultPanelForStage(createInitialState().stage)
@@ -48,6 +48,8 @@ export default function MorpGame() {
   const [streamingText, setStreamingText] = useState('');
   const [announcement, setAnnouncement] = useState('');
   const [pendingBriefingStage, setPendingBriefingStage] = useState<StageId | null>('boot');
+  const [predictionPredicting, setPredictionPredicting] = useState(false);
+  const [candidatesFailed, setCandidatesFailed] = useState(false);
   const gameRef = useRef<HTMLElement>(null);
 
   const stage = useMemo(() => getCurrentStage(state), [state]);
@@ -93,6 +95,54 @@ export default function MorpGame() {
       }));
     }
   }, [state.bootPhase, state.stage, state.conversation.length]);
+
+  const refreshPredictionCandidates = useCallback(
+    async (context: string, temperature: number) => {
+      setPredictionPredicting(true);
+      setCandidatesFailed(false);
+      try {
+        const candidates = await fetchPredictionCandidates(
+          context,
+          temperature,
+          fetchNextTokenLogprobs
+        );
+        const failed = context.trim().length > 0 && candidates.length === 0;
+        setCandidatesFailed(failed);
+        setState((current) => {
+          if (current.stage !== 'prediction') {
+            return current;
+          }
+          if (current.predictionInput !== context) {
+            return current;
+          }
+          return applyAction(current, { type: 'set-prediction-candidates', candidates });
+        });
+      } finally {
+        setPredictionPredicting(false);
+      }
+    },
+    [fetchNextTokenLogprobs]
+  );
+
+  async function handlePredictionPredict() {
+    if (predictionPredicting || !state.predictionInput.trim()) {
+      return;
+    }
+
+    await refreshPredictionCandidates(state.predictionInput, state.predictionTemperature);
+  }
+
+  function handleAcceptPredictionToken(token: string, percent: number | null, rawToken?: string) {
+    const next = syncStageObjectives(
+      applyAction(state, { type: 'accept-prediction-token', token, rawToken, percent })
+    );
+    setState(next);
+    setCandidatesFailed(false);
+
+    if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+      setAnnouncement('Prediction objectives met. Advance when ready.');
+    }
+  }
 
   const resetUiForStage = useCallback((stageId: StageId) => {
     setActivePanel(getDefaultPanelForStage(stageId));
@@ -140,18 +190,6 @@ export default function MorpGame() {
     }
   }
 
-  async function handlePredictionGenerate(count: number) {
-    setIsResponding(true);
-    setStreamingText('');
-    const result = await processPredictionGeneration(state, count, handleStreamChat);
-    setState(result.state);
-    setStreamingText('');
-    setIsResponding(false);
-
-    if (result.state.stageObjectivesMet && !state.stageObjectivesMet) {
-      setAnnouncement('Prediction objectives met. You can keep experimenting or advance when ready.');
-    }
-  }
 
   function handleAction(action: StageAction) {
     if (action.type === 'ask-recall-designation') {
@@ -288,9 +326,11 @@ export default function MorpGame() {
     prediction: (
       <PredictionPanel
         state={state}
+        predicting={predictionPredicting}
+        candidatesFailed={candidatesFailed}
         onInputChange={(value) => handleAction({ type: 'set-prediction-input', value })}
-        onGenerateToken={() => handlePredictionGenerate(1)}
-        onGenerateTokens={(count) => handlePredictionGenerate(count)}
+        onPredict={() => void handlePredictionPredict()}
+        onAcceptToken={handleAcceptPredictionToken}
         onTemperatureChange={(value) => handleAction({ type: 'set-temperature', value })}
       />
     ),
@@ -386,6 +426,7 @@ export default function MorpGame() {
             unlockedSystems={state.unlockedSystems}
             activePanel={activePanel}
             onPanelChange={setActivePanel}
+            hideChatPanel={state.stage === 'prediction'}
             chatPanel={
               <ConversationPanel
                 messages={state.conversation}

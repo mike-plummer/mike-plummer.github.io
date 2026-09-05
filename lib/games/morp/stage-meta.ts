@@ -17,7 +17,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   prediction: {
     label: 'Prediction',
     shortLabel: 'PREDICT',
-    objective: 'Explore the prediction engine — try different inputs, temperatures, and generation modes.',
+    objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
     completionHint: 'You have explored token prediction. Advance when you are ready for the next subsystem.'
   },
   orders: {
@@ -171,14 +171,10 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
       return [{ label: 'Send a message to MORP', complete: sent }];
     }
     case 'prediction': {
-      const complete = state.predictionExperiments >= 2;
       return [
-        {
-          label: complete
-            ? 'Run at least 2 prediction experiments'
-            : `Run prediction experiments (${state.predictionExperiments}/2)`,
-          complete
-        }
+        { label: 'Accept at least one predicted token', complete: state.predictionHasAcceptedToken },
+        { label: 'Observe low temperature (≤ 0.4)', complete: state.predictionHasLowTemp },
+        { label: 'Observe high temperature (≥ 1.0)', complete: state.predictionHasHighTemp }
       ];
     }
     case 'orders':

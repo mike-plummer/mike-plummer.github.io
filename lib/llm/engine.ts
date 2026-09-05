@@ -5,8 +5,11 @@ import {
   DEFAULT_MODEL_ID,
   type LLMProgress,
   type LLMStatus,
+  type NextTokenLogprobsOptions,
+  type NextTokenLogprobsResult,
   type StreamChatOptions,
-  type StreamChatResult
+  type StreamChatResult,
+  type TokenLogprob
 } from './types';
 
 let engine: MLCEngine | null = null;
@@ -142,6 +145,84 @@ export async function chatCompletion(
 
   const content = response.choices[0]?.message?.content ?? '';
   return { content };
+}
+
+interface LogprobContentEntry {
+  token: string;
+  logprob: number;
+  bytes?: number[] | null;
+  top_logprobs?: Array<{ token: string; logprob: number; bytes?: number[] | null }>;
+}
+
+function tokenFromLogprobItem(item: {
+  token: unknown;
+  logprob: number;
+  bytes?: number[] | null;
+}): string | null {
+  if (typeof item.token === 'string' && item.token.length > 0 && !/^\d{1,6}$/.test(item.token)) {
+    return item.token;
+  }
+
+  if (item.bytes && item.bytes.length > 0) {
+    return new TextDecoder().decode(new Uint8Array(item.bytes));
+  }
+
+  return null;
+}
+
+function extractTopLogprobs(
+  content: LogprobContentEntry[] | null | undefined
+): TokenLogprob[] {
+  const entry = content?.[0];
+  if (!entry?.top_logprobs?.length) {
+    return [];
+  }
+
+  const candidates: TokenLogprob[] = [];
+
+  for (const item of entry.top_logprobs) {
+    const token = tokenFromLogprobItem(item);
+    if (!token || typeof item.logprob !== 'number') {
+      continue;
+    }
+    candidates.push({ token, logprob: item.logprob });
+  }
+
+  return candidates;
+}
+
+function hasUsableLogprobs(candidates: TokenLogprob[]): boolean {
+  return candidates.length >= 2;
+}
+
+export async function fetchNextTokenLogprobs(
+  options: NextTokenLogprobsOptions,
+  modelId: string = DEFAULT_MODEL_ID
+): Promise<NextTokenLogprobsResult> {
+  const activeEngine = await loadLLM(undefined, modelId);
+  const topLogprobs = options.topLogprobs ?? 4;
+  const temperature = options.temperature ?? 1;
+  // Trailing whitespace can break completion logprobs on instruct models.
+  const prompt = options.prompt.trimEnd();
+
+  const requestBase = {
+    max_tokens: 1,
+    temperature,
+    logprobs: true,
+    top_logprobs: topLogprobs
+  };
+
+  const completion = await activeEngine.completions.create({
+    prompt,
+    ...requestBase
+  });
+  const candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+
+  if (hasUsableLogprobs(candidates)) {
+    return { candidates };
+  }
+
+  return { candidates: [] };
 }
 
 export function resetLLM() {

@@ -5,25 +5,34 @@ import type { MorpState } from '@/lib/games/morp/types';
 
 interface PredictionPanelProps {
   state: MorpState;
+  predicting?: boolean;
+  candidatesFailed?: boolean;
   onInputChange: (value: string) => void;
-  onGenerateToken: () => void;
-  onGenerateTokens: (count: number) => void;
+  onPredict: () => void;
+  onAcceptToken: (token: string, percent: number | null, rawToken?: string) => void;
   onTemperatureChange: (value: number) => void;
 }
 
 export default function PredictionPanel({
   state,
+  predicting = false,
+  candidatesFailed = false,
   onInputChange,
-  onGenerateToken,
-  onGenerateTokens,
+  onPredict,
+  onAcceptToken,
   onTemperatureChange
 }: PredictionPanelProps) {
+  const canPredict = state.predictionInput.trim().length > 0 && !predicting;
+  const hasCandidates = state.predictionCandidates.length > 0;
+
   return (
     <section className="morp-panel morp-panel--prediction" aria-labelledby="prediction-heading">
       <header className="morp-panel__header">
         <h3 id="prediction-heading">{COPY.prediction.title}</h3>
       </header>
       <p className="morp-panel__note">{COPY.prediction.visualizationNote}</p>
+      <p className="morp-prediction__instructions">{COPY.prediction.instructions}</p>
+
       <label className="morp-field">
         <span>INPUT</span>
         <input
@@ -31,44 +40,90 @@ export default function PredictionPanel({
           value={state.predictionInput}
           onChange={(e) => onInputChange(e.target.value)}
           className="morp-field__input"
+          disabled={predicting}
         />
       </label>
+
+      {state.predictionSelected && (
+        <p className="morp-prediction__selected">
+          {COPY.prediction.lastAccepted}: <strong>{state.predictionSelected}</strong>
+          {state.predictionLastSampledPercent !== null && (
+            <span className="morp-prediction__sampled-weight">
+              {' '}
+              ({state.predictionLastSampledPercent}% at this temperature)
+            </span>
+          )}
+        </p>
+      )}
+
+      <label className="morp-prediction__temperature">
+        <span className="morp-prediction__temperature-label">
+          TEMPERATURE: {state.predictionTemperature.toFixed(1)}
+        </span>
+        <input
+          type="range"
+          min={0.1}
+          max={1.5}
+          step={0.1}
+          value={state.predictionTemperature}
+          onChange={(e) => onTemperatureChange(Number.parseFloat(e.target.value))}
+          className="morp-prediction__temperature-slider"
+          disabled={predicting}
+        />
+        <span className="morp-prediction__temperature-hint">{COPY.prediction.temperatureHint}</span>
+      </label>
+
+      <div className="morp-panel__actions">
+        <button type="button" className="button small" onClick={onPredict} disabled={!canPredict}>
+          {predicting ? 'PREDICTING...' : COPY.prediction.predictNextToken}
+        </button>
+      </div>
+
       <div className="morp-prediction__candidates">
         <h4>LIKELY NEXT TOKENS</h4>
-        {state.predictionCandidates.map((candidate) => (
-          <div key={candidate.token} className="morp-prediction__row">
-            <span className="morp-prediction__token">{candidate.token}</span>
-            <div className="morp-prediction__bar-track">
+        {predicting && (
+          <p className="morp-prediction__loading">Estimating next tokens from model...</p>
+        )}
+        {candidatesFailed && !predicting && (
+          <p className="morp-prediction__error">{COPY.prediction.candidatesFailed}</p>
+        )}
+        {!predicting && !candidatesFailed && !hasCandidates && (
+          <p className="morp-prediction__empty">No predictions yet — click Predict Next Token when ready.</p>
+        )}
+        {!predicting &&
+          hasCandidates &&
+          state.predictionCandidates.map((candidate) => {
+            const isSelected = candidate.token === state.predictionSelected;
+            return (
               <div
-                className="morp-prediction__bar"
-                style={{ width: `${candidate.weight * 100}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-      {state.predictionSelected && (
-        <p className="morp-prediction__selected">SELECTED: &gt; {state.predictionSelected}</p>
-      )}
-      {state.predictionGenerated && (
-        <p className="morp-prediction__generated">GENERATED: {state.predictionGenerated}</p>
-      )}
-      <p className="morp-prediction__experiments">
-        Experiments: {state.predictionExperiments} / 2 minimum
-      </p>
-      <div className="morp-panel__actions">
-        <button type="button" className="button small" onClick={onGenerateToken}>
-          GENERATE NEXT TOKEN
-        </button>
-        <button type="button" className="button small" onClick={() => onGenerateTokens(10)}>
-          GENERATE 10 TOKENS
-        </button>
-        <button type="button" className="button small alt" onClick={() => onTemperatureChange(0.3)}>
-          TEMP: LOW
-        </button>
-        <button type="button" className="button small alt" onClick={() => onTemperatureChange(1.0)}>
-          TEMP: HIGH ({state.predictionTemperature.toFixed(1)})
-        </button>
+                key={candidate.token}
+                className={`morp-prediction__row${isSelected ? ' morp-prediction__row--selected' : ''}`}
+              >
+                <span className="morp-prediction__token">{candidate.token}</span>
+                <div className="morp-prediction__bar-track">
+                  <div
+                    className={`morp-prediction__bar${isSelected ? ' morp-prediction__bar--selected' : ''}`}
+                    style={{ width: `${candidate.weight * 100}%` }}
+                  />
+                </div>
+                <span className="morp-prediction__weight">{Math.round(candidate.weight * 100)}%</span>
+                <button
+                  type="button"
+                  className="button small morp-prediction__accept"
+                  onClick={() =>
+                    onAcceptToken(
+                      candidate.token,
+                      Math.round(candidate.weight * 100),
+                      candidate.rawToken
+                    )
+                  }
+                  disabled={predicting}
+                >
+                  {COPY.prediction.acceptToken}
+                </button>
+              </div>
+            );
+          })}
       </div>
     </section>
   );

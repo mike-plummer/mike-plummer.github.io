@@ -609,6 +609,10 @@ $morp-error: #ff6b6b;
   @include breakpoint('<=medium') {
     grid-template-columns: 1fr;
   }
+
+  &--no-chat {
+    grid-template-columns: 1fr;
+  }
 }
 
 .morp-terminal__tabs {
@@ -778,11 +782,114 @@ $morp-error: #ff6b6b;
 }
 
 // Prediction
+.morp-prediction__instructions {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.morp-prediction__output {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+}
+
+.morp-prediction__output-label {
+  color: $morp-accent-soft;
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.morp-prediction__output-text {
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0;
+  word-break: break-word;
+}
+
+.morp-prediction__output-generated {
+  color: $morp-accent;
+  font-weight: 600;
+}
+
+.morp-prediction__output-placeholder {
+  color: $morp-text-muted;
+  font-style: italic;
+}
+
+.morp-prediction__temperature {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.morp-prediction__temperature-label {
+  color: $morp-text;
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.morp-prediction__temperature-slider {
+  accent-color: $morp-accent;
+  display: block;
+  margin-bottom: 0.25rem;
+  width: 100%;
+}
+
+.morp-prediction__temperature-hint {
+  color: $morp-text-muted;
+  font-size: 0.8125rem;
+}
+
+.morp-prediction__loading {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  font-style: italic;
+  margin: 0 0 0.5rem;
+}
+
+.morp-prediction__error {
+  color: $morp-error;
+  font-size: 0.9375rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-prediction__sampled-weight {
+  color: $morp-text-muted;
+  font-weight: 400;
+}
+
+.morp-prediction__empty {
+  color: $morp-text-muted;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-prediction__accept {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  padding: 0.2rem 0.45rem;
+}
+
 .morp-prediction__row {
   align-items: center;
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
+
+  &--selected {
+    .morp-prediction__token {
+      color: $morp-accent;
+    }
+  }
 }
 
 .morp-prediction__token {
@@ -790,7 +897,7 @@ $morp-error: #ff6b6b;
   flex-shrink: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  width: 5rem;
+  width: 4.5rem;
 }
 
 .morp-prediction__bar-track {
@@ -802,20 +909,28 @@ $morp-error: #ff6b6b;
 .morp-prediction__bar {
   background: #55ff99;
   height: 100%;
+
+  &--selected {
+    background: $morp-accent-soft;
+  }
 }
 
-.morp-prediction__selected,
-.morp-prediction__generated,
-.morp-prediction__experiments {
-  color: $morp-text;
+.morp-prediction__weight {
+  color: $morp-text-muted;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  width: 2.5rem;
+}
+
+.morp-prediction__selected {
+  color: $morp-text-secondary;
   font-size: 0.9375rem;
   line-height: 1.5;
-  margin-top: 0.75rem;
-}
+  margin: 0.5rem 0 0;
 
-.morp-prediction__experiments {
-  color: $morp-text-secondary;
-  font-weight: 500;
+  strong {
+    color: $morp-accent;
+  }
 }
 
 // Prompt stack

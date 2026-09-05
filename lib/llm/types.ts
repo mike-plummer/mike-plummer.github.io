@@ -24,3 +24,18 @@ export interface StreamChatOptions {
 export interface StreamChatResult {
   content: string;
 }
+
+export interface TokenLogprob {
+  token: string;
+  logprob: number;
+}
+
+export interface NextTokenLogprobsOptions {
+  prompt: string;
+  topLogprobs?: number;
+  temperature?: number;
+}
+
+export interface NextTokenLogprobsResult {
+  candidates: TokenLogprob[];
+}

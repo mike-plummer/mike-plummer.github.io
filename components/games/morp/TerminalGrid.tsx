@@ -10,6 +10,7 @@ interface TerminalGridProps {
   chatPanel: ReactNode;
   sidePanels: Partial<Record<SystemId, ReactNode>>;
   stageKey?: string;
+  hideChatPanel?: boolean;
 }
 
 const PANEL_ORDER: SystemId[] = [
@@ -28,13 +29,14 @@ export default function TerminalGrid({
   onPanelChange,
   chatPanel,
   sidePanels,
-  stageKey
+  stageKey,
+  hideChatPanel = false
 }: TerminalGridProps) {
   const availablePanels = PANEL_ORDER.filter((p) => unlockedSystems.includes(p));
 
   return (
-    <div className="morp-terminal">
-      <div className="morp-terminal__main">{chatPanel}</div>
+    <div className={`morp-terminal${hideChatPanel ? ' morp-terminal--no-chat' : ''}`}>
+      {!hideChatPanel && <div className="morp-terminal__main">{chatPanel}</div>}
       {availablePanels.length > 0 && (
         <div className="morp-terminal__side">
           <nav className="morp-terminal__tabs" aria-label="Diagnostic panels">

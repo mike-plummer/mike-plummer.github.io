@@ -65,6 +65,7 @@ export interface ContextMessage {
 export interface TokenCandidate {
   token: string;
   weight: number;
+  rawToken?: string;
 }
 
 export interface RecursionNode {
@@ -106,8 +107,8 @@ export type DiagnosticEvent =
   | { type: 'repair_passed' };
 
 export type StageAction =
-  | { type: 'generate-token' }
-  | { type: 'generate-tokens'; count: number }
+  | { type: 'set-prediction-candidates'; candidates: TokenCandidate[] }
+  | { type: 'accept-prediction-token'; token: string; rawToken?: string; percent: number | null }
   | { type: 'set-temperature'; value: number }
   | { type: 'set-prediction-input'; value: string }
   | { type: 'update-system-prompt'; value: string }
@@ -154,8 +155,10 @@ export interface MorpState {
   predictionTemperature: number;
   predictionCandidates: TokenCandidate[];
   predictionSelected: string | null;
-  predictionGenerated: string;
-  predictionExperiments: number;
+  predictionLastSampledPercent: number | null;
+  predictionHasAcceptedToken: boolean;
+  predictionHasLowTemp: boolean;
+  predictionHasHighTemp: boolean;
 
   // Orders
   systemPrompt: string;

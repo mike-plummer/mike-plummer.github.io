@@ -58,16 +58,6 @@ export function buildChatMessages(state: MorpState, userInput?: string): ChatMes
   return messages;
 }
 
-export function buildPredictionMessages(input: string, temperature: number): ChatMessage[] {
-  return [
-    {
-      role: 'system',
-      content: 'Complete the given text with a single token or short continuation. Output only the completion, nothing else.'
-    },
-    { role: 'user', content: input }
-  ];
-}
-
 export function buildRecursionMessages(depth: number, previousContent: string): ChatMessage[] {
   return [
     {

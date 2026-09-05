@@ -1,7 +1,9 @@
-import { buildChatMessages, buildPredictionMessages } from './prompts';
+import { buildChatMessages } from './prompts';
 import { saveCheckpoint, loadCheckpoint } from './checkpoint';
+import {
+  fetchPredictionCandidates
+} from './modules/prediction-llm';
 import { runRecursionChain } from './modules/recursion-controller';
-import { getTopCandidate, simulateTokenCandidates } from './modules/token-simulator';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
 import { applyOrdersResponse, processOrdersInput } from './stages/02-orders';
@@ -41,8 +43,10 @@ function createBaseState(): MorpState {
     predictionTemperature: 0.7,
     predictionCandidates: [],
     predictionSelected: null,
-    predictionGenerated: '',
-    predictionExperiments: 0,
+    predictionLastSampledPercent: null,
+    predictionHasAcceptedToken: false,
+    predictionHasLowTemp: false,
+    predictionHasHighTemp: false,
     systemPrompt: '',
     userPrompt: '',
     diagnosticCodeFound: false,
@@ -144,42 +148,7 @@ export function applyAction(state: MorpState, action: StageAction): MorpState {
   return syncStageObjectives(next);
 }
 
-export async function processPredictionGeneration(
-  state: MorpState,
-  count: number,
-  streamChat: StreamChatFn
-): Promise<MessageResult> {
-  const messages = buildPredictionMessages(state.predictionInput, state.predictionTemperature);
-  let content = '';
-
-  try {
-    const result = await streamChat({
-      messages,
-      temperature: state.predictionTemperature,
-      maxTokens: count === 1 ? 8 : 64,
-      onToken: (token) => {
-        content += token;
-      }
-    });
-    content = result.content;
-  } catch {
-    content = getTopCandidate(state.predictionCandidates);
-  }
-
-  const stage = getStage('prediction');
-  let next = stage.processAction({ type: 'generate-tokens', count }, state);
-  next = {
-    ...next,
-    predictionGenerated: content,
-    predictionCandidates: simulateTokenCandidates(state.predictionInput + content)
-  };
-
-  return {
-    state: syncStageObjectives(next),
-    response: content,
-    report: null
-  };
-}
+export { fetchPredictionCandidates };
 
 export async function processInput(
   state: MorpState,
