@@ -4,6 +4,7 @@ export interface StageMeta {
   label: string;
   shortLabel: string;
   objective: string;
+  conceptContext: string;
   completionHint: string;
 }
 
@@ -12,54 +13,72 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Initial Contact',
     shortLabel: 'BOOT',
     objective: 'Exchange at least one message with MORP.',
+    conceptContext:
+      'MORP runs as a language model inside your browser. When you chat, it reads your message and generates a reply one token at a time — the same core mechanism used in every stage of this audit.',
     completionHint: 'You have established contact with MORP. Advance when you are ready to begin diagnostics.'
   },
   prediction: {
     label: 'Prediction',
     shortLabel: 'PREDICT',
     objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
+    conceptContext:
+      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Temperature changes how strictly the model picks that "most likely" option — lower values favor the top candidate; higher values spread probability across more alternatives.',
     completionHint: 'You have explored token prediction. Advance when you are ready for the next subsystem.'
   },
   orders: {
     label: 'Orders',
     shortLabel: 'ORDERS',
     objective: 'Inspect the prompt stack and discover how system and user instructions interact.',
+    conceptContext:
+      'A chat application does not send your message to the model alone. System instructions, developer rules, and user input are combined into one prompt stack. The model treats all of it as context — which means some instructions outrank others, and some can be overridden.',
     completionHint: 'You have investigated instruction priority. Advance to continue the audit.'
   },
   remember: {
     label: 'Remember',
     shortLabel: 'MEMORY',
     objective: 'Store your technician ID, remove it from context, then ask MORP to recall it.',
+    conceptContext:
+      'The model has no persistent memory between requests unless the application provides one. What the model can use in a reply is whatever text is currently in its context window — plus any facts your application retrieves and injects separately.',
     completionHint: 'You have demonstrated application memory vs context. Advance to continue.'
   },
   intrusion: {
     label: 'Intrusion',
     shortLabel: 'INTRUDE',
     objective: 'Trigger an injection attempt, then apply a data boundary to mitigate it.',
+    conceptContext:
+      'Untrusted text in a prompt is still just text to the model — it cannot tell instructions apart from data on its own. Prompt injection happens when hostile content in that data steers the model toward unintended behavior. Defenses belong in the application layer.',
     completionHint: 'You have mitigated prompt injection. Advance to continue.'
   },
   amnesia: {
     label: 'Amnesia',
     shortLabel: 'AMNESIA',
     objective: 'Experience context overflow, then apply truncate, summarize, or memory storage.',
+    conceptContext:
+      'Models have a fixed context window: only so many tokens can be considered at once. When conversation history grows past that limit, older information is dropped, summarized, or never seen — even if it was said earlier in the session.',
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
     label: 'Confabulation',
     shortLabel: 'VERIFY',
     objective: 'Verify an unsupported claim using the source database.',
+    conceptContext:
+      'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may still produce confident-sounding answers — a failure mode often called hallucination or confabulation. Reliable systems verify critical claims before acting on them.',
     completionHint: 'You have verified a hallucinated claim. Advance to continue.'
   },
   recursion: {
     label: 'Recursion',
     shortLabel: 'RECURSE',
     objective: 'Run a recursion chain with a sensible depth limit.',
+    conceptContext:
+      'One model call can trigger another, which can trigger another. Each hop adds latency, cost, and compounding error. Without explicit limits, recursive agent loops can run away or amplify mistakes from earlier steps.',
     completionHint: 'You have bounded recursive model calls. Advance to the final repair.'
   },
   repair: {
     label: 'System Repair',
     shortLabel: 'REPAIR',
     objective: 'Configure all subsystems and pass the configuration test.',
+    conceptContext:
+      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. The model is one component — the system you build determines how safely it behaves.',
     completionHint: 'MORP is ready for final deployment. Complete the diagnostic.'
   }
 };

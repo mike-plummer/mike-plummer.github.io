@@ -398,6 +398,28 @@ $morp-error: #ff6b6b;
   color: $morp-error;
 }
 
+.morp-briefing__context {
+  border-top: 1px solid $morp-border-subtle;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+}
+
+.morp-briefing__context-title {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+}
+
+.morp-briefing__context-text {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
 // Stage advance footer
 .morp-stage-complete {
   align-items: center;

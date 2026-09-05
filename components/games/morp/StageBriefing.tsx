@@ -9,6 +9,15 @@ interface StageBriefingProps {
   onAcknowledge?: () => void;
 }
 
+function StageConceptContext({ context }: { context: string }) {
+  return (
+    <div className="morp-briefing__context">
+      <h3 className="morp-briefing__context-title">How This Works</h3>
+      <p className="morp-briefing__context-text">{context}</p>
+    </div>
+  );
+}
+
 export default function StageBriefing({ state, stage, onAcknowledge }: StageBriefingProps) {
   const stageId = stage ?? state.stage;
   const meta = getStageMeta(stageId);
@@ -25,6 +34,7 @@ export default function StageBriefing({ state, stage, onAcknowledge }: StageBrie
             Your Objective
           </h2>
           <p className="morp-briefing__objective">{meta.objective}</p>
+          <StageConceptContext context={meta.conceptContext} />
           <button type="button" className="button morp-briefing__begin" onClick={onAcknowledge}>
             Begin Stage
           </button>
@@ -57,6 +67,7 @@ export default function StageBriefing({ state, stage, onAcknowledge }: StageBrie
           ))}
         </ul>
       )}
+      <StageConceptContext context={meta.conceptContext} />
     </section>
   );
 }
