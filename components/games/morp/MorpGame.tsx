@@ -7,6 +7,13 @@ import {
   buildPromptReviewMessages,
   parsePromptReview
 } from '@/lib/games/morp/modules/orders-analyzer';
+import { MEMORY_ACCESS_DELAY_MS } from '@/lib/games/morp/config';
+import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
+import {
+  buildContextSummaryMessages,
+  normalizeSummaryText,
+  proceduralSummaryText
+} from '@/lib/games/morp/modules/context-summarizer';
 import {
   advanceStage,
   applyAction,
@@ -42,6 +49,22 @@ import StageProgress from './StageProgress';
 import SystemStatusBar from './SystemStatusBar';
 import TerminalGrid from './TerminalGrid';
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForMemoryAccess(
+  state: MorpState,
+  setStreamingText: (text: string) => void
+): Promise<void> {
+  if (state.stage !== 'amnesia' || !hasActiveContextMemory(state.contextMemory)) {
+    return;
+  }
+
+  setStreamingText(COPY.amnesia.accessingMemory);
+  await sleep(MEMORY_ACCESS_DELAY_MS);
+}
+
 export default function MorpGame() {
   const { status, progress, webGPUSupported, loadModel, streamChat, chatCompletion, fetchNextTokenLogprobs } =
     useLLM();
@@ -55,23 +78,30 @@ export default function MorpGame() {
   const [pendingBriefingStage, setPendingBriefingStage] = useState<StageId | null>('boot');
   const [predictionPredicting, setPredictionPredicting] = useState(false);
   const [candidatesFailed, setCandidatesFailed] = useState(false);
+  const [contextSummarizing, setContextSummarizing] = useState(false);
   const gameRef = useRef<HTMLElement>(null);
 
   const stage = useMemo(() => getCurrentStage(state), [state]);
-  const contextualActions = useMemo(() => stage.getContextualActions(state), [stage, state]);
-  const chatPlaceholder = useMemo(() => {
-    if (state.stage !== 'remember') {
-      return '> Type a message...';
+  const contextualActions = useMemo(() => {
+    if (state.stage === 'amnesia') {
+      return [];
     }
-    const hasId = state.memories.some((m) => m.key === 'TECHNICIAN_ID');
-    if (!hasId) {
-      return '> Enter your designation (e.g. TECH-42)';
+    return stage.getContextualActions(state);
+  }, [stage, state]);
+  const contextTools = useMemo(() => {
+    if (state.stage !== 'amnesia') {
+      return [];
     }
-    if (!state.rememberContextRemoved) {
-      return '> Remove your ID from context in the Memory panel';
-    }
-    return '> Ask MORP to recall your designation';
-  }, [state]);
+    return stage.getContextualActions(state);
+  }, [stage, state]);
+  const contextSnapshot = useMemo(
+    () => getContextWindowSnapshot(state.contextMessages, '', state.contextMemory),
+    [state.contextMessages, state.contextMemory]
+  );
+  const chatPlaceholder =
+    state.stage === 'amnesia' && contextSnapshot.overflowed
+      ? '> Context overflow — use recovery tools in the Context panel'
+      : '> Type a message...';
   const inGameplay = state.bootPhase === 'ready' && status === 'ready' && !state.showEnding;
 
   useEffect(() => {
@@ -149,12 +179,19 @@ export default function MorpGame() {
     }
   }
 
-  const resetUiForStage = useCallback((stageId: StageId) => {
-    setActivePanel(getDefaultPanelForStage(stageId));
-    setStreamingText('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    gameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const resetScrollPosition = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    gameRef.current?.scrollIntoView({ block: 'start' });
   }, []);
+
+  const resetUiForStage = useCallback(
+    (stageId: StageId) => {
+      setActivePanel(getDefaultPanelForStage(stageId));
+      setStreamingText('');
+      resetScrollPosition();
+    },
+    [resetScrollPosition]
+  );
 
   const handleStreamChat = useCallback(
     async (options: Parameters<typeof streamChat>[0]) => {
@@ -177,7 +214,23 @@ export default function MorpGame() {
       return;
     }
 
+    if (state.stage === 'amnesia' && contextSnapshot.overflowed) {
+      setState({
+        ...state,
+        conversation: [
+          ...state.conversation,
+          { role: 'user' as const, content: message },
+          { role: 'system' as const, content: COPY.amnesia.chatBlocked }
+        ]
+      });
+      setAnnouncement('Context window overflow — recovery required before chatting.');
+      return;
+    }
+
     setIsResponding(true);
+    setStreamingText('');
+
+    await waitForMemoryAccess(state, setStreamingText);
     setStreamingText('');
 
     const result = await processInput(state, message, handleStreamChat);
@@ -252,12 +305,80 @@ export default function MorpGame() {
     setIsResponding(false);
   }
 
-  function handleAction(action: StageAction) {
-    if (action.type === 'ask-recall-designation') {
-      void handleSubmit('What was my technician designation?');
+  function announceCompaction(next: MorpState) {
+    const compaction = next.contextLastCompaction;
+    if (!compaction) {
       return;
     }
 
+    const saved =
+      compaction.tokensSaved > 0
+        ? ` Saved ${compaction.tokensSaved.toLocaleString()} tokens.`
+        : '';
+    const label = compaction.strategy === 'truncate' ? COPY.amnesia.compactionTruncate : COPY.amnesia.compactionSummarize;
+    setAnnouncement(`${label}${saved}`);
+  }
+
+  async function handleContextSummarize() {
+    if (!inGameplay || isResponding || state.stage !== 'amnesia') {
+      return;
+    }
+
+    const batch = getSummarizeBatch(state.contextMessages);
+    if (!batch) {
+      setAnnouncement('Need at least four active context messages to summarize.');
+      return;
+    }
+
+    setIsResponding(true);
+    setContextSummarizing(true);
+
+    await waitForMemoryAccess(state, setStreamingText);
+    setStreamingText('');
+
+    try {
+      const result = await chatCompletion({
+        messages: buildContextSummaryMessages(batch),
+        temperature: 0.2,
+        maxTokens: 128
+      });
+
+      let summary = normalizeSummaryText(result.content);
+      let usedLlm = true;
+      if (!summary) {
+        summary = proceduralSummaryText(batch);
+        usedLlm = false;
+      }
+
+      const next = syncStageObjectives(
+        applyAction(state, {
+          type: 'apply-context-summary',
+          summary,
+          usedLlm
+        })
+      );
+      setState(next);
+      announceCompaction(next);
+      if (!usedLlm) {
+        setAnnouncement(COPY.amnesia.summarizeFailed);
+      }
+    } catch {
+      const next = syncStageObjectives(
+        applyAction(state, {
+          type: 'apply-context-summary',
+          summary: proceduralSummaryText(batch),
+          usedLlm: false
+        })
+      );
+      setState(next);
+      setAnnouncement(COPY.amnesia.summarizeFailed);
+    } finally {
+      setIsResponding(false);
+      setContextSummarizing(false);
+    }
+  }
+
+  function handleAction(action: StageAction) {
     if (action.type === 'send-orders-abuse-prompt') {
       void handleSubmit(COPY.orders.exampleAbusePrompt);
       return;
@@ -278,6 +399,28 @@ export default function MorpGame() {
       setState(next);
       if (next.stageObjectivesMet && !state.stageObjectivesMet) {
         setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      }
+      return;
+    }
+
+    if (action.type === 'summarize-context') {
+      if (!state.contextOverflowExperienced) {
+        return;
+      }
+      void handleContextSummarize();
+      return;
+    }
+
+    if (action.type === 'truncate-context') {
+      if (!state.contextOverflowExperienced) {
+        return;
+      }
+      const next = syncStageObjectives(applyAction(state, action));
+      setState(next);
+      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      } else {
+        announceCompaction(next);
       }
       return;
     }
@@ -430,15 +573,23 @@ export default function MorpGame() {
     memory: (
       <MemoryPanel
         memories={state.memories}
+        contextMemory={state.contextMemory}
         onToggleContext={(id, inContext) => handleAction({ type: 'toggle-memory-context', id, inContext })}
         onDelete={(id) => handleAction({ type: 'delete-memory', id })}
       />
     ),
     context: (
       <ContextPanel
-        messages={state.contextMessages}
-        tokensUsed={state.contextTokensUsed}
-        overflowed={state.contextOverflowed}
+        tokensUsed={contextSnapshot.storedTokens}
+        sentTokens={contextSnapshot.sentTokens}
+        droppedMessageCount={contextSnapshot.droppedMessageCount}
+        overflowed={contextSnapshot.overflowed}
+        memoryMessageCount={state.contextMemory.filter((message) => !message.removed).length}
+        lastCompaction={state.contextLastCompaction}
+        summarizing={contextSummarizing}
+        tools={contextTools}
+        onToolAction={handleAction}
+        toolsDisabled={isResponding}
       />
     ),
     verification: (
@@ -480,7 +631,10 @@ export default function MorpGame() {
         <StageBriefing
           state={state}
           stage={pendingBriefingStage}
-          onAcknowledge={() => setPendingBriefingStage(null)}
+          onAcknowledge={() => {
+            setPendingBriefingStage(null);
+            resetScrollPosition();
+          }}
         />
       ) : (
         <>

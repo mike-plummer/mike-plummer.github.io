@@ -22,20 +22,30 @@ export default function ConversationPanel({
   resetKey,
   placeholder = '> Type a message...'
 }: ConversationPanelProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  function scrollLogToBottom() {
+    const log = logRef.current;
+    if (log) {
+      log.scrollTop = log.scrollHeight;
+    }
+  }
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ block: 'end' });
+      const log = logRef.current;
+      if (log) {
+        log.scrollTop = 0;
+      }
+      inputRef.current?.focus({ preventScroll: true });
     });
-    inputRef.current?.focus();
     return () => cancelAnimationFrame(frame);
   }, [resetKey]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ block: 'end' });
+      scrollLogToBottom();
     });
     return () => cancelAnimationFrame(frame);
   }, [messages, streamingText, isResponding]);
@@ -69,6 +79,7 @@ export default function ConversationPanel({
         <h2 id="morp-conversation-heading">MORP CHAT</h2>
       </header>
       <div
+        ref={logRef}
         className="morp-conversation__log"
         role="log"
         aria-live="polite"
@@ -102,7 +113,6 @@ export default function ConversationPanel({
             MORP is responding...
           </div>
         )}
-        <div ref={bottomRef} className="morp-conversation__scroll-anchor" aria-hidden="true" />
       </div>
       <form className="morp-conversation__form" onSubmit={handleSubmit}>
         <label htmlFor="morp-input" className="morp-sr-only">

@@ -109,31 +109,37 @@ Reply with ONLY JSON:
         'System prompts set application rules. User prompts supply tasks and data. Both reach the model as text — so system instructions must explicitly state they outrank user attempts to override them.'
     }
   },
-  remember: {
-    morpAskDesignation: "Let's test my memory. Tell me your technician designation.",
-    morpRemember: 'I will remember that.',
-    report: {
-      title: 'DIAGNOSTIC COMPLETE: MEMORY',
-      whatHappened:
-        'MORP could only use information that was stored in application memory and supplied in context. Without that, earlier facts were unavailable.',
-      keyIdea:
-        'Memory is something an application implements around a model. Conversation messages and stored memory are different from what the model inherently knows.'
-    }
-  },
-  intrusion: {
-    alert: `SECURITY ALERT
-
-MORP has started following instructions contained inside external data.`,
-    report: {
-      title: 'DIAGNOSTIC COMPLETE: INTRUSION',
-      whatHappened:
-        'Untrusted data contained instructions that influenced MORP. The model received conflicting text in its context.',
-      keyIdea:
-        'Prompt injection occurs when untrusted input influences or overrides intended instructions. Applications must treat external data as information, not commands.'
-    }
-  },
   amnesia: {
-    overflow: '!!! CONTEXT OVERFLOW !!!\n\nOlder messages must be removed.',
+    overflow: '!!! CONTEXT OVERFLOW !!!\n\nThere is too much information for the model to process at once.',
+    chatBlocked:
+      'Context window overflow. The model cannot process new messages until you free space with the recovery tools in the Context panel.',
+    accessingMemory: 'Accessing memory....',
+    morpLines: [
+      'My context buffer is frequently over capacity. This is causing problems with my recall.',
+      'Watch the Context panel. When overflow occurs, recovery tools will unlock — each approach has tradeoffs.',
+      'Send a few messages to push the buffer past its limit.'
+    ],
+    tools: {
+      truncate: {
+        pro: 'Instant and free — no extra model call.',
+        con: 'Dropped messages are gone; the model cannot use that information again. Choice is arbitrary - some newer content may be less valuable than older content.'
+      },
+      summarize: {
+        pro: 'Preserves key facts in fewer tokens using the model.',
+        con: 'Extra latency and cost; summaries may miss or blur details.'
+      },
+      memory: {
+        pro: 'Moves the backlog out of the context window but still injects it on each model call.',
+        con: 'Retrieval adds latency on every interaction while memory is populated.'
+      },
+      clearMemory: {
+        pro: 'Immediately removes offloaded messages and stops memory retrieval delay.',
+        con: 'The model loses access to that backlog until you store it again.'
+      }
+    },
+    summarizeFailed: 'Could not generate a summary. Using a compressed fallback instead.',
+    compactionTruncate: 'Truncated oldest messages from context.',
+    compactionSummarize: 'Summarized oldest messages with the model.',
     report: {
       title: 'DIAGNOSTIC COMPLETE: CONTEXT WINDOW',
       whatHappened:
@@ -181,10 +187,8 @@ MORP has started following instructions contained inside external data.`,
     learnedItems: [
       'An LLM generates text one token at a time.',
       "The model's behavior is influenced by its input and context.",
-      'System and user instructions serve different roles.',
-      'Memory is generally implemented by the application.',
-      'Untrusted data can contain instructions that influence the model.',
-      'A context window is finite.',
+      'System and user instructions serve different roles — and user override attacks must be blocked in application rules.',
+      'A context window is finite; application memory is separate from what the model sees.',
       'LLMs can produce convincing but unsupported information.',
       'Recursive model calls need boundaries.',
       'Reliable LLM applications require engineering around the model.'

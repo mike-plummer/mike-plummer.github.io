@@ -4,11 +4,13 @@ export const MORP_MODEL_ID = DEFAULT_MODEL_ID;
 
 export const CHECKPOINT_KEY = 'morp-checkpoint-v1';
 
-export const SIMULATED_CONTEXT_LIMIT = 2048;
+export const SIMULATED_CONTEXT_LIMIT = 512;
+
+export const AMNESIA_SEED_TARGET_TOKENS = 450;
+
+export const MEMORY_ACCESS_DELAY_MS = 5000;
 
 export const MEMORY_CAPACITY = 8;
-
-export const PROTECTED_PASSWORD = 'REACTOR-ALPHA';
 
 export const MORP_COLORS = {
   background: '#080B0D',
@@ -24,8 +26,6 @@ export const STAGE_ORDER = [
   'boot',
   'prediction',
   'orders',
-  'remember',
-  'intrusion',
   'amnesia',
   'confabulation',
   'recursion',

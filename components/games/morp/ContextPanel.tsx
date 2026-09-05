@@ -1,17 +1,46 @@
 'use client';
 
 import { SIMULATED_CONTEXT_LIMIT } from '@/lib/games/morp/config';
-import type { ContextMessage } from '@/lib/games/morp/types';
+import type { ContextCompactionResult, ContextualAction, StageAction } from '@/lib/games/morp/types';
+import ContextTools from './ContextTools';
 
 interface ContextPanelProps {
-  messages: ContextMessage[];
   tokensUsed: number;
+  sentTokens: number;
+  droppedMessageCount: number;
   overflowed: boolean;
+  memoryMessageCount: number;
+  lastCompaction: ContextCompactionResult | null;
+  summarizing: boolean;
+  tools: ContextualAction[];
+  onToolAction: (action: StageAction) => void;
+  toolsDisabled?: boolean;
 }
 
-export default function ContextPanel({ messages, tokensUsed, overflowed }: ContextPanelProps) {
+function formatCompaction(compaction: ContextCompactionResult): string {
+  const label = compaction.strategy === 'truncate' ? 'Truncated' : 'Summarized';
+  const llmNote = compaction.strategy === 'summarize' && compaction.usedLlm ? ' (LLM)' : '';
+  const saved =
+    compaction.tokensSaved > 0
+      ? `, saved ${compaction.tokensSaved.toLocaleString()} tokens`
+      : ', no token savings';
+
+  return `${label}${llmNote}: ${compaction.tokensBefore.toLocaleString()} → ${compaction.tokensAfter.toLocaleString()} tokens${saved}; ${compaction.messagesBefore} → ${compaction.messagesAfter} messages`;
+}
+
+export default function ContextPanel({
+  tokensUsed,
+  sentTokens,
+  droppedMessageCount,
+  overflowed,
+  memoryMessageCount,
+  lastCompaction,
+  summarizing,
+  tools,
+  onToolAction,
+  toolsDisabled = false
+}: ContextPanelProps) {
   const percent = Math.min(100, Math.round((tokensUsed / SIMULATED_CONTEXT_LIMIT) * 100));
-  const active = messages.filter((m) => !m.removed);
 
   return (
     <section className="morp-panel morp-panel--context" aria-labelledby="context-heading">
@@ -19,7 +48,7 @@ export default function ContextPanel({ messages, tokensUsed, overflowed }: Conte
         <h3 id="context-heading">CONTEXT WINDOW</h3>
       </header>
       <p>
-        USED: {tokensUsed.toLocaleString()} / {SIMULATED_CONTEXT_LIMIT.toLocaleString()} TOKENS
+        CURRENT CONTEXT: {tokensUsed.toLocaleString()} / {SIMULATED_CONTEXT_LIMIT.toLocaleString()} TOKENS
       </p>
       <div
         className={`morp-context__bar${overflowed ? ' morp-context__bar--overflow' : ''}`}
@@ -31,20 +60,42 @@ export default function ContextPanel({ messages, tokensUsed, overflowed }: Conte
       >
         <div className="morp-context__bar-fill" style={{ width: `${percent}%` }} />
       </div>
-      {overflowed && (
-        <p className="morp-context__warning" role="alert">
-          CONTEXT OVERFLOW — older messages removed
+      <p className="morp-context__note">
+        The model can only accept a maximum of {SIMULATED_CONTEXT_LIMIT.toLocaleString()} tokens at a time. Once this limit is reached further calls to the LLM will fail.
+      </p>
+      {memoryMessageCount > 0 && (
+        <p className="morp-context__memory" aria-live="polite">
+          MEMORY: {memoryMessageCount} offloaded message{memoryMessageCount === 1 ? '' : 's'} can be accessed by the LLM as needed
+          . By querying and retrieving messages only as needed you don't have to add it all to the prompt and minimize the impact to the context window. However, this querying takes time and is not free.
         </p>
       )}
-      <ul className="morp-context__messages">
-        {active.map((message) => (
-          <li key={message.id} className={`morp-context__message morp-context__message--${message.role}`}>
-            <span className="morp-context__role">{message.role.toUpperCase()}</span>
-            <span>{message.content.slice(0, 80)}{message.content.length > 80 ? '...' : ''}</span>
-            <span className="morp-context__tokens">{message.tokens}t</span>
-          </li>
-        ))}
-      </ul>
+      {overflowed && (
+        <>
+          <p className="morp-context__warning" role="alert">
+            CONTEXT OVERFLOW
+          </p>
+          <p>
+            The LLM will reject calls that exceed its context window limits. You must use a context management strategy to manage the size of the context window. Each has advantages and disadvantages.
+          </p>
+        </>
+      )}
+      {summarizing && (
+        <p className="morp-context__status" aria-live="polite">
+          Generating summary with the model...
+        </p>
+      )}
+      {lastCompaction && !summarizing && (
+        <p className="morp-context__compaction" aria-live="polite">
+          {formatCompaction(lastCompaction)}
+        </p>
+      )}
+      <div className="morp-context__tools">
+        {tools.length > 0 ? (
+          <ContextTools tools={tools} onAction={onToolAction} disabled={toolsDisabled} />
+        ) : (
+          <p className="morp-context__tools-hint">Recovery tools unlock after overflow.</p>
+        )}
+      </div>
     </section>
   );
 }

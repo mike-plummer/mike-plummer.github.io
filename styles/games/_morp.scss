@@ -739,11 +739,7 @@ $morp-error: #ff6b6b;
   height: 12rem;
   overflow-y: auto;
   padding: 0.35rem 0;
-}
-
-.morp-conversation__scroll-anchor {
-  height: 0;
-  overflow: hidden;
+  scroll-behavior: smooth;
 }
 
 .morp-conversation__message {
@@ -1042,6 +1038,19 @@ $morp-error: #ff6b6b;
   margin-top: 0.75rem;
 }
 
+.morp-memory__note {
+  color: $morp-text-secondary;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+.morp-memory__item--context .morp-memory__fact span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 // Context
 .morp-context__bar {
   background: #1e3a2f;
@@ -1066,35 +1075,91 @@ $morp-error: #ff6b6b;
   font-weight: bold;
 }
 
-.morp-context__messages {
-  list-style: none;
-  margin: 0;
-  max-height: 12rem;
-  overflow-y: auto;
-  padding: 0;
-}
-
-.morp-context__message {
-  color: $morp-text;
-  display: flex;
-  font-size: 0.9375rem;
-  gap: 0.5rem;
-  line-height: 1.5;
-  margin-bottom: 0.35rem;
-}
-
-.morp-context__role {
-  color: $morp-accent;
-  flex-shrink: 0;
-  font-weight: 600;
-  width: 4.5rem;
-}
-
-.morp-context__tokens {
+.morp-context__note {
   color: $morp-text-secondary;
-  flex-shrink: 0;
-  font-weight: 500;
-  margin-left: auto;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-context__memory {
+  color: $morp-accent;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-context__status {
+  color: $morp-accent;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-context__compaction {
+  background: rgba($morp-accent, 0.08);
+  border: 1px solid rgba($morp-accent, 0.25);
+  border-radius: 0.25rem;
+  color: $morp-accent;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.morp-context__tools {
+  margin-top: 0.75rem;
+}
+
+.morp-context__tools-hint {
+  color: $morp-text-secondary;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.morp-context-tools {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.morp-context-tools__card {
+  background: rgba($morp-accent, 0.04);
+  border: 1px solid $morp-border;
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.55rem;
+}
+
+.morp-context-tools__button {
+  width: 100%;
+}
+
+.morp-context-tools__tradeoffs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.morp-context-tools__pro,
+.morp-context-tools__con {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.morp-context-tools__label {
+  color: $morp-text;
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+}
+
+.morp-context-tools__con .morp-context-tools__label {
+  color: $morp-warning;
 }
 
 // Verification

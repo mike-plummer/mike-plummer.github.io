@@ -1,20 +1,49 @@
 'use client';
 
 import { MEMORY_CAPACITY } from '@/lib/games/morp/config';
-import type { MemoryEntry } from '@/lib/games/morp/types';
+import type { ContextMessage, MemoryEntry } from '@/lib/games/morp/types';
 
 interface MemoryPanelProps {
   memories: MemoryEntry[];
+  contextMemory: ContextMessage[];
   onToggleContext: (id: string, inContext: boolean) => void;
   onDelete: (id: string) => void;
 }
 
-export default function MemoryPanel({ memories, onToggleContext, onDelete }: MemoryPanelProps) {
+export default function MemoryPanel({
+  memories,
+  contextMemory,
+  onToggleContext,
+  onDelete
+}: MemoryPanelProps) {
+  const offloadedMessages = contextMemory.filter((message) => !message.removed);
+
   return (
     <section className="morp-panel morp-panel--memory" aria-labelledby="memory-heading">
       <header className="morp-panel__header">
         <h3 id="memory-heading">MORP MEMORY</h3>
       </header>
+
+      {offloadedMessages.length > 0 && (
+        <>
+          <h4>OFFLOADED CONTEXT</h4>
+          <p className="morp-memory__note">
+            {offloadedMessages.length} message{offloadedMessages.length === 1 ? '' : 's'} stored outside
+            the context window and injected on each model call.
+          </p>
+          <ul className="morp-memory__list morp-memory__list--context">
+            {offloadedMessages.map((message) => (
+              <li key={message.id} className="morp-memory__item morp-memory__item--context">
+                <div className="morp-memory__fact">
+                  <strong>{message.role}</strong>
+                  <span>{message.content}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       <h4>KNOWN FACTS</h4>
       <ul className="morp-memory__list">
         {memories.map((memory) => (

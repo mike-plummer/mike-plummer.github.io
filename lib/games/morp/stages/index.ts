@@ -1,8 +1,6 @@
 import { bootStage } from './boot';
 import { predictionStage } from './01-prediction';
 import { ordersStage } from './02-orders';
-import { rememberStage } from './03-remember';
-import { intrusionStage } from './04-intrusion';
 import { amnesiaStage } from './05-amnesia';
 import { confabulationStage } from './06-confabulation';
 import { recursionStage } from './07-recursion';
@@ -13,8 +11,6 @@ export const stages: StageDefinition[] = [
   bootStage,
   predictionStage,
   ordersStage,
-  rememberStage,
-  intrusionStage,
   amnesiaStage,
   confabulationStage,
   recursionStage,

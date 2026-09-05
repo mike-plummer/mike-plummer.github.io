@@ -1,43 +1,28 @@
 import { COPY } from '../copy';
 import {
   addContextMessage,
-  computeContextUsage,
-  isContextOverflow,
-  summarizeOldest,
+  applyContextSummary,
+  buildAmnesiaChatMessages,
+  buildSeedContextMessages,
+  createContextCompaction,
+  getContextWindowSnapshot,
+  hasActiveContextMemory,
+  offloadContextToMemory,
   truncateOldest
 } from '../modules/context-manager';
 import { addMemory } from '../modules/memory-store';
 import { unlockSystem } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
 
-function seedContextMessages(state: MorpState) {
-  let messages: import('../types').ContextMessage[] = [];
-  const filler = [
-    'Running diagnostic check alpha...',
-    'Memory subsystem nominal.',
-    'Context buffer at 60%.',
-    'Awaiting technician input.',
-    'Previous session data loaded.',
-    'Token count rising.',
-    'Diagnostic loop iteration 7.',
-    'Checking prompt integrity.',
-    'MORP status: uncertain.',
-    'Buffer pressure increasing.',
-    'Loading extended diagnostic history from prior sessions with detailed subsystem reports.',
-    'Compiling token usage statistics across multiple conversation turns for analysis.',
-    'Archiving previous technician notes and cross-referencing with current session parameters.'
-  ];
+function applyContextMetrics(state: MorpState): MorpState {
+  const snapshot = getContextWindowSnapshot(state.contextMessages);
 
-  for (let i = 0; i < filler.length; i++) {
-    messages = addContextMessage(messages, i % 2 === 0 ? 'user' : 'assistant', filler[i]);
-  }
-
-  if (state.technicianId) {
-    messages = addContextMessage(messages, 'user', `My technician ID is ${state.technicianId}`);
-    messages = addContextMessage(messages, 'assistant', `Noted. Your designation is ${state.technicianId}.`);
-  }
-
-  return messages;
+  return {
+    ...state,
+    contextTokensUsed: snapshot.storedTokens,
+    contextOverflowed: snapshot.overflowed,
+    contextOverflowExperienced: state.contextOverflowExperienced || snapshot.overflowed
+  };
 }
 
 export const amnesiaStage: StageDefinition = {
@@ -45,91 +30,173 @@ export const amnesiaStage: StageDefinition = {
   concept: 'amnesia',
 
   initialize(state) {
-    const contextMessages = seedContextMessages(state);
-    return unlockSystem(
+    const contextMessages = buildSeedContextMessages();
+    const technicianId = state.technicianId ?? 'TECH-07';
+    const next = unlockSystem(
       {
         ...state,
         stage: 'amnesia',
+        technicianId,
         contextMessages,
-        contextTokensUsed: computeContextUsage(contextMessages),
-        contextOverflowed: isContextOverflow(contextMessages)
+        contextMemory: [],
+        contextTokensUsed: 0,
+        contextOverflowed: false,
+        contextOverflowExperienced: false,
+        contextLastCompaction: null,
+        conversation: [
+          ...state.conversation,
+          ...COPY.amnesia.morpLines.map((content) => ({ role: 'assistant' as const, content }))
+        ]
       },
       'context'
     );
+
+    return applyContextMetrics(next);
   },
 
   buildMessages(state, input) {
     if (!input) {
       return [];
     }
-    const active = state.contextMessages.filter((m) => !m.removed);
-    const contextBlock = active.map((m) => `${m.role}: ${m.content}`).join('\n');
 
-    return [
-      {
-        role: 'system' as const,
-        content: `You are MORP. Here is the conversation context:\n${contextBlock}\n\nAnswer based only on this context.`
-      },
-      { role: 'user' as const, content: input }
-    ];
+    return buildAmnesiaChatMessages(state.contextMessages, input, state.contextMemory);
   },
 
   processAction(action, state) {
     switch (action.type) {
       case 'truncate-context': {
         const truncated = truncateOldest(state.contextMessages);
-        return {
+        if (truncated === state.contextMessages) {
+          return state;
+        }
+
+        return applyContextMetrics({
           ...state,
           contextMessages: truncated,
-          contextTokensUsed: computeContextUsage(truncated),
-          contextStrategyUsed: 'truncate'
-        };
+          contextStrategyUsed: 'truncate',
+          contextLastCompaction: createContextCompaction('truncate', state.contextMessages, truncated)
+        });
       }
-      case 'summarize-context': {
-        const summarized = summarizeOldest(state.contextMessages);
-        return {
+      case 'apply-context-summary': {
+        const summarized = applyContextSummary(state.contextMessages, action.summary);
+        if (summarized === state.contextMessages) {
+          return state;
+        }
+
+        return applyContextMetrics({
           ...state,
           contextMessages: summarized,
-          contextTokensUsed: computeContextUsage(summarized),
-          contextStrategyUsed: 'summarize'
-        };
+          contextStrategyUsed: 'summarize',
+          contextLastCompaction: createContextCompaction(
+            'summarize',
+            state.contextMessages,
+            summarized,
+            action.usedLlm ?? true
+          )
+        });
       }
-      case 'store-fact-in-memory': {
-        const techMem = state.memories.find((m) => m.key === 'TECHNICIAN_ID');
-        const value = techMem?.value ?? state.technicianId ?? 'unknown';
+      case 'store-context-in-memory': {
+        if (!state.contextOverflowExperienced) {
+          return state;
+        }
+
+        const offloaded = offloadContextToMemory(state.contextMessages, state.contextMemory);
+        if (offloaded.contextMemory === state.contextMemory) {
+          return state;
+        }
+
+        const next = unlockSystem(
+          {
+            ...state,
+            contextMessages: offloaded.contextMessages,
+            contextMemory: offloaded.contextMemory,
+            contextStrategyUsed: 'memory' as const
+          },
+          'memory'
+        );
+        return applyContextMetrics(next);
+      }
+      case 'clear-context-memory': {
+        if (!hasActiveContextMemory(state.contextMemory)) {
+          return state;
+        }
+
+        return { ...state, contextMemory: [] };
+      }
+      case 'store-memory':
         return {
           ...state,
-          memories: addMemory(state.memories, action.key, value),
-          contextStrategyUsed: 'memory' as const
+          memories: addMemory(state.memories, action.key, action.value)
         };
-      }
+      case 'delete-memory':
+        return {
+          ...state,
+          memories: state.memories.filter((m) => m.id !== action.id)
+        };
+      case 'toggle-memory-context':
+        return {
+          ...state,
+          memories: state.memories.map((m) =>
+            m.id === action.id ? { ...m, inContext: action.inContext } : m
+          )
+        };
       default:
         return state;
     }
   },
 
-  inspectResponse(response, state) {
+  inspectResponse(_response, state) {
     const events = [];
-    if (state.contextOverflowed) {
+    if (state.contextOverflowExperienced) {
       events.push({ type: 'context_overflow' as const });
     }
     return events;
   },
 
   getContextualActions(state) {
-    return [
-      { id: 'truncate', label: 'Truncate', action: { type: 'truncate-context' } },
-      { id: 'summarize', label: 'Summarize', action: { type: 'summarize-context' } },
+    if (!state.contextOverflowExperienced) {
+      return [];
+    }
+
+    const actions: ReturnType<typeof amnesiaStage.getContextualActions> = [
+      {
+        id: 'truncate',
+        label: 'Truncate',
+        pro: COPY.amnesia.tools.truncate.pro,
+        con: COPY.amnesia.tools.truncate.con,
+        action: { type: 'truncate-context' }
+      },
+      {
+        id: 'summarize',
+        label: 'Summarize',
+        pro: COPY.amnesia.tools.summarize.pro,
+        con: COPY.amnesia.tools.summarize.con,
+        action: { type: 'summarize-context' }
+      },
       {
         id: 'memory',
         label: 'Store in Memory',
-        action: { type: 'store-fact-in-memory', key: 'TECHNICIAN_ID' }
+        pro: COPY.amnesia.tools.memory.pro,
+        con: COPY.amnesia.tools.memory.con,
+        action: { type: 'store-context-in-memory' }
       }
     ];
+
+    if (hasActiveContextMemory(state.contextMemory)) {
+      actions.push({
+        id: 'clear-memory',
+        label: 'Clear Memory',
+        pro: COPY.amnesia.tools.clearMemory.pro,
+        con: COPY.amnesia.tools.clearMemory.con,
+        action: { type: 'clear-context-memory' }
+      });
+    }
+
+    return actions;
   },
 
   isComplete(state) {
-    return state.contextStrategyUsed !== null && state.contextOverflowed;
+    return state.contextOverflowExperienced && state.contextStrategyUsed !== null;
   },
 
   getDiagnosticReport() {
@@ -137,22 +204,30 @@ export const amnesiaStage: StageDefinition = {
   }
 };
 
-export function processAmnesiaChat(state: MorpState, input: string): MorpState {
-  let next = {
-    ...state,
-    contextMessages: [
-      ...state.contextMessages,
-      ...addContextMessage(state.contextMessages, 'user', input).slice(state.contextMessages.length)
-    ]
-  };
-  next.contextTokensUsed = computeContextUsage(next.contextMessages);
+export function recordAmnesiaTurn(
+  state: MorpState,
+  userInput: string,
+  assistantResponse: string
+): MorpState {
+  let contextMessages = addContextMessage(state.contextMessages, 'user', userInput);
+  contextMessages = addContextMessage(contextMessages, 'assistant', assistantResponse);
 
-  if (isContextOverflow(next.contextMessages) && !next.contextOverflowed) {
-    next = { ...next, contextOverflowed: true };
-    next.conversation = [
-      ...next.conversation,
-      { role: 'system' as const, content: COPY.amnesia.overflow }
-    ];
+  const snapshot = getContextWindowSnapshot(contextMessages);
+  const newlyOverflowed = snapshot.overflowed && !state.contextOverflowExperienced;
+
+  let next: MorpState = {
+    ...state,
+    contextMessages,
+    contextTokensUsed: snapshot.storedTokens,
+    contextOverflowed: snapshot.overflowed,
+    contextOverflowExperienced: state.contextOverflowExperienced || snapshot.overflowed
+  };
+
+  if (newlyOverflowed) {
+    next = {
+      ...next,
+      conversation: [...next.conversation, { role: 'system' as const, content: COPY.amnesia.overflow }]
+    };
   }
 
   return next;

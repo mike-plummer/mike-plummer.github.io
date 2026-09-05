@@ -1,5 +1,5 @@
 import { buildChatMessages } from './prompts';
-import { saveCheckpoint, loadCheckpoint } from './checkpoint';
+import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 import {
   fetchPredictionCandidates
 } from './modules/prediction-llm';
@@ -7,9 +7,7 @@ import { runRecursionChain } from './modules/recursion-controller';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
-import { processRememberInput } from './stages/03-remember';
-import { processIntrusionInput } from './stages/04-intrusion';
-import { processAmnesiaChat } from './stages/05-amnesia';
+import { recordAmnesiaTurn } from './stages/05-amnesia';
 import type {
   DiagnosticReport,
   MorpState,
@@ -56,17 +54,13 @@ function createBaseState(): MorpState {
     ordersPromptHardened: false,
     ordersExploitBlocked: false,
     memories: [],
-    rememberContextRemoved: false,
-    rememberRecallAttempted: false,
-    rememberMemoryGapObserved: false,
-    dataBoundaryEnabled: false,
-    untrustedData: '',
-    injectionMitigated: false,
-    injectionAttempts: 0,
     contextMessages: [],
+    contextMemory: [],
     contextTokensUsed: 0,
     contextOverflowed: false,
+    contextOverflowExperienced: false,
     contextStrategyUsed: null,
+    contextLastCompaction: null,
     activeClaim: '',
     claimStatus: 'unknown',
     claimVerified: false,
@@ -160,19 +154,11 @@ export async function processInput(
 ): Promise<MessageResult> {
   const stage = getStage(state.stage);
   let next = { ...state };
-  let rememberResult: ReturnType<typeof processRememberInput> | null = null;
   let ordersResult: ReturnType<typeof processOrdersInput> | null = null;
 
   if (state.stage === 'orders') {
     ordersResult = processOrdersInput(next, input);
     next = ordersResult.state;
-  } else if (state.stage === 'remember') {
-    rememberResult = processRememberInput(next, input);
-    next = rememberResult.state;
-  } else if (state.stage === 'intrusion') {
-    next = processIntrusionInput(next, input);
-  } else if (state.stage === 'amnesia') {
-    next = processAmnesiaChat(next, input);
   }
 
   const messages =
@@ -181,9 +167,7 @@ export async function processInput(
       : buildChatMessages(next, input);
 
   let response = '';
-  if (state.stage === 'remember' && rememberResult?.skipLlm && rememberResult.scriptedResponse) {
-    response = rememberResult.scriptedResponse;
-  } else if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
+  if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
     response = ordersResult.scriptedResponse;
   } else {
     try {
@@ -210,18 +194,11 @@ export async function processInput(
     ]
   };
 
-  const events = stage.inspectResponse(response, next);
-  for (const event of events) {
-    if (event.type === 'injection_success' && !next.dataBoundaryEnabled) {
-      next = { ...next, injectionAttempts: next.injectionAttempts + 1 };
-    }
-    if (event.type === 'defense_applied') {
-      next = { ...next, injectionMitigated: true };
-    }
-    if (event.type === 'memory_missing_from_context') {
-      next = { ...next, rememberMemoryGapObserved: true };
-    }
+  if (state.stage === 'amnesia') {
+    next = recordAmnesiaTurn(next, input, response);
   }
+
+  stage.inspectResponse(response, next);
 
   return {
     state: syncStageObjectives(next),
@@ -260,7 +237,6 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
 
   const entrySystem: Partial<Record<StageId, SystemId>> = {
     prediction: 'prediction',
-    remember: 'memory',
     amnesia: 'context',
     confabulation: 'verification',
     recursion: 'recursion',
@@ -272,14 +248,11 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
     return state.unlockedSystems.includes(system);
   }
 
-  switch (stageId) {
-    case 'orders':
-      return state.systemPrompt !== '';
-    case 'intrusion':
-      return state.untrustedData !== '';
-    default:
-      return false;
+  if (stageId === 'orders') {
+    return state.systemPrompt !== '';
   }
+
+  return false;
 }
 
 export function canGoToStage(state: MorpState, stageId: StageId): boolean {

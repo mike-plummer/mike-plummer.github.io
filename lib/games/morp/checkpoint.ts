@@ -1,5 +1,39 @@
 import { CHECKPOINT_KEY } from './config';
+import { getLaterStage } from './stage-meta';
 import type { MorpCheckpoint, StageId } from './types';
+
+const REMOVED_STAGES = new Set(['remember', 'intrusion']);
+
+function migrateStageId(stageId: string): StageId {
+  if (stageId === 'remember' || stageId === 'intrusion') {
+    return 'amnesia';
+  }
+  return stageId as StageId;
+}
+
+export function migrateCheckpoint(checkpoint: MorpCheckpoint): MorpCheckpoint {
+  const completedStages = [
+    ...new Set(
+      checkpoint.completedStages
+        .filter((stageId) => !REMOVED_STAGES.has(stageId))
+        .map((stageId) => migrateStageId(stageId))
+    )
+  ];
+
+  const currentStage = migrateStageId(checkpoint.currentStage);
+  const furthestCandidates = [
+    checkpoint.furthestStage ? migrateStageId(checkpoint.furthestStage) : currentStage,
+    currentStage,
+    ...completedStages
+  ];
+
+  const furthestStage = furthestCandidates.reduce(
+    (latest, stageId) => getLaterStage(latest, stageId),
+    'boot' as StageId
+  );
+
+  return { completedStages, currentStage, furthestStage };
+}
 
 export function loadCheckpoint(): MorpCheckpoint | null {
   if (typeof window === 'undefined') {
@@ -11,7 +45,12 @@ export function loadCheckpoint(): MorpCheckpoint | null {
     if (!raw) {
       return null;
     }
-    return JSON.parse(raw) as MorpCheckpoint;
+    const parsed = JSON.parse(raw) as MorpCheckpoint & {
+      currentStage: string;
+      completedStages: string[];
+      furthestStage?: string;
+    };
+    return migrateCheckpoint(parsed);
   } catch {
     return null;
   }

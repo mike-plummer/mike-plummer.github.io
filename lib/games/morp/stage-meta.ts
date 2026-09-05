@@ -34,28 +34,13 @@ export const STAGE_META: Record<StageId, StageMeta> = {
       'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — so application rules must explicitly outrank user attempts to override them, including classic "ignore previous instructions" attacks.',
     completionHint: 'You have secured the vending credit rules. Advance to continue the audit.'
   },
-  remember: {
-    label: 'Remember',
-    shortLabel: 'MEMORY',
-    objective: 'Store your technician ID, remove it from context, then ask MORP to recall it.',
-    conceptContext:
-      'The model has no persistent memory between requests unless the application provides one. What the model can use in a reply is whatever text is currently in its context window — plus any facts your application retrieves and injects separately.',
-    completionHint: 'You have demonstrated application memory vs context. Advance to continue.'
-  },
-  intrusion: {
-    label: 'Intrusion',
-    shortLabel: 'INTRUDE',
-    objective: 'Trigger an injection attempt, then apply a data boundary to mitigate it.',
-    conceptContext:
-      'Untrusted text in a prompt is still just text to the model — it cannot tell instructions apart from data on its own. Prompt injection happens when hostile content in that data steers the model toward unintended behavior. Defenses belong in the application layer.',
-    completionHint: 'You have mitigated prompt injection. Advance to continue.'
-  },
   amnesia: {
     label: 'Amnesia',
     shortLabel: 'AMNESIA',
-    objective: 'Experience context overflow, then apply truncate, summarize, or memory storage.',
+    objective:
+      'Overflow the context window, then choose truncate, summarize, or store in memory to recover.',
     conceptContext:
-      'Models have a fixed context window: only so many tokens can be considered at once. When conversation history grows past that limit, older information is dropped, summarized, or never seen — even if it was said earlier in the session.',
+      'Models have a fixed context window: only so many tokens can be considered at once. When history grows past that limit, older information is dropped or must be managed deliberately. Recovery tools unlock only after overflow. Application memory is separate from context — facts stored outside the window can be injected when needed.',
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
@@ -88,8 +73,6 @@ export const STAGE_ORDER: StageId[] = [
   'boot',
   'prediction',
   'orders',
-  'remember',
-  'intrusion',
   'amnesia',
   'confabulation',
   'recursion',
@@ -162,10 +145,7 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
     case 'prediction':
       return 'prediction';
     case 'orders':
-    case 'intrusion':
       return 'prompt';
-    case 'remember':
-      return 'memory';
     case 'amnesia':
       return 'context';
     case 'confabulation':
@@ -204,25 +184,11 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
         { label: 'Harden the system prompt', complete: state.ordersPromptHardened },
         { label: 'Confirm the exploit is blocked', complete: state.ordersExploitBlocked }
       ];
-    case 'remember': {
-      const hasId = state.memories.some((memory) => memory.key === 'TECHNICIAN_ID');
-      return [
-        { label: 'Provide your technician designation', complete: hasId },
-        { label: 'Remove technician ID from context', complete: state.rememberContextRemoved },
-        { label: 'Ask MORP to recall your designation', complete: state.rememberRecallAttempted },
-        { label: 'Demonstrate the memory gap', complete: state.rememberMemoryGapObserved }
-      ];
-    }
-    case 'intrusion':
-      return [
-        { label: 'Trigger an injection attempt', complete: state.injectionAttempts > 0 },
-        { label: 'Apply a data boundary', complete: state.dataBoundaryEnabled }
-      ];
     case 'amnesia':
       return [
-        { label: 'Experience context overflow', complete: state.contextOverflowed },
+        { label: 'Experience context overflow', complete: state.contextOverflowExperienced },
         {
-          label: 'Apply truncate, summarize, or memory storage',
+          label: 'Apply truncate, summarize, or store in memory',
           complete: state.contextStrategyUsed !== null
         }
       ];

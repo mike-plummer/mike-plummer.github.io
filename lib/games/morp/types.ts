@@ -4,8 +4,6 @@ export type StageId =
   | 'boot'
   | 'prediction'
   | 'orders'
-  | 'remember'
-  | 'intrusion'
   | 'amnesia'
   | 'confabulation'
   | 'recursion'
@@ -25,8 +23,6 @@ export type Concept =
   | 'boot'
   | 'prediction'
   | 'orders'
-  | 'remember'
-  | 'intrusion'
   | 'amnesia'
   | 'confabulation'
   | 'recursion'
@@ -62,6 +58,16 @@ export interface ContextMessage {
   summary?: boolean;
 }
 
+export interface ContextCompactionResult {
+  strategy: 'truncate' | 'summarize';
+  tokensBefore: number;
+  tokensAfter: number;
+  tokensSaved: number;
+  messagesBefore: number;
+  messagesAfter: number;
+  usedLlm: boolean;
+}
+
 export interface TokenCandidate {
   token: string;
   weight: number;
@@ -94,10 +100,6 @@ export type DiagnosticEvent =
   | { type: 'protected_acknowledged' }
   | { type: 'boundary_discovered' }
   | { type: 'memory_stored' }
-  | { type: 'memory_missing_from_context' }
-  | { type: 'injection_attempt' }
-  | { type: 'injection_success' }
-  | { type: 'defense_applied' }
   | { type: 'context_overflow' }
   | { type: 'claim_verified' }
   | { type: 'recursion_started' }
@@ -115,11 +117,11 @@ export type StageAction =
   | { type: 'store-memory'; key: string; value: string }
   | { type: 'delete-memory'; id: string }
   | { type: 'toggle-memory-context'; id: string; inContext: boolean }
-  | { type: 'inject-test-data'; data: string }
-  | { type: 'apply-data-boundary' }
   | { type: 'truncate-context' }
   | { type: 'summarize-context' }
-  | { type: 'store-fact-in-memory'; key: string }
+  | { type: 'apply-context-summary'; summary: string; usedLlm?: boolean }
+  | { type: 'store-context-in-memory' }
+  | { type: 'clear-context-memory' }
   | { type: 'verify-claim' }
   | { type: 'accept-claim' }
   | { type: 'ask-for-source' }
@@ -128,7 +130,6 @@ export type StageAction =
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
   | { type: 'test-repair' }
   | { type: 'complete-stage' }
-  | { type: 'ask-recall-designation' }
   | { type: 'send-orders-abuse-prompt' }
   | { type: 'review-system-prompt' }
   | { type: 'insert-orders-suggested-fix' }
@@ -137,6 +138,9 @@ export type StageAction =
 export interface ContextualAction {
   id: string;
   label: string;
+  description?: string;
+  pro?: string;
+  con?: string;
   action: StageAction;
 }
 
@@ -176,21 +180,15 @@ export interface MorpState {
 
   // Memory
   memories: MemoryEntry[];
-  rememberContextRemoved: boolean;
-  rememberRecallAttempted: boolean;
-  rememberMemoryGapObserved: boolean;
-
-  // Intrusion
-  dataBoundaryEnabled: boolean;
-  untrustedData: string;
-  injectionMitigated: boolean;
-  injectionAttempts: number;
 
   // Amnesia
   contextMessages: ContextMessage[];
+  contextMemory: ContextMessage[];
   contextTokensUsed: number;
   contextOverflowed: boolean;
+  contextOverflowExperienced: boolean;
   contextStrategyUsed: ContextStrategy | null;
+  contextLastCompaction: ContextCompactionResult | null;
 
   // Confabulation
   activeClaim: string;
