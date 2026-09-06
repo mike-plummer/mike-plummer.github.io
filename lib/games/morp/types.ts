@@ -252,4 +252,5 @@ export type StreamChatFn = (options: {
   presencePenalty?: number;
   repetitionPenalty?: number;
   onToken?: (token: string) => void;
+  signal?: AbortSignal;
 }) => Promise<{ content: string }>;

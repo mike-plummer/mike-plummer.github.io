@@ -129,7 +129,8 @@ function logprobsToCandidates(
 export async function fetchPredictionCandidates(
   context: string,
   temperature: number,
-  fetchLogprobs: FetchNextTokenLogprobsFn
+  fetchLogprobs: FetchNextTokenLogprobsFn,
+  signal?: AbortSignal
 ): Promise<TokenCandidate[]> {
   if (!context.trim()) {
     return [];
@@ -139,10 +140,14 @@ export async function fetchPredictionCandidates(
     const result = await fetchLogprobs({
       prompt: context,
       topLogprobs: PREDICTION_TOP_LOGPROBS_REQUEST,
-      temperature
+      temperature,
+      signal
     });
     return logprobsToCandidates(result.candidates);
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error;
+    }
     return [];
   }
 }

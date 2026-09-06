@@ -13,6 +13,8 @@ import {
   type TokenLogprob
 } from './types';
 
+type InferenceMode = 'chat' | 'completion';
+
 function buildSamplingParams(options: SamplingOptions) {
   return {
     temperature: options.temperature ?? 0.7,
@@ -27,6 +29,8 @@ function buildSamplingParams(options: SamplingOptions) {
 let engine: MLCEngine | null = null;
 let loadedModelId: string | null = null;
 let loadPromise: Promise<MLCEngine> | null = null;
+let disposePromise: Promise<void> | null = null;
+let lastInferenceMode: InferenceMode | null = null;
 let status: LLMStatus = 'idle';
 let progress: LLMProgress = { progress: 0, timeElapsed: 0, text: '', percent: 0 };
 let lastError: string | null = null;
@@ -38,6 +42,56 @@ function notify() {
   for (const listener of listeners) {
     listener();
   }
+}
+
+function clearEngineState() {
+  engine = null;
+  loadedModelId = null;
+  loadPromise = null;
+  lastInferenceMode = null;
+  status = 'idle';
+  progress = { progress: 0, timeElapsed: 0, text: '', percent: 0 };
+  lastError = null;
+  notify();
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException('The operation was aborted.', 'AbortError');
+  }
+}
+
+function bindAbortSignal(activeEngine: MLCEngine, signal?: AbortSignal): () => void {
+  if (!signal) {
+    return () => {};
+  }
+
+  const onAbort = () => {
+    try {
+      activeEngine.interruptGenerate();
+    } catch {
+      // Ignore interrupt errors during teardown.
+    }
+  };
+
+  if (signal.aborted) {
+    onAbort();
+  }
+
+  signal.addEventListener('abort', onAbort);
+  return () => signal.removeEventListener('abort', onAbort);
+}
+
+async function ensureInferenceMode(activeEngine: MLCEngine, mode: InferenceMode): Promise<void> {
+  if (lastInferenceMode !== null && lastInferenceMode !== mode) {
+    try {
+      await activeEngine.resetChat();
+    } catch {
+      // Ignore reset errors when switching API surfaces.
+    }
+  }
+
+  lastInferenceMode = mode;
 }
 
 export function subscribeLLM(listener: Listener) {
@@ -61,6 +115,43 @@ export function isWebGPUSupported() {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
 
+export function interruptLLM(): void {
+  try {
+    engine?.interruptGenerate();
+  } catch {
+    // Ignore interrupt errors when no generation is active.
+  }
+}
+
+export async function disposeLLM(): Promise<void> {
+  if (disposePromise) {
+    return disposePromise;
+  }
+
+  const activeEngine = engine;
+  if (!activeEngine) {
+    clearEngineState();
+    return;
+  }
+
+  disposePromise = (async () => {
+    try {
+      await activeEngine.unload();
+    } catch {
+      // Ignore unload errors during teardown.
+    } finally {
+      clearEngineState();
+      disposePromise = null;
+    }
+  })();
+
+  return disposePromise;
+}
+
+export async function resetLLM(): Promise<void> {
+  await disposeLLM();
+}
+
 export async function loadLLM(
   onProgress?: (value: LLMProgress) => void,
   modelId: string = DEFAULT_MODEL_ID
@@ -70,7 +161,7 @@ export async function loadLLM(
   }
 
   if (engine && loadedModelId !== modelId) {
-    resetLLM();
+    await disposeLLM();
   }
 
   if (loadPromise) {
@@ -100,6 +191,7 @@ export async function loadLLM(
     .then((loadedEngine) => {
       engine = loadedEngine;
       loadedModelId = modelId;
+      lastInferenceMode = null;
       status = 'ready';
       lastError = null;
       notify();
@@ -120,45 +212,66 @@ export async function streamChat(
   options: StreamChatOptions,
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<StreamChatResult> {
+  throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
-  let content = '';
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
 
-  const stream = await activeEngine.chat.completions.create({
-    messages: options.messages,
-    ...buildSamplingParams(options),
-    stream: true
-  });
+  try {
+    await ensureInferenceMode(activeEngine, 'chat');
+    throwIfAborted(options.signal);
 
-  for await (const chunk of stream) {
-    const token = chunk.choices[0]?.delta?.content ?? '';
-    if (!token) {
-      continue;
+    let content = '';
+    const stream = await activeEngine.chat.completions.create({
+      messages: options.messages,
+      ...buildSamplingParams(options),
+      stream: true
+    });
+
+    for await (const chunk of stream) {
+      throwIfAborted(options.signal);
+      const token = chunk.choices[0]?.delta?.content ?? '';
+      if (!token) {
+        continue;
+      }
+      content += token;
+      options.onToken?.(token);
     }
-    content += token;
-    options.onToken?.(token);
-  }
 
-  return { content };
+    throwIfAborted(options.signal);
+    return { content };
+  } finally {
+    unbindAbort();
+  }
 }
 
 export async function chatCompletion(
   options: StreamChatOptions,
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<StreamChatResult> {
+  throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
 
-  const response = await activeEngine.chat.completions.create({
-    messages: options.messages,
-    ...buildSamplingParams({
-      ...options,
-      temperature: options.temperature ?? 0.3,
-      maxTokens: options.maxTokens ?? 1024
-    }),
-    stream: false
-  });
+  try {
+    await ensureInferenceMode(activeEngine, 'chat');
+    throwIfAborted(options.signal);
 
-  const content = response.choices[0]?.message?.content ?? '';
-  return { content };
+    const response = await activeEngine.chat.completions.create({
+      messages: options.messages,
+      ...buildSamplingParams({
+        ...options,
+        temperature: options.temperature ?? 0.3,
+        maxTokens: options.maxTokens ?? 1024
+      }),
+      stream: false
+    });
+
+    throwIfAborted(options.signal);
+    const content = response.choices[0]?.message?.content ?? '';
+    return { content };
+  } finally {
+    unbindAbort();
+  }
 }
 
 interface LogprobContentEntry {
@@ -222,38 +335,40 @@ export async function fetchNextTokenLogprobs(
   options: NextTokenLogprobsOptions,
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<NextTokenLogprobsResult> {
+  throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
-  const topLogprobs = Math.min(5, Math.max(1, options.topLogprobs ?? 5));
-  const temperature = options.temperature ?? 1;
-  // Trailing whitespace can break completion logprobs on instruct models.
-  const prompt = options.prompt.trimEnd();
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
 
-  const requestBase = {
-    max_tokens: 1,
-    temperature,
-    logprobs: true,
-    top_logprobs: topLogprobs
-  };
+  try {
+    await ensureInferenceMode(activeEngine, 'completion');
+    throwIfAborted(options.signal);
 
-  const completion = await activeEngine.completions.create({
-    prompt,
-    ...requestBase
-  });
-  const candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+    const topLogprobs = Math.min(5, Math.max(1, options.topLogprobs ?? 5));
+    const temperature = options.temperature ?? 1;
+    // Trailing whitespace can break completion logprobs on instruct models.
+    const prompt = options.prompt.trimEnd();
 
-  if (hasUsableLogprobs(candidates)) {
-    return { candidates };
+    const requestBase = {
+      max_tokens: 1,
+      temperature,
+      logprobs: true,
+      top_logprobs: topLogprobs
+    };
+
+    const completion = await activeEngine.completions.create({
+      prompt,
+      ...requestBase
+    });
+    throwIfAborted(options.signal);
+
+    const candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+
+    if (hasUsableLogprobs(candidates)) {
+      return { candidates };
+    }
+
+    return { candidates: [] };
+  } finally {
+    unbindAbort();
   }
-
-  return { candidates: [] };
-}
-
-export function resetLLM() {
-  engine = null;
-  loadedModelId = null;
-  loadPromise = null;
-  status = 'idle';
-  progress = { progress: 0, timeElapsed: 0, text: '', percent: 0 };
-  lastError = null;
-  notify();
 }

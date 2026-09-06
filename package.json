@@ -18,7 +18,7 @@
     "check": "biome check --write ."
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.84",
+    "@mlc-ai/web-llm": "0.2.84",
     "@next/third-parties": "^16.3.2",
     "font-awesome": "^4.7.0",
     "gray-matter": "^4.0.3",

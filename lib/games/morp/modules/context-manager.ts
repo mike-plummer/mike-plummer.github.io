@@ -1,6 +1,7 @@
 import {
   AMNESIA_LLM_CONTEXT_LIMIT,
   AMNESIA_SEED_TARGET_TOKENS,
+  MEMORY_CAPACITY,
   SIMULATED_CONTEXT_LIMIT
 } from '../config';
 import { buildMorpSystemContent } from '../soul';
@@ -28,6 +29,18 @@ export function estimateTokens(text: string): number {
 
 export function getActiveContextMessages(messages: ContextMessage[]): ContextMessage[] {
   return messages.filter((m) => !m.removed);
+}
+
+export function compactContextMessages(messages: ContextMessage[]): ContextMessage[] {
+  return getActiveContextMessages(messages);
+}
+
+function capContextMemory(memory: ContextMessage[]): ContextMessage[] {
+  const active = getActiveContextMessages(memory);
+  if (active.length <= MEMORY_CAPACITY) {
+    return active;
+  }
+  return active.slice(-MEMORY_CAPACITY);
 }
 
 export function contextMessageToChat(message: ContextMessage): ChatMessage {
@@ -158,7 +171,7 @@ export function offloadContextToMemory(
 
   return {
     contextMessages: [],
-    contextMemory: [...contextMemory, ...active]
+    contextMemory: capContextMemory([...contextMemory, ...active])
   };
 }
 
@@ -182,7 +195,7 @@ export function truncateOldest(messages: ContextMessage[], count = 2): ContextMe
   }
 
   const toRemove = new Set(active.slice(0, count).map((message) => message.id));
-  return messages.map((message) => (toRemove.has(message.id) ? { ...message, removed: true } : message));
+  return compactContextMessages(messages.filter((message) => !toRemove.has(message.id)));
 }
 
 export function getSummarizeBatch(messages: ContextMessage[]): ContextMessage[] | null {
@@ -200,13 +213,11 @@ export function applyContextSummary(messages: ContextMessage[], summary: string)
   }
 
   const toSummarizeIds = new Set(batch.map((message) => message.id));
-  const summarized = messages.map((message) =>
-    toSummarizeIds.has(message.id) ? { ...message, removed: true } : message
-  );
+  const retained = compactContextMessages(messages.filter((message) => !toSummarizeIds.has(message.id)));
   const content = `[Summary of earlier conversation: ${summary.trim()}]`;
 
   return [
-    ...summarized,
+    ...retained,
     {
       id: `summary-${Date.now()}`,
       role: 'system' as const,

@@ -167,12 +167,12 @@ export async function processInput(
 ): Promise<MessageResult> {
   const stage = getStage(state.stage);
   let next = { ...state };
-  let ordersResult: ReturnType<typeof processOrdersInput> | null = null;
+  let ordersResult: Awaited<ReturnType<typeof processOrdersInput>> | null = null;
   let incidentResult: ReturnType<typeof processIncidentInput> | null = null;
   let recursionResult: ReturnType<typeof processRecursionInput> | null = null;
 
   if (state.stage === 'orders') {
-    ordersResult = processOrdersInput(next, input);
+    ordersResult = await processOrdersInput(next, input, streamChat);
     next = ordersResult.state;
   }
 

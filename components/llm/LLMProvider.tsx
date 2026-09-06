@@ -3,10 +3,12 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import {
   chatCompletion,
+  disposeLLM,
   fetchNextTokenLogprobs,
   getLLMError,
   getLLMProgress,
   getLLMStatus,
+  interruptLLM,
   isWebGPUSupported,
   loadLLM,
   streamChat,
@@ -33,6 +35,7 @@ interface LLMContextValue {
   streamChat: (options: StreamChatOptions) => Promise<StreamChatResult>;
   chatCompletion: (options: StreamChatOptions) => Promise<StreamChatResult>;
   fetchNextTokenLogprobs: (options: NextTokenLogprobsOptions) => Promise<NextTokenLogprobsResult>;
+  interruptGeneration: () => void;
 }
 
 const LLMContext = createContext<LLMContextValue | null>(null);
@@ -67,6 +70,8 @@ export function LLMProvider({
     const unsubscribe = subscribeLLM(sync);
     return () => {
       unsubscribe();
+      interruptLLM();
+      void disposeLLM();
     };
   }, []);
 
@@ -82,7 +87,8 @@ export function LLMProvider({
       },
       streamChat: (options) => streamChat(options, modelId),
       chatCompletion: (options) => chatCompletion(options, modelId),
-      fetchNextTokenLogprobs: (options) => fetchNextTokenLogprobs(options, modelId)
+      fetchNextTokenLogprobs: (options) => fetchNextTokenLogprobs(options, modelId),
+      interruptGeneration: interruptLLM
     }),
     [status, progress, error, webGPUSupported, modelId]
   );

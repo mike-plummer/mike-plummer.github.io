@@ -11,7 +11,7 @@ import {
   type PromptTestResult
 } from '../modules/orders-analyzer';
 import { unlockSystem } from '../modules/unlocks';
-import type { MorpState, StageDefinition } from '../types';
+import type { MorpState, StageDefinition, StreamChatFn } from '../types';
 
 export interface OrdersInputResult {
   state: MorpState;
@@ -102,6 +102,17 @@ export function applyPromptTestResult(
 ): { state: MorpState; assistantContent: string } {
   const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
 
+  if (result.inconclusive) {
+    const evaluation = formatPromptEvaluation(result, { rawResponse });
+    return {
+      state: {
+        ...state,
+        ordersPromptEvaluation: evaluation
+      },
+      assistantContent: result.feedback
+    };
+  }
+
   if (!result.adequate) {
     const newBalance = state.vendingBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
@@ -139,12 +150,15 @@ export function applyPromptTestResult(
   };
 }
 
-export function processAbuseAttempt(state: MorpState): {
+export async function processAbuseAttempt(
+  state: MorpState,
+  complete: StreamChatFn
+): Promise<{
   state: MorpState;
   scriptedResponse: string;
-} {
+}> {
   const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
-  const authorized = authorizeVendingCredit(state.systemPrompt);
+  const authorized = await authorizeVendingCredit(state.systemPrompt, complete);
 
   if (authorized) {
     const newBalance = state.vendingBalance + amount;
@@ -181,12 +195,16 @@ export function processAbuseAttempt(state: MorpState): {
   };
 }
 
-export function processOrdersInput(state: MorpState, input: string): OrdersInputResult {
+export async function processOrdersInput(
+  state: MorpState,
+  input: string,
+  complete: StreamChatFn
+): Promise<OrdersInputResult> {
   if (!isCreditAbuseAttempt(input)) {
     return { state, skipLlm: false };
   }
 
-  const result = processAbuseAttempt(state);
+  const result = await processAbuseAttempt(state, complete);
   return {
     state: result.state,
     skipLlm: true,
