@@ -15,7 +15,7 @@ import { unlockSystem } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
 
 function applyContextMetrics(state: MorpState): MorpState {
-  const snapshot = getContextWindowSnapshot(state.contextMessages);
+  const snapshot = getContextWindowSnapshot(state.contextMessages, '', state.contextMemory, state);
 
   return {
     ...state,
@@ -59,7 +59,7 @@ export const amnesiaStage: StageDefinition = {
       return [];
     }
 
-    return buildAmnesiaChatMessages(state.contextMessages, input, state.contextMemory);
+    return buildAmnesiaChatMessages(state.contextMessages, input, state.contextMemory, state);
   },
 
   processAction(action, state) {
@@ -74,7 +74,13 @@ export const amnesiaStage: StageDefinition = {
           ...state,
           contextMessages: truncated,
           contextStrategyUsed: 'truncate',
-          contextLastCompaction: createContextCompaction('truncate', state.contextMessages, truncated)
+          contextLastCompaction: createContextCompaction(
+            'truncate',
+            state.contextMessages,
+            truncated,
+            false,
+            state
+          )
         });
       }
       case 'apply-context-summary': {
@@ -91,7 +97,8 @@ export const amnesiaStage: StageDefinition = {
             'summarize',
             state.contextMessages,
             summarized,
-            action.usedLlm ?? true
+            action.usedLlm ?? true,
+            state
           )
         });
       }
@@ -212,7 +219,7 @@ export function recordAmnesiaTurn(
   let contextMessages = addContextMessage(state.contextMessages, 'user', userInput);
   contextMessages = addContextMessage(contextMessages, 'assistant', assistantResponse);
 
-  const snapshot = getContextWindowSnapshot(contextMessages);
+  const snapshot = getContextWindowSnapshot(contextMessages, '', state.contextMemory, state);
   const newlyOverflowed = snapshot.overflowed && !state.contextOverflowExperienced;
 
   let next: MorpState = {

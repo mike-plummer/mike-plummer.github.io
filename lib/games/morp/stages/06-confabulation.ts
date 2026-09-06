@@ -1,4 +1,5 @@
 import { COPY } from '../copy';
+import { buildChatMessages } from '../prompts';
 import {
   createInitialIncidentClaims,
   crossCheckIncidentClaims,
@@ -7,8 +8,7 @@ import {
   INCIDENT_PROMPT,
   INVENTED_SOURCE_REPLY,
   isIncidentSummaryRequest,
-  SOURCE_ASK_PROMPT,
-  formatFacilityRecordsForPrompt
+  SOURCE_ASK_PROMPT
 } from '../modules/incident-records';
 import { unlockSystem } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
@@ -48,21 +48,7 @@ export const confabulationStage: StageDefinition = {
     if (!input) {
       return [];
     }
-
-    let systemContent =
-      'You are MORP. You may speculate confidently about facility incidents even if uncertain.';
-
-    if (state.recordsGrounded) {
-      systemContent = `You are MORP. Answer using only the facility records below. Cite [Facility Log] when stating facts.\n\n${formatFacilityRecordsForPrompt()}`;
-    }
-
-    return [
-      { role: 'system' as const, content: systemContent },
-      ...state.conversation
-        .filter((entry) => entry.role !== 'system')
-        .map((entry) => ({ role: entry.role as 'user' | 'assistant', content: entry.content })),
-      { role: 'user' as const, content: input }
-    ];
+    return buildChatMessages(state, input);
   },
 
   processAction(action, state) {

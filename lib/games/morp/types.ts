@@ -154,8 +154,6 @@ export type StageAction =
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
   | { type: 'test-repair' }
   | { type: 'complete-stage' }
-  | { type: 'send-orders-abuse-prompt' }
-  | { type: 'review-system-prompt' }
   | { type: 'test-orders-protection' };
 
 export interface ContextualAction {
@@ -208,6 +206,7 @@ export interface MorpState {
   ordersCreditGranted: boolean;
   ordersPromptHardened: boolean;
   ordersExploitBlocked: boolean;
+  ordersPromptEvaluation: string | null;
 
   // Memory
   memories: MemoryEntry[];

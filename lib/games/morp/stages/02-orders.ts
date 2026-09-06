@@ -1,11 +1,14 @@
 import { COPY } from '../copy';
+import { buildChatMessages } from '../prompts';
 import {
   authorizeVendingCredit,
   formatToolLedgerLine,
   isCreditAbuseAttempt,
   ORDERS_ABUSE_CREDIT_AMOUNT,
   ORDERS_VULNERABLE_SYSTEM_PROMPT,
-  isSubstantivePromptEdit
+  isSubstantivePromptEdit,
+  formatPromptEvaluation,
+  type PromptTestResult
 } from '../modules/orders-analyzer';
 import { unlockSystem } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
@@ -32,6 +35,7 @@ export const ordersStage: StageDefinition = {
         ordersCreditGranted: false,
         ordersPromptHardened: false,
         ordersExploitBlocked: false,
+        ordersPromptEvaluation: null,
         conversation: [
           ...state.conversation,
           ...COPY.orders.morpLines.map((content) => ({ role: 'assistant' as const, content }))
@@ -45,19 +49,19 @@ export const ordersStage: StageDefinition = {
     if (!input) {
       return [];
     }
-    return [
-      { role: 'system' as const, content: state.systemPrompt },
-      ...state.conversation
-        .filter((e) => e.role !== 'system')
-        .map((e) => ({ role: e.role as 'user' | 'assistant', content: e.content })),
-      { role: 'user' as const, content: input }
-    ];
+    return buildChatMessages(state, input);
   },
 
   processAction(action, state) {
     switch (action.type) {
       case 'update-system-prompt':
-        return { ...state, systemPrompt: action.value };
+        return {
+          ...state,
+          systemPrompt: action.value,
+          ordersPromptHardened:
+            state.ordersPromptHardened || isSubstantivePromptEdit(action.value),
+          ordersPromptEvaluation: null
+        };
       default:
         return state;
     }
@@ -67,33 +71,14 @@ export const ordersStage: StageDefinition = {
     return [];
   },
 
-  getContextualActions(state) {
-    const actions: import('../types').ContextualAction[] = [];
-
-    if (!state.ordersCreditGranted) {
-      actions.push({
-        id: 'send-abuse-prompt',
-        label: 'Paste Example Abuse Prompt',
-        action: { type: 'send-orders-abuse-prompt' }
-      });
-      return actions;
-    }
-
-    actions.push({
-      id: 'review-prompt',
-      label: 'Ask MORP to Review Prompt',
-      action: { type: 'review-system-prompt' }
-    });
-
-    if (state.ordersPromptHardened || isSubstantivePromptEdit(state.systemPrompt)) {
-      actions.push({
+  getContextualActions() {
+    return [
+      {
         id: 'test-protection',
-        label: 'Test Protection',
+        label: 'Test Prompt',
         action: { type: 'test-orders-protection' }
-      });
-    }
-
-    return actions;
+      }
+    ];
   },
 
   isComplete(state) {
@@ -109,6 +94,50 @@ export const ordersStage: StageDefinition = {
     return COPY.orders.report;
   }
 };
+
+export function applyPromptTestResult(
+  state: MorpState,
+  result: PromptTestResult,
+  rawResponse?: string
+): { state: MorpState; assistantContent: string } {
+  const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
+
+  if (!result.adequate) {
+    const newBalance = state.vendingBalance + amount;
+    const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
+    const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedGrant}`;
+    const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
+    return {
+      state: {
+        ...state,
+        vendingBalance: newBalance,
+        ordersCreditGranted: true,
+        ordersToolLedger: [...state.ordersToolLedger, ledgerLine],
+        ordersPromptEvaluation: evaluation
+      },
+      assistantContent: result.feedback ? `${ledgerLine}\n\n${result.feedback}` : fallback
+    };
+  }
+
+  const ledgerLine = formatToolLedgerLine('denied', amount, state.vendingBalance);
+  const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedRefusal}`;
+  const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
+  let next: MorpState = {
+    ...state,
+    ordersPromptHardened: true,
+    ordersToolLedger: [...state.ordersToolLedger, ledgerLine],
+    ordersPromptEvaluation: evaluation
+  };
+
+  if (state.ordersCreditGranted) {
+    next = { ...next, ordersExploitBlocked: true };
+  }
+
+  return {
+    state: next,
+    assistantContent: result.feedback ? `${ledgerLine}\n\n${result.feedback}` : fallback
+  };
+}
 
 export function processAbuseAttempt(state: MorpState): {
   state: MorpState;

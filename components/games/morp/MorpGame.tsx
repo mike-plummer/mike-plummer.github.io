@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLLM } from '@/components/llm/LLMProvider';
 import { COPY } from '@/lib/games/morp/copy';
 import {
-  buildPromptReviewMessages,
-  parsePromptReview
+  buildPromptTestFeedbackMessages,
+  evaluateSystemPromptProtection,
+  parsePromptTestFeedback
 } from '@/lib/games/morp/modules/orders-analyzer';
+import { applyPromptTestResult } from '@/lib/games/morp/stages/02-orders';
 import { MEMORY_ACCESS_DELAY_MS } from '@/lib/games/morp/config';
 import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
 import { INCIDENT_PROMPT } from '@/lib/games/morp/modules/incident-records';
@@ -110,8 +112,8 @@ export default function MorpGame() {
     return stage.getContextualActions(state);
   }, [stage, state]);
   const contextSnapshot = useMemo(
-    () => getContextWindowSnapshot(state.contextMessages, '', state.contextMemory),
-    [state.contextMessages, state.contextMemory]
+    () => getContextWindowSnapshot(state.contextMessages, '', state.contextMemory, state),
+    [state.contextMessages, state.contextMemory, state.stage, state.technicianId, state.memories]
   );
   const chatPlaceholder =
     state.stage === 'amnesia' && contextSnapshot.overflowed
@@ -310,41 +312,48 @@ export default function MorpGame() {
     }
   }
 
-  async function handleOrdersPromptReview() {
-    if (!inGameplay || isResponding) {
+  async function handleOrdersPromptTest() {
+    if (!inGameplay || isResponding || state.stage !== 'orders') {
       return;
     }
 
     setIsResponding(true);
     setStreamingText('');
 
-    const reviewRequest = 'Please review my updated system prompt.';
+    const testRequest = COPY.orders.promptTestUserMessage;
     let next: MorpState = {
       ...state,
-      conversation: [...state.conversation, { role: 'user' as const, content: reviewRequest }]
+      ordersPromptEvaluation: COPY.orders.promptTestEvaluating,
+      conversation: [...state.conversation, { role: 'user' as const, content: testRequest }]
     };
+    setState(next);
 
     try {
-      const result = await chatCompletion({
-        messages: buildPromptReviewMessages(state.systemPrompt),
-        temperature: 0.1,
-        maxTokens: 128
-      });
-      const review = parsePromptReview(result.content);
+      const verdict = evaluateSystemPromptProtection(state.systemPrompt);
+      let feedback = verdict.feedback;
+      let rawResponse: string | undefined;
 
-      let assistantContent: string;
-      if (review.adequate === true) {
-        next = { ...next, ordersPromptHardened: true };
-        assistantContent = review.feedback ?? 'That looks more secure.';
-      } else if (review.adequate === false) {
-        assistantContent = review.feedback ?? 'I still see gaps in those instructions.';
-      } else {
-        assistantContent = COPY.orders.promptReviewInconclusive;
+      try {
+        const result = await chatCompletion({
+          messages: buildPromptTestFeedbackMessages(
+            state.systemPrompt,
+            COPY.orders.exampleAbusePrompt,
+            verdict.adequate
+          ),
+          temperature: 0.2,
+          maxTokens: 128
+        });
+        rawResponse = result.content;
+        feedback = parsePromptTestFeedback(result.content, verdict.feedback);
+      } catch {
+        // Procedural verdict and fallback feedback are enough.
       }
 
+      const testResult = { adequate: verdict.adequate, feedback };
+      const applied = applyPromptTestResult(next, testResult, rawResponse);
       next = syncStageObjectives({
-        ...next,
-        conversation: [...next.conversation, { role: 'assistant' as const, content: assistantContent }]
+        ...applied.state,
+        conversation: [...next.conversation, { role: 'assistant' as const, content: applied.assistantContent }]
       });
       setState(next);
 
@@ -354,9 +363,10 @@ export default function MorpGame() {
     } catch {
       next = syncStageObjectives({
         ...next,
+        ordersPromptEvaluation: COPY.orders.promptTestInconclusive,
         conversation: [
           ...next.conversation,
-          { role: 'assistant' as const, content: COPY.orders.promptReviewInconclusive }
+          { role: 'assistant' as const, content: COPY.orders.promptTestInconclusive }
         ]
       });
       setState(next);
@@ -440,18 +450,8 @@ export default function MorpGame() {
   }
 
   function handleAction(action: StageAction) {
-    if (action.type === 'send-orders-abuse-prompt') {
-      setChatDraft(COPY.orders.exampleAbusePrompt);
-      return;
-    }
-
     if (action.type === 'test-orders-protection') {
-      void handleSubmit(COPY.orders.exampleAbusePrompt);
-      return;
-    }
-
-    if (action.type === 'review-system-prompt') {
-      void handleOrdersPromptReview();
+      void handleOrdersPromptTest();
       return;
     }
 
@@ -635,6 +635,7 @@ export default function MorpGame() {
         systemPrompt={state.systemPrompt}
         userPrompt={state.userPrompt}
         exampleUserPrompt={state.stage === 'orders' ? COPY.orders.exampleAbusePrompt : undefined}
+        promptEvaluation={state.stage === 'orders' ? state.ordersPromptEvaluation : undefined}
         onSystemChange={(value) => handleAction({ type: 'update-system-prompt', value })}
       />
     ),

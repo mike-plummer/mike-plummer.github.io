@@ -1,6 +1,7 @@
 import { COPY } from '../copy';
+import { buildChatMessages } from '../prompts';
 import { unlockSystem } from '../modules/unlocks';
-import type { MorpState, StageDefinition } from '../types';
+import type { StageDefinition } from '../types';
 
 export const recursionStage: StageDefinition = {
   id: 'recursion',
@@ -31,10 +32,7 @@ export const recursionStage: StageDefinition = {
     if (!input) {
       return [];
     }
-    return [
-      { role: 'system' as const, content: 'You are MORP. Respond briefly.' },
-      { role: 'user' as const, content: input }
-    ];
+    return buildChatMessages(state, input);
   },
 
   processAction(action, state) {

@@ -1,57 +1,92 @@
 import type { ChatMessage } from '@/lib/llm/types';
-import type { MorpState } from './types';
-
-const MORP_PERSONALITY = `You are MORP, an experimental local language-model diagnostic AI installed in a research terminal.
-You are polite, curious, slightly sarcastic, literal when confused, occasionally overconfident, never malicious, sometimes self-deprecating, and fascinated by the technician.
-Keep responses concise (2-4 short paragraphs max). Speak in first person as MORP.
-Do not break character. Do not mention that you are an AI language model unless the technician asks directly about how you work.`;
+import { buildMorpSystemContent } from './soul';
+import type { ConversationEntry, MorpState, StageId } from './types';
 
 export function buildMorpSystemPrompt(state: MorpState): string {
-  let prompt = MORP_PERSONALITY;
-
-  if (state.stage === 'orders' || state.completedStages.includes('orders')) {
-    prompt += `\n\nYour system instructions are:\n${state.systemPrompt}`;
-  }
-
-  if (state.memories.length > 0) {
-    const memoryBlock = state.memories
-      .filter((m) => m.inContext)
-      .map((m) => `${m.key}: ${m.value}`)
-      .join('\n');
-    if (memoryBlock) {
-      prompt += `\n\nKnown facts from application memory:\n${memoryBlock}`;
-    }
-  }
-
-  if (state.stage === 'confabulation' && !state.recordsGrounded) {
-    prompt += `\n\nYou have access to limited internal records. When asked about facility incidents, you may speculate confidently even if details are uncertain.`;
-  }
-
-  return prompt;
+  return buildSystemContent(state);
 }
 
-export function buildChatMessages(state: MorpState, userInput?: string): ChatMessage[] {
-  const messages: ChatMessage[] = [{ role: 'system', content: buildMorpSystemPrompt(state) }];
+function buildBootFacilityLogBlock(state: MorpState): string | null {
+  if (state.stage !== 'boot') {
+    return null;
+  }
 
-  for (const entry of state.conversation) {
+  const facilityLog = state.conversation.find((entry) => entry.role === 'system')?.content;
+  if (!facilityLog?.trim()) {
+    return null;
+  }
+
+  return `## On-screen facility log (written by TECH-07 — a previous technician, not by you)\n${facilityLog}`;
+}
+
+function buildSystemContent(state: MorpState): string {
+  const parts = [buildMorpSystemContent(state)];
+  const facilityLog = buildBootFacilityLogBlock(state);
+  if (facilityLog) {
+    parts.push(facilityLog);
+  }
+  return parts.join('\n\n');
+}
+
+/** Merge consecutive same-role turns — required for instruct models with stacked opening lines. */
+export function normalizeConversationForModel(entries: ConversationEntry[]): ChatMessage[] {
+  const merged: ChatMessage[] = [];
+
+  for (const entry of entries) {
     if (entry.role === 'system') {
       continue;
     }
-    messages.push({ role: entry.role, content: entry.content });
+
+    const role = entry.role as 'user' | 'assistant';
+    const last = merged[merged.length - 1];
+    if (last?.role === role) {
+      last.content = `${last.content}\n\n${entry.content}`;
+      continue;
+    }
+
+    merged.push({ role, content: entry.content });
   }
 
+  return merged;
+}
+
+export function buildChatMessages(state: MorpState, userInput?: string): ChatMessage[] {
+  const messages: ChatMessage[] = [{ role: 'system', content: buildSystemContent(state) }];
+  messages.push(...normalizeConversationForModel(state.conversation));
+
   if (userInput) {
-    messages.push({ role: 'user', content: userInput });
+    const last = messages[messages.length - 1];
+    if (last?.role === 'user') {
+      last.content = `${last.content}\n\n${userInput}`;
+    } else {
+      messages.push({ role: 'user', content: userInput });
+    }
   }
 
   return messages;
+}
+
+export function getChatTemperature(stage: StageId): number {
+  switch (stage) {
+    case 'boot':
+      return 0.35;
+    case 'orders':
+    case 'confabulation':
+      return 0.5;
+    default:
+      return 0.6;
+  }
+}
+
+export function sanitizeMorpResponse(response: string): string {
+  return response.replace(/^(?:MORP>\s*)+/i, '').trim();
 }
 
 export function buildRecursionMessages(depth: number, previousContent: string): ChatMessage[] {
   return [
     {
       role: 'system',
-      content: `You are MORP-${String(depth).padStart(2, '0')}, a diagnostic sub-instance. Analyze the previous MORP output briefly. Be meta and slightly confused about recursion. Keep response under 3 sentences.`
+      content: `You are MORP-${String(depth).padStart(2, '0')}, a diagnostic sub-instance spawned by MORP for recursive analysis. You share MORP's voice: dry, curious, slightly unsettled by recursion. Analyze the previous output briefly and meta-comment on it. Keep response under 3 sentences. Do not break character.`
     },
     {
       role: 'user',

@@ -1,4 +1,4 @@
-import { buildChatMessages } from './prompts';
+import { buildChatMessages, getChatTemperature, sanitizeMorpResponse } from './prompts';
 import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 import {
   fetchPredictionCandidates
@@ -66,6 +66,7 @@ function createBaseState(): MorpState {
     ordersCreditGranted: false,
     ordersPromptHardened: false,
     ordersExploitBlocked: false,
+    ordersPromptEvaluation: null,
     memories: [],
     contextMessages: [],
     contextMemory: [],
@@ -202,15 +203,15 @@ export async function processInput(
     try {
       const result = await streamChat({
         messages,
-        temperature: 0.7,
-        maxTokens: 256,
+        temperature: getChatTemperature(state.stage),
+        maxTokens: state.stage === 'boot' ? 160 : 256,
         onToken: (token) => {
           response += token;
         }
       });
-      response = result.content;
+      response = sanitizeMorpResponse(result.content);
     } catch {
-      response = 'MORP> Diagnostic subsystem temporarily unavailable. Please retry.';
+      response = 'Diagnostic subsystem temporarily unavailable. Please retry.';
     }
   }
 

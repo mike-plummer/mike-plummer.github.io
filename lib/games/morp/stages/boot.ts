@@ -1,4 +1,5 @@
 import { COPY } from '../copy';
+import { buildChatMessages } from '../prompts';
 import type { StageDefinition } from '../types';
 
 export const bootStage: StageDefinition = {
@@ -21,17 +22,7 @@ export const bootStage: StageDefinition = {
     if (!input) {
       return [];
     }
-    return [
-      {
-        role: 'system' as const,
-        content:
-          'You are MORP, a diagnostic AI who believes something is wrong. Be curious, polite, slightly sarcastic. Keep responses brief.'
-      },
-      ...state.conversation
-        .filter((e) => e.role !== 'system')
-        .map((e) => ({ role: e.role as 'user' | 'assistant', content: e.content })),
-      { role: 'user' as const, content: input }
-    ];
+    return buildChatMessages(state, input);
   },
 
   processAction(_action, state) {
