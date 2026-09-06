@@ -5,8 +5,11 @@ import type { MorpCheckpoint, StageId } from './types';
 const REMOVED_STAGES = new Set(['remember', 'intrusion', 'repair']);
 
 function migrateStageId(stageId: string): StageId {
-  if (stageId === 'remember' || stageId === 'intrusion') {
-    return 'amnesia';
+  if (stageId === 'boot') {
+    return 'training';
+  }
+  if (stageId === 'remember' || stageId === 'intrusion' || stageId === 'amnesia') {
+    return 'context';
   }
   if (stageId === 'repair') {
     return 'recursion';
@@ -32,7 +35,7 @@ export function migrateCheckpoint(checkpoint: MorpCheckpoint): MorpCheckpoint {
 
   const furthestStage = furthestCandidates.reduce(
     (latest, stageId) => getLaterStage(latest, stageId),
-    'boot' as StageId
+    'training' as StageId
   );
 
   return { completedStages, currentStage, furthestStage };

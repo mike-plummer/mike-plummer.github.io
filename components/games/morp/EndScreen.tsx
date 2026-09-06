@@ -13,7 +13,7 @@ export default function EndScreen({ onRestart }: EndScreenProps) {
     'prediction',
     'refine',
     'orders',
-    'amnesia',
+    'context',
     'confabulation',
     'recursion'
   ]);

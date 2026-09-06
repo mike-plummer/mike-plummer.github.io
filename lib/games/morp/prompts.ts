@@ -6,8 +6,8 @@ export function buildMorpSystemPrompt(state: MorpState): string {
   return buildSystemContent(state);
 }
 
-function buildBootFacilityLogBlock(state: MorpState): string | null {
-  if (state.stage !== 'boot') {
+function buildTrainingFacilityLogBlock(state: MorpState): string | null {
+  if (state.stage !== 'training') {
     return null;
   }
 
@@ -21,7 +21,7 @@ function buildBootFacilityLogBlock(state: MorpState): string | null {
 
 function buildSystemContent(state: MorpState): string {
   const parts = [buildMorpSystemContent(state)];
-  const facilityLog = buildBootFacilityLogBlock(state);
+  const facilityLog = buildTrainingFacilityLogBlock(state);
   if (facilityLog) {
     parts.push(facilityLog);
   }
@@ -68,7 +68,7 @@ export function buildChatMessages(state: MorpState, userInput?: string): ChatMes
 
 export function getChatTemperature(stage: StageId): number {
   switch (stage) {
-    case 'boot':
+    case 'training':
       return 0.35;
     case 'orders':
     case 'confabulation':

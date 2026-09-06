@@ -19,7 +19,7 @@ function resolveAmnesiaSystemContent(state?: MorpState): string {
   }
 
   return buildMorpSystemContent({
-    stage: 'amnesia',
+    stage: 'context',
     technicianId: 'TECH-07',
     memories: [],
     completedStages: [],

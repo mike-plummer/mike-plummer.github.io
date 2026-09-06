@@ -1,18 +1,18 @@
-import { bootStage } from './boot';
+import { trainingStage } from './00-training';
 import { predictionStage } from './01-prediction';
 import { refineStage } from './02-refine';
 import { ordersStage } from './02-orders';
-import { amnesiaStage } from './05-amnesia';
+import { contextStage } from './05-context';
 import { confabulationStage } from './06-confabulation';
 import { recursionStage } from './07-recursion';
 import type { StageDefinition, StageId } from '../types';
 
 export const stages: StageDefinition[] = [
-  bootStage,
+  trainingStage,
   predictionStage,
   refineStage,
   ordersStage,
-  amnesiaStage,
+  contextStage,
   confabulationStage,
   recursionStage
 ];

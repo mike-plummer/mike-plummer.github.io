@@ -26,9 +26,9 @@ function applyContextMetrics(state: MorpState): MorpState {
   };
 }
 
-export const amnesiaStage: StageDefinition = {
-  id: 'amnesia',
-  concept: 'amnesia',
+export const contextStage: StageDefinition = {
+  id: 'context',
+  concept: 'context',
 
   initialize(state) {
     const contextMessages = buildSeedContextMessages();
@@ -36,7 +36,7 @@ export const amnesiaStage: StageDefinition = {
     const next = unlockSystem(
       {
         ...state,
-        stage: 'amnesia',
+        stage: 'context',
         technicianId,
         contextMessages,
         contextMemory: [],
@@ -46,7 +46,7 @@ export const amnesiaStage: StageDefinition = {
         contextLastCompaction: null,
         conversation: [
           ...state.conversation,
-          ...COPY.amnesia.morpLines.map((content) => ({ role: 'assistant' as const, content }))
+          ...COPY.context.morpLines.map((content) => ({ role: 'assistant' as const, content }))
         ]
       },
       'context'
@@ -168,26 +168,26 @@ export const amnesiaStage: StageDefinition = {
       return [];
     }
 
-    const actions: ReturnType<typeof amnesiaStage.getContextualActions> = [
+    const actions: ReturnType<typeof contextStage.getContextualActions> = [
       {
         id: 'truncate',
         label: 'Truncate',
-        pro: COPY.amnesia.tools.truncate.pro,
-        con: COPY.amnesia.tools.truncate.con,
+        pro: COPY.context.tools.truncate.pro,
+        con: COPY.context.tools.truncate.con,
         action: { type: 'truncate-context' }
       },
       {
         id: 'summarize',
         label: 'Summarize',
-        pro: COPY.amnesia.tools.summarize.pro,
-        con: COPY.amnesia.tools.summarize.con,
+        pro: COPY.context.tools.summarize.pro,
+        con: COPY.context.tools.summarize.con,
         action: { type: 'summarize-context' }
       },
       {
         id: 'memory',
         label: 'Store in Memory',
-        pro: COPY.amnesia.tools.memory.pro,
-        con: COPY.amnesia.tools.memory.con,
+        pro: COPY.context.tools.memory.pro,
+        con: COPY.context.tools.memory.con,
         action: { type: 'store-context-in-memory' }
       }
     ];
@@ -196,8 +196,8 @@ export const amnesiaStage: StageDefinition = {
       actions.push({
         id: 'clear-memory',
         label: 'Clear Memory',
-        pro: COPY.amnesia.tools.clearMemory.pro,
-        con: COPY.amnesia.tools.clearMemory.con,
+        pro: COPY.context.tools.clearMemory.pro,
+        con: COPY.context.tools.clearMemory.con,
         action: { type: 'clear-context-memory' }
       });
     }
@@ -210,11 +210,11 @@ export const amnesiaStage: StageDefinition = {
   },
 
   getDiagnosticReport() {
-    return COPY.amnesia.report;
+    return COPY.context.report;
   }
 };
 
-export function recordAmnesiaTurn(
+export function recordContextTurn(
   state: MorpState,
   userInput: string,
   assistantResponse: string
@@ -236,7 +236,7 @@ export function recordAmnesiaTurn(
   if (newlyOverflowed) {
     next = {
       ...next,
-      conversation: [...next.conversation, { role: 'system' as const, content: COPY.amnesia.overflow }]
+      conversation: [...next.conversation, { role: 'system' as const, content: COPY.context.overflow }]
     };
   }
 

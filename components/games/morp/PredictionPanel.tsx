@@ -35,8 +35,7 @@ export default function PredictionPanel({
 
       <label className="morp-field">
         <span>INPUT</span>
-        <input
-          type="text"
+        <textarea
           value={state.predictionInput}
           onChange={(e) => onInputChange(e.target.value)}
           className="morp-field__input"
@@ -107,7 +106,7 @@ export default function PredictionPanel({
                     style={{ width: `${candidate.weight * 100}%` }}
                   />
                 </div>
-                <span className="morp-prediction__weight">{Math.round(candidate.weight * 100)}%</span>
+                <span className="morp-prediction__weight">{(candidate.weight * 100).toFixed(2)}%</span>
                 <button
                   type="button"
                   className="button small morp-prediction__accept"

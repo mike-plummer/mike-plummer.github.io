@@ -26,11 +26,11 @@ export const MORP_COLORS = {
 } as const;
 
 export const STAGE_ORDER = [
-  'boot',
+  'training',
   'prediction',
   'refine',
   'orders',
-  'amnesia',
+  'context',
   'confabulation',
   'recursion'
 ] as const;

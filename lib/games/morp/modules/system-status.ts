@@ -60,14 +60,14 @@ export const SYSTEM_STATUS_DEFINITIONS: SystemStatusDefinition[] = [
     label: 'MEMORY',
     brokenStatus: 'UNMANAGED',
     repairedStatus: 'STABLE',
-    repairedByStage: 'amnesia'
+    repairedByStage: 'context'
   },
   {
     id: 'context',
     label: 'CONTEXT',
     brokenStatus: 'OVERFLOWING',
     repairedStatus: 'STABLE',
-    repairedByStage: 'amnesia'
+    repairedByStage: 'context'
   },
   {
     id: 'verification',

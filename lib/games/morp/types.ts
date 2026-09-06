@@ -1,11 +1,11 @@
 import type { ChatMessage } from '@/lib/llm/types';
 
 export type StageId =
-  | 'boot'
+  | 'training'
   | 'prediction'
   | 'refine'
   | 'orders'
-  | 'amnesia'
+  | 'context'
   | 'confabulation'
   | 'recursion';
 
@@ -20,11 +20,11 @@ export type SystemId =
   | 'recursion';
 
 export type Concept =
-  | 'boot'
+  | 'training'
   | 'prediction'
   | 'refine'
   | 'orders'
-  | 'amnesia'
+  | 'context'
   | 'confabulation'
   | 'recursion';
 
@@ -164,6 +164,11 @@ export interface MorpState {
   pendingReport: DiagnosticReport | null;
   showEnding: boolean;
 
+  // Training
+  trainingTechnologySynonymVerified: boolean;
+  trainingFranceCapitalVerified: boolean;
+  trainingWaterBoilingPointVerified: boolean;
+
   // Prediction
   predictionInput: string;
   predictionTemperature: number;
@@ -196,7 +201,7 @@ export interface MorpState {
   // Memory
   memories: MemoryEntry[];
 
-  // Amnesia
+  // Context stage
   contextMessages: ContextMessage[];
   contextMemory: ContextMessage[];
   contextTokensUsed: number;

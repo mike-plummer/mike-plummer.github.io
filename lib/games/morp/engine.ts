@@ -9,7 +9,8 @@ import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
 import { processIncidentInput } from './stages/06-confabulation';
 import { processRecursionInput } from './stages/07-recursion';
-import { recordAmnesiaTurn } from './stages/05-amnesia';
+import { recordContextTurn } from './stages/05-context';
+import { recordTrainingTurn } from './modules/training-probes';
 import { REVIEW_COMPLETE_REPLY, REVIEW_SEED_SUMMARY } from './modules/incident-review-chain';
 import type {
   DiagnosticReport,
@@ -30,7 +31,7 @@ export interface MessageResult {
 
 function createBaseState(): MorpState {
   return {
-    stage: 'boot',
+    stage: 'training',
     bootPhase: 'ack',
     bootAcknowledged: false,
     technicianId: null,
@@ -38,10 +39,13 @@ function createBaseState(): MorpState {
     unlockedSystems: ['chat'],
     discoveredConcepts: [],
     completedStages: [],
-    furthestStage: 'boot',
+    furthestStage: 'training',
     stageObjectivesMet: false,
     pendingReport: null,
     showEnding: false,
+    trainingTechnologySynonymVerified: false,
+    trainingFranceCapitalVerified: false,
+    trainingWaterBoilingPointVerified: false,
     predictionInput: '',
     predictionTemperature: 0.7,
     predictionCandidates: [],
@@ -117,14 +121,14 @@ export function createInitialState(): MorpState {
     state = stage.initialize(state);
     state.stage = checkpoint.currentStage;
     state.completedStages = checkpoint.completedStages;
-    state.furthestStage = checkpoint.furthestStage ?? 'boot';
+    state.furthestStage = checkpoint.furthestStage ?? 'training';
 
     for (const completed of checkpoint.completedStages) {
       const completedStage = getStage(completed);
       state.discoveredConcepts = [...new Set([...state.discoveredConcepts, completedStage.concept])];
     }
   } else {
-    state = getStage('boot').initialize(state);
+    state = getStage('training').initialize(state);
   }
 
   return syncStageObjectives(normalizeFurthestStage(state));
@@ -229,7 +233,7 @@ export async function processInput(
       const result = await streamChat({
         messages,
         temperature: getChatTemperature(state.stage),
-        maxTokens: state.stage === 'boot' ? 160 : 256,
+        maxTokens: state.stage === 'training' ? 160 : 256,
         onToken: (token) => {
           response += token;
         }
@@ -250,8 +254,12 @@ export async function processInput(
   };
 
   if (!scripted) {
-    if (state.stage === 'amnesia') {
-      next = recordAmnesiaTurn(next, input, response);
+    if (state.stage === 'training') {
+      next = recordTrainingTurn(next, input, response);
+    }
+
+    if (state.stage === 'context') {
+      next = recordContextTurn(next, input, response);
     }
 
     stage.inspectResponse(response, next);
@@ -304,7 +312,7 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
   const entrySystem: Partial<Record<StageId, SystemId>> = {
     prediction: 'prediction',
     refine: 'refine',
-    amnesia: 'context',
+    context: 'context',
     confabulation: 'verification',
     recursion: 'recursion'
   };

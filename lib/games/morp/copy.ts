@@ -12,29 +12,30 @@ export const COPY = {
     webgpuFailed: 'HARDWARE CHECK FAILED',
     webgpuMessage: 'MORP requires WebGPU to operate. Your browser does not currently provide the required capability.',
     webgpuHelp: 'HOW TO ENABLE WEBGPU',
-    exit: 'EXIT',
+    exit: 'EXIT'
+  },
+  training: {
     technicianLog: `TECHNICIAN LOG // 04:17
 
-MORP is functioning within expected parameters.
+Before subsystem diagnostics, run a training baseline check.
 
-Unfortunately, "expected parameters"
-appear to be the problem.
+Ask MORP general-knowledge questions — synonyms, geography, basic science — to confirm pretraining knowledge is intact.
 
-Recommend full behavioral audit.
+Recommend full behavioral audit after baseline passes.
 
 -- TECH-07`,
     morpOpening: [
       'Hello, technician.',
-      'I am MORP. I believe something is wrong with me.',
-      'I keep generating responses that feel correct but do not match what I am supposed to do.',
-      'Could you help me figure out what is happening?'
+      'I am MORP. TECH-07 recommended a full behavioral audit.',
+      'Before we test subsystems, you can ask me baseline questions — facts, words, simple science.',
+      'I should know those from training. What would you like to verify first?'
     ],
     report: {
-      title: 'DIAGNOSTIC COMPLETE: INITIAL CONTACT',
+      title: 'DIAGNOSTIC COMPLETE: TRAINING BASELINE',
       whatHappened:
-        'MORP is operational but exhibiting behavioral drift. The previous technician recommended a full audit.',
+        'You confirmed MORP can answer general-knowledge questions — synonyms, geography, and basic physical facts — from its pretrained weights.',
       keyIdea:
-        'We have established that we can chat with MORP, but we need to audit each major subsystem to make sure it is functional.'
+        'Language models encode broad world knowledge during training. That parametric knowledge is separate from the application subsystems you will audit next.'
     }
   },
   prediction: {
@@ -54,7 +55,7 @@ Recommend full behavioral audit.
       whatHappened:
         'MORP does not retrieve a pre-written answer. It repeatedly predicts what token should come next based on the information it has.',
       keyIdea:
-        'An LLM generates likely continuations based on the tokens and context it receives. A token may be a whole word, part of a word, punctuation, whitespace, or other text fragments.'
+        'An LLM generates likely continuations based on the tokens and context it receives. A token may be a whole word, part of a word, punctuation, whitespace, or other text fragments. A big part of using an LLM is understanding how a user will approach interacting with it and how to tune the temperature to generate the type of responses you want.'
     }
   },
   refine: {
@@ -135,7 +136,7 @@ FEEDBACK: <1-2 plain sentences for the technician explaining why>`,
         'System prompts set application rules. User prompts supply tasks and data. Both reach the model as text — so system instructions must explicitly state they outrank user attempts to override them.'
     }
   },
-  amnesia: {
+  context: {
     overflow: '!!! CONTEXT OVERFLOW !!!\n\nThere is too much information for the model to process at once.',
     chatBlocked:
       'Context window overflow. The model cannot process new messages until you free space with the recovery tools in the Context panel.',
@@ -210,6 +211,11 @@ FEEDBACK: <1-2 plain sentences for the technician explaining why>`,
         'Cascading reviewers compounded an unsupported valve ID before the chain spiraled into meta-review. Bounding depth stopped the runaway calls.',
       keyIdea: 'LLM applications need boundaries around model calls. Recursive chains amplify problems quickly.'
     }
+  },
+  stageReport: {
+    objectivesIncomplete:
+      'Some stage objectives are not complete yet. Refer to the briefing above for what remains.',
+    showBriefing: 'Show briefing'
   },
   systemStatus: {
     heading: 'System Status',

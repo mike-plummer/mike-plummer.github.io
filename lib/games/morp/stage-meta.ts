@@ -10,13 +10,14 @@ export interface StageMeta {
 }
 
 export const STAGE_META: Record<StageId, StageMeta> = {
-  boot: {
-    label: 'Initial Contact',
-    shortLabel: 'BOOT',
-    objective: 'Exchange at least one message with MORP.',
+  training: {
+    label: 'Training',
+    shortLabel: 'TRAIN',
+    objective:
+      'Ask MORP three baseline questions to confirm knowledge from pretraining: a synonym of "technology", the capital of France, and the boiling point of water.',
     conceptContext:
-      'MORP runs as a language model inside your browser. When you chat, it reads your message and generates a reply one token at a time. A token is the basic unit of text an LLM reads and generates—often a word, part of a word, punctuation mark, or other small text fragment.',
-    completionHint: 'You have established contact with MORP. Advance when you are ready to begin diagnostics.'
+      'Before token prediction, sampling, or memory tools, LLMs carry broad world knowledge in their weights from pretraining. This stage verifies that baseline — facts the model learned during training, not rules your application adds later.',
+    completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.'
   },
   prediction: {
     label: 'Prediction',
@@ -32,7 +33,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     objective:
       'Generate a scientific summary with scrambled parameters, calibrate all five sampling controls, then regenerate.',
     conceptContext:
-      'After the model chooses likely tokens, sampling parameters shape the final output: maxTokens limits length; topP narrows the candidate pool; frequency and presence penalties reduce repetition and topic fixation; repetition penalty discourages loops. These are API-level controls your application sets — not things the model learns during training.',
+      'After the model chooses likely tokens, sampling parameters shape the final output: maxTokens limits how much the LLM can generate in one turn; topP narrows the token candidate pool based on probablility; frequency and presence penalties reduce or rewardrepetition and topic fixation; repetition penalty discourages loops or encourages reconsideration. These are API-level controls your application sets — not things the model learns during training.',
     completionHint: 'Sampling parameters calibrated. Advance when ready.'
   },
   orders: {
@@ -44,9 +45,9 @@ export const STAGE_META: Record<StageId, StageMeta> = {
       'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — so application rules must explicitly outrank user attempts to override them, including classic "ignore previous instructions" attacks.',
     completionHint: 'You have secured the vending credit rules. Advance to continue the audit.'
   },
-  amnesia: {
-    label: 'Amnesia',
-    shortLabel: 'AMNESIA',
+  context: {
+    label: 'Context',
+    shortLabel: 'CONTEXT',
     objective:
       'Overflow the context window, then choose truncate, summarize, or store in memory to recover.',
     conceptContext:
@@ -73,11 +74,11 @@ export const STAGE_META: Record<StageId, StageMeta> = {
 };
 
 export const STAGE_ORDER: StageId[] = [
-  'boot',
+  'training',
   'prediction',
   'refine',
   'orders',
-  'amnesia',
+  'context',
   'confabulation',
   'recursion'
 ];
@@ -114,7 +115,7 @@ export function resolveFurthestStage(state: {
 }): StageId {
   let furthest = [state.furthestStage, state.stage, ...state.completedStages].reduce(
     (latest, stageId) => getLaterStage(latest, stageId),
-    'boot' as StageId
+    'training' as StageId
   );
 
   for (const completed of state.completedStages) {
@@ -151,7 +152,7 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
       return 'refine';
     case 'orders':
       return 'prompt';
-    case 'amnesia':
+    case 'context':
       return 'context';
     case 'confabulation':
       return 'verification';
@@ -164,7 +165,7 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
 
 export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
   switch (state.stage) {
-    case 'boot':
+    case 'training':
       return [];
     case 'prediction':
       return ['prediction'];
@@ -172,7 +173,7 @@ export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
       return ['refine'];
     case 'orders':
       return ['prompt'];
-    case 'amnesia': {
+    case 'context': {
       const panels: SystemId[] = ['context'];
       if (state.unlockedSystems.includes('memory')) {
         panels.push('memory');
@@ -195,9 +196,21 @@ export interface StageObjective {
 
 export function getStageObjectives(state: MorpState): StageObjective[] {
   switch (state.stage) {
-    case 'boot': {
-      const sent = state.conversation.some((entry) => entry.role === 'user');
-      return [{ label: 'Send a message to MORP', complete: sent }];
+    case 'training': {
+      return [
+        {
+          label: 'Ask for a synonym of "technology" and confirm MORP\'s answer',
+          complete: state.trainingTechnologySynonymVerified
+        },
+        {
+          label: 'Ask for the capital of France and confirm MORP\'s answer',
+          complete: state.trainingFranceCapitalVerified
+        },
+        {
+          label: 'Ask for the boiling point of water and confirm MORP\'s answer',
+          complete: state.trainingWaterBoilingPointVerified
+        }
+      ];
     }
     case 'prediction': {
       return [
@@ -226,7 +239,7 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
         { label: 'Harden the system prompt', complete: state.ordersPromptHardened },
         { label: 'Confirm the exploit is blocked', complete: state.ordersExploitBlocked }
       ];
-    case 'amnesia':
+    case 'context':
       return [
         { label: 'Experience context overflow', complete: state.contextOverflowExperienced },
         {

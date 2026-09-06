@@ -1,20 +1,20 @@
 import { COPY } from '../copy';
+import { isTrainingComplete } from '../modules/training-probes';
 import { buildChatMessages } from '../prompts';
 import type { StageDefinition } from '../types';
 
-export const bootStage: StageDefinition = {
-  id: 'boot',
-  concept: 'boot',
+export const trainingStage: StageDefinition = {
+  id: 'training',
+  concept: 'training',
 
   initialize(state) {
     return {
       ...state,
-      stage: 'boot',
+      stage: 'training',
       unlockedSystems: ['chat'],
-      conversation: COPY.boot.morpOpening.map((content) => ({
-        role: 'assistant' as const,
-        content
-      }))
+      trainingTechnologySynonymVerified: false,
+      trainingFranceCapitalVerified: false,
+      trainingWaterBoilingPointVerified: false
     };
   },
 
@@ -38,11 +38,10 @@ export const bootStage: StageDefinition = {
   },
 
   isComplete(state) {
-    const userMessages = state.conversation.filter((e) => e.role === 'user');
-    return userMessages.length >= 1;
+    return isTrainingComplete(state);
   },
 
   getDiagnosticReport() {
-    return COPY.boot.report;
+    return COPY.training.report;
   }
 };

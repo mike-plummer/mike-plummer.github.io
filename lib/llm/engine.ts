@@ -83,7 +83,8 @@ function bindAbortSignal(activeEngine: MLCEngine, signal?: AbortSignal): () => v
 }
 
 async function ensureInferenceMode(activeEngine: MLCEngine, mode: InferenceMode): Promise<void> {
-  if (lastInferenceMode !== null && lastInferenceMode !== mode) {
+  if (lastInferenceMode !== null && lastInferenceMode !== mode && mode === 'chat') {
+    // Completions are a separate API surface — only reset chat state when re-entering chat mode.
     try {
       await activeEngine.resetChat();
     } catch {
@@ -340,7 +341,6 @@ export async function fetchNextTokenLogprobs(
   const unbindAbort = bindAbortSignal(activeEngine, options.signal);
 
   try {
-    await ensureInferenceMode(activeEngine, 'completion');
     throwIfAborted(options.signal);
 
     const topLogprobs = Math.min(5, Math.max(1, options.topLogprobs ?? 5));
@@ -355,13 +355,30 @@ export async function fetchNextTokenLogprobs(
       top_logprobs: topLogprobs
     };
 
+    await ensureInferenceMode(activeEngine, 'completion');
+    throwIfAborted(options.signal);
+
     const completion = await activeEngine.completions.create({
       prompt,
       ...requestBase
     });
     throwIfAborted(options.signal);
 
-    const candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+    let candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+
+    if (!hasUsableLogprobs(candidates)) {
+      await ensureInferenceMode(activeEngine, 'chat');
+      throwIfAborted(options.signal);
+
+      const chatCompletion = await activeEngine.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        ...requestBase,
+        stream: false
+      });
+      throwIfAborted(options.signal);
+
+      candidates = extractTopLogprobs(chatCompletion.choices[0]?.logprobs?.content);
+    }
 
     if (hasUsableLogprobs(candidates)) {
       return { candidates };

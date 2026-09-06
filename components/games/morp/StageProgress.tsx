@@ -1,5 +1,6 @@
 'use client';
 
+import { COPY } from '@/lib/games/morp/copy';
 import { getOverallMorpStatus } from '@/lib/games/morp/modules/system-status';
 import { getStageMeta, getStageNumber, isStageAtOrBefore, resolveFurthestStage, STAGE_ORDER } from '@/lib/games/morp/stage-meta';
 import type { StageId } from '@/lib/games/morp/types';
@@ -85,10 +86,9 @@ export default function StageProgress({
             className={`morp-progress__status${statusNeedsAttention ? ' morp-progress__status--attention' : ''}`}
             onClick={onStatusOpen}
             disabled={disabled}
-            aria-label="Open repair status"
+            aria-label={`Open ${COPY.systemStatus.heading.toLowerCase()}`}
           >
-            <span className="morp-progress__status-prefix">SYS</span>
-            <span className="morp-progress__status-label">STATUS</span>
+            {COPY.systemStatus.heading}
           </button>
         )}
       </div>

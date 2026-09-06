@@ -1,12 +1,14 @@
 'use client';
 
 import { getStageMeta, getStageNumber, getStageObjectives } from '@/lib/games/morp/stage-meta';
-import type { MorpState, StageId } from '@/lib/games/morp/types';
+import type { MorpState } from '@/lib/games/morp/types';
 
 interface StageBriefingProps {
   state: MorpState;
-  stage?: StageId;
-  onAcknowledge?: () => void;
+  acknowledged: boolean;
+  expanded: boolean;
+  onAcknowledge: () => void;
+  onToggleExpanded: () => void;
 }
 
 function StageConceptContext({ context }: { context: string }) {
@@ -18,36 +20,67 @@ function StageConceptContext({ context }: { context: string }) {
   );
 }
 
-export default function StageBriefing({ state, stage, onAcknowledge }: StageBriefingProps) {
-  const stageId = stage ?? state.stage;
-  const meta = getStageMeta(stageId);
+export default function StageBriefing({
+  state,
+  acknowledged,
+  expanded,
+  onAcknowledge,
+  onToggleExpanded
+}: StageBriefingProps) {
+  const meta = getStageMeta(state.stage);
   const objectives = getStageObjectives(state);
+  const stageLabel = `Stage ${getStageNumber(state.stage)} — ${meta.label}`;
 
-  if (onAcknowledge) {
+  if (!acknowledged) {
     return (
-      <div className="morp-briefing-overlay" role="dialog" aria-labelledby="stage-briefing-heading" aria-modal="true">
-        <div className="morp-briefing morp-briefing--modal">
-          <p className="morp-briefing__stage">
-            Stage {getStageNumber(stageId)} — {meta.label}
-          </p>
-          <h2 id="stage-briefing-heading" className="morp-briefing__title">
-            Your Objective
-          </h2>
-          <p className="morp-briefing__objective">{meta.objective}</p>
-          <StageConceptContext context={meta.conceptContext} />
-          <button type="button" className="button morp-briefing__begin" onClick={onAcknowledge}>
-            Begin Stage
-          </button>
-        </div>
-      </div>
+      <section className="morp-briefing morp-briefing--intro" aria-labelledby="stage-briefing-heading">
+        <p className="morp-briefing__stage">{stageLabel}</p>
+        <h2 id="stage-briefing-heading" className="morp-briefing__title">
+          Your Objective
+        </h2>
+        <p className="morp-briefing__objective">{meta.objective}</p>
+        <StageConceptContext context={meta.conceptContext} />
+        <button type="button" className="button morp-briefing__begin" onClick={onAcknowledge}>
+          Begin Stage
+        </button>
+      </section>
+    );
+  }
+
+  if (!expanded) {
+    return (
+      <section className="morp-briefing morp-briefing--collapsed" aria-label="Stage briefing">
+        <button
+          type="button"
+          className="morp-briefing__toggle"
+          onClick={onToggleExpanded}
+          aria-expanded={false}
+        >
+          <span className="morp-briefing__toggle-label">{stageLabel}</span>
+          <span className="morp-briefing__toggle-hint">Show briefing</span>
+        </button>
+      </section>
     );
   }
 
   return (
-    <section className="morp-briefing" aria-labelledby="stage-briefing-heading">
-      <h2 id="stage-briefing-heading" className="morp-briefing__title">
-        Current Objective
-      </h2>
+    <section className="morp-briefing morp-briefing--reference" aria-labelledby="stage-briefing-heading">
+      <div className="morp-briefing__header">
+        <div>
+          <p className="morp-briefing__stage">{stageLabel}</p>
+          <h2 id="stage-briefing-heading" className="morp-briefing__title">
+            Current Objective
+          </h2>
+        </div>
+        <button
+          type="button"
+          className="button small alt morp-briefing__collapse"
+          onClick={onToggleExpanded}
+          aria-expanded
+        >
+          Hide briefing
+        </button>
+      </div>
       <p className="morp-briefing__objective">{meta.objective}</p>
       {objectives.length > 0 && (
         <ul className="morp-briefing__objectives">
@@ -56,10 +89,7 @@ export default function StageBriefing({ state, stage, onAcknowledge }: StageBrie
               key={objective.label}
               className={`morp-briefing__objective-item${objective.complete ? ' morp-briefing__objective-item--complete' : ' morp-briefing__objective-item--incomplete'}`}
             >
-              <span
-                className="morp-briefing__objective-marker"
-                aria-label={objective.complete ? 'Complete' : 'Incomplete'}
-              >
+              <span className="morp-briefing__objective-marker" aria-hidden="true">
                 {objective.complete ? '✓' : '✗'}
               </span>
               <span>{objective.label}</span>
