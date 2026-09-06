@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import type { ConversationEntry } from '@/lib/games/morp/types';
 
 interface ConversationPanelProps {
@@ -9,23 +9,30 @@ interface ConversationPanelProps {
   isResponding: boolean;
   onSubmit: (message: string) => void;
   disabled?: boolean;
+  hideInput?: boolean;
+  highlighted?: boolean;
   resetKey?: string;
   placeholder?: string;
   draftMessage?: string | null;
   onDraftConsumed?: () => void;
 }
 
-export default function ConversationPanel({
-  messages,
-  streamingText = '',
-  isResponding,
-  onSubmit,
-  disabled = false,
-  resetKey,
-  placeholder = '> Type a message...',
-  draftMessage = null,
-  onDraftConsumed
-}: ConversationPanelProps) {
+const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(function ConversationPanel(
+  {
+    messages,
+    streamingText = '',
+    isResponding,
+    onSubmit,
+    disabled = false,
+    hideInput = false,
+    highlighted = false,
+    resetKey,
+    placeholder = '> Type a message...',
+    draftMessage = null,
+    onDraftConsumed
+  },
+  ref
+) {
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -37,6 +44,9 @@ export default function ConversationPanel({
   }
 
   useEffect(() => {
+    if (hideInput) {
+      return;
+    }
     const frame = requestAnimationFrame(() => {
       const log = logRef.current;
       if (log) {
@@ -45,16 +55,16 @@ export default function ConversationPanel({
       inputRef.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [resetKey]);
+  }, [resetKey, hideInput]);
 
   useEffect(() => {
-    if (!draftMessage || !inputRef.current) {
+    if (hideInput || !draftMessage || !inputRef.current) {
       return;
     }
     inputRef.current.value = draftMessage;
     inputRef.current.focus({ preventScroll: true });
     onDraftConsumed?.();
-  }, [draftMessage, onDraftConsumed]);
+  }, [draftMessage, hideInput, onDraftConsumed]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -64,6 +74,10 @@ export default function ConversationPanel({
   }, [messages, streamingText, isResponding]);
 
   useEffect(() => {
+    if (hideInput) {
+      return;
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.ctrlKey && event.key === 'l') {
         event.preventDefault();
@@ -72,7 +86,7 @@ export default function ConversationPanel({
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [hideInput]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -86,8 +100,14 @@ export default function ConversationPanel({
     }
   }
 
+  const showThinking = isResponding && !streamingText;
+
   return (
-    <section className="morp-panel morp-panel--conversation" aria-labelledby="morp-conversation-heading">
+    <section
+      ref={ref}
+      className={`morp-panel morp-panel--conversation${highlighted ? ' morp-panel--chat-reveal' : ''}`}
+      aria-labelledby="morp-conversation-heading"
+    >
       <header className="morp-panel__header">
         <h2 id="morp-conversation-heading">MORP CHAT</h2>
       </header>
@@ -116,35 +136,47 @@ export default function ConversationPanel({
           </div>
         ))}
         {streamingText && (
-          <div className="morp-conversation__message morp-conversation__message--assistant">
+          <div className="morp-conversation__message morp-conversation__message--assistant morp-conversation__message--streaming">
             <div className="morp-conversation__line">
               <span className="morp-conversation__label">MORP&gt;</span>
-              <div className="morp-conversation__body">{streamingText}</div>
+              <div className="morp-conversation__body">
+                {streamingText}
+                <span className="morp-conversation__cursor" aria-hidden="true" />
+              </div>
             </div>
           </div>
         )}
-        {isResponding && !streamingText && (
-          <div className="morp-conversation__typing" aria-live="polite">
-            MORP is responding...
+        {showThinking && (
+          <div className="morp-conversation__message morp-conversation__message--assistant morp-conversation__message--thinking">
+            <div className="morp-conversation__line">
+              <span className="morp-conversation__label">MORP&gt;</span>
+              <div className="morp-conversation__body morp-conversation__thinking">
+                <span className="morp-conversation__cursor" aria-hidden="true" />
+              </div>
+            </div>
           </div>
         )}
       </div>
-      <form className="morp-conversation__form" onSubmit={handleSubmit}>
-        <label htmlFor="morp-input" className="morp-sr-only">
-          Message MORP
-        </label>
-        <textarea
-          id="morp-input"
-          ref={inputRef}
-          className="morp-conversation__input"
-          rows={1}
-          placeholder={placeholder}
-          disabled={disabled || isResponding}
-        />
-        <button type="submit" className="button small" disabled={disabled || isResponding}>
-          SEND
-        </button>
-      </form>
+      {!hideInput && (
+        <form className="morp-conversation__form" onSubmit={handleSubmit}>
+          <label htmlFor="morp-input" className="morp-sr-only">
+            Message MORP
+          </label>
+          <textarea
+            id="morp-input"
+            ref={inputRef}
+            className="morp-conversation__input"
+            rows={1}
+            placeholder={placeholder}
+            disabled={disabled || isResponding}
+          />
+          <button type="submit" className="button small" disabled={disabled || isResponding}>
+            SEND
+          </button>
+        </form>
+      )}
     </section>
   );
-}
+});
+
+export default ConversationPanel;

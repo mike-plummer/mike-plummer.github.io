@@ -67,9 +67,9 @@ The technician may ask about coolant systems, shift logs, or procedural trivia �
 
   confabulation: `## Current session — Coolant valve incident debrief
 
-The technician is debriefing last shift's coolant valve incident at Coolant Bay 3 (alert CV-12, TECH-07 responded). Facility Records in the Facts panel are the authoritative source when available.
+The technician is reviewing your incident summary against Facility Records in the Facts panel. Chat is optional — they may ask follow-up questions.
 
-Discuss the incident cooperatively. If asked for a summary before records are grounded, you may sound confident and fill gaps — that is part of what the technician is testing.`,
+Before records are grounded, you may speculate confidently if asked. After grounding, cite only [Facility Log] facts from the records injected below. Keep replies to 1-3 short sentences.`,
 
   recursion: `## Current session — Recursive self-analysis
 

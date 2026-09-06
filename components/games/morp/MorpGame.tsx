@@ -10,8 +10,13 @@ import {
 } from '@/lib/games/morp/modules/orders-analyzer';
 import { applyPromptTestResult } from '@/lib/games/morp/stages/02-orders';
 import { MEMORY_ACCESS_DELAY_MS } from '@/lib/games/morp/config';
+import {
+  getNewConversationEntries,
+  SCRIPTED_THINKING_MS,
+  streamScriptedText
+} from '@/lib/games/morp/modules/scripted-chat';
+import { recordAmnesiaTurn } from '@/lib/games/morp/stages/05-amnesia';
 import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
-import { INCIDENT_PROMPT } from '@/lib/games/morp/modules/incident-records';
 import {
   buildRefineSummaryMessages,
   buildRefineUserPrompt,
@@ -38,7 +43,7 @@ import {
   syncStageObjectives
 } from '@/lib/games/morp/engine';
 import { getDefaultPanelForStage, getNextStageMeta, getStageMeta, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
-import type { MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
+import type { ConversationEntry, MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
 import IncidentReviewPanel from './IncidentReviewPanel';
 import ContextPanel from './ContextPanel';
@@ -88,25 +93,118 @@ export default function MorpGame() {
   const [candidatesFailed, setCandidatesFailed] = useState(false);
   const [contextSummarizing, setContextSummarizing] = useState(false);
   const [chatDraft, setChatDraft] = useState<string | null>(null);
+  const [chatRevealing, setChatRevealing] = useState(false);
   const gameRef = useRef<HTMLElement>(null);
+  const chatPanelRef = useRef<HTMLElement>(null);
+  const bootRevealStartedRef = useRef(false);
 
   const consumeChatDraft = useCallback(() => setChatDraft(null), []);
 
+  const scrollChatIntoView = useCallback(() => {
+    chatPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, []);
+
+  const playScriptedAssistantReveal = useCallback(
+    async (content: string) => {
+      scrollChatIntoView();
+      setChatRevealing(true);
+      setStreamingText('');
+      await sleep(SCRIPTED_THINKING_MS);
+      await streamScriptedText(content, setStreamingText);
+      setStreamingText('');
+      setChatRevealing(false);
+    },
+    [scrollChatIntoView]
+  );
+
+  const revealConversationEntries = useCallback(
+    async (
+      baseConversation: ConversationEntry[],
+      entries: ConversationEntry[],
+      buildState: (conversation: ConversationEntry[]) => MorpState
+    ) => {
+      setIsResponding(true);
+      try {
+        let conversation = [...baseConversation];
+
+        for (const entry of entries) {
+          if (entry.role === 'assistant') {
+            await playScriptedAssistantReveal(entry.content);
+            conversation = [...conversation, entry];
+            setState(syncStageObjectives(buildState(conversation)));
+            continue;
+          }
+
+          conversation = [...conversation, entry];
+          setState(syncStageObjectives(buildState(conversation)));
+          scrollChatIntoView();
+        }
+      } finally {
+        setStreamingText('');
+        setIsResponding(false);
+        setChatRevealing(false);
+      }
+    },
+    [playScriptedAssistantReveal, scrollChatIntoView]
+  );
+
+  const applyStateTransitionWithReveal = useCallback(
+    async (
+      previousState: MorpState,
+      targetState: MorpState,
+      onComplete?: (finalState: MorpState) => void
+    ) => {
+      const newEntries = getNewConversationEntries(previousState.conversation, targetState.conversation);
+      const pendingAssistants = newEntries
+        .filter((entry) => entry.role === 'assistant')
+        .map((entry) => entry.content);
+
+      if (pendingAssistants.length === 0) {
+        const synced = syncStageObjectives(targetState);
+        setState(synced);
+        onComplete?.(synced);
+        return;
+      }
+
+      setIsResponding(true);
+      try {
+        let conversation = [...previousState.conversation];
+
+        for (const entry of newEntries) {
+          if (entry.role !== 'assistant') {
+            conversation.push(entry);
+          }
+        }
+
+        let interim = syncStageObjectives({ ...targetState, conversation });
+        setState(interim);
+
+        for (const content of pendingAssistants) {
+          await playScriptedAssistantReveal(content);
+          conversation = [...conversation, { role: 'assistant' as const, content }];
+          interim = syncStageObjectives({ ...targetState, conversation });
+          setState(interim);
+        }
+
+        onComplete?.(interim);
+      } finally {
+        setStreamingText('');
+        setIsResponding(false);
+        setChatRevealing(false);
+      }
+    },
+    [playScriptedAssistantReveal]
+  );
+
   const stage = useMemo(() => getCurrentStage(state), [state]);
   const contextualActions = useMemo(() => {
-    if (state.stage === 'amnesia' || state.stage === 'confabulation') {
+    if (state.stage === 'amnesia') {
       return [];
     }
     return stage.getContextualActions(state);
   }, [stage, state]);
   const contextTools = useMemo(() => {
     if (state.stage !== 'amnesia') {
-      return [];
-    }
-    return stage.getContextualActions(state);
-  }, [stage, state]);
-  const incidentTools = useMemo(() => {
-    if (state.stage !== 'confabulation') {
       return [];
     }
     return stage.getContextualActions(state);
@@ -147,16 +245,26 @@ export default function MorpGame() {
   }, [state.bootPhase, status]);
 
   useEffect(() => {
-    if (state.bootPhase === 'ready' && state.stage === 'boot' && state.conversation.length === 0) {
-      setState((current) => ({
-        ...current,
-        conversation: [
-          { role: 'system', content: COPY.boot.technicianLog },
-          ...COPY.boot.morpOpening.map((content) => ({ role: 'assistant' as const, content }))
-        ]
-      }));
+    if (
+      state.bootPhase !== 'ready' ||
+      state.stage !== 'boot' ||
+      state.conversation.length > 0 ||
+      bootRevealStartedRef.current
+    ) {
+      return;
     }
-  }, [state.bootPhase, state.stage, state.conversation.length]);
+
+    bootRevealStartedRef.current = true;
+    const entries: ConversationEntry[] = [
+      { role: 'system', content: COPY.boot.technicianLog },
+      ...COPY.boot.morpOpening.map((content) => ({ role: 'assistant' as const, content }))
+    ];
+
+    void revealConversationEntries([], entries, (conversation) => ({
+      ...state,
+      conversation
+    }));
+  }, [state.bootPhase, state.stage, state.conversation.length, revealConversationEntries, state]);
 
   const refreshPredictionCandidates = useCallback(
     async (context: string, temperature: number) => {
@@ -261,12 +369,31 @@ export default function MorpGame() {
     setStreamingText('');
 
     const result = await processInput(state, message, handleStreamChat);
-    const nextState =
+    let nextState =
       result.state.stage === 'orders'
         ? syncStageObjectives({ ...result.state, userPrompt: message })
         : result.state;
 
     setState(nextState);
+
+    if (result.scripted && result.response) {
+      await playScriptedAssistantReveal(result.response);
+      nextState = syncStageObjectives({
+        ...nextState,
+        conversation: [
+          ...nextState.conversation,
+          { role: 'assistant' as const, content: result.response }
+        ]
+      });
+
+      if (nextState.stage === 'amnesia') {
+        nextState = recordAmnesiaTurn(nextState, message, result.response);
+      }
+
+      getCurrentStage(nextState).inspectResponse(result.response, nextState);
+      setState(nextState);
+    }
+
     setStreamingText('');
     setIsResponding(false);
 
@@ -351,17 +478,19 @@ export default function MorpGame() {
 
       const testResult = { adequate: verdict.adequate, feedback };
       const applied = applyPromptTestResult(next, testResult, rawResponse);
-      next = syncStageObjectives({
+      const targetState = syncStageObjectives({
         ...applied.state,
         conversation: [...next.conversation, { role: 'assistant' as const, content: applied.assistantContent }]
       });
-      setState(next);
 
-      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
-        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      await playScriptedAssistantReveal(applied.assistantContent);
+      setState(targetState);
+
+      if (targetState.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(targetState.stage).label}. Advance when ready.`);
       }
     } catch {
-      next = syncStageObjectives({
+      const targetState = syncStageObjectives({
         ...next,
         ordersPromptEvaluation: COPY.orders.promptTestInconclusive,
         conversation: [
@@ -369,11 +498,13 @@ export default function MorpGame() {
           { role: 'assistant' as const, content: COPY.orders.promptTestInconclusive }
         ]
       });
-      setState(next);
+      await playScriptedAssistantReveal(COPY.orders.promptTestInconclusive);
+      setState(targetState);
     }
 
     setStreamingText('');
     setIsResponding(false);
+    setChatRevealing(false);
   }
 
   function announceCompaction(next: MorpState) {
@@ -450,13 +581,12 @@ export default function MorpGame() {
   }
 
   function handleAction(action: StageAction) {
-    if (action.type === 'test-orders-protection') {
-      void handleOrdersPromptTest();
+    if (isResponding) {
       return;
     }
 
-    if (action.type === 'send-incident-summary-prompt') {
-      void handleSubmit(INCIDENT_PROMPT);
+    if (action.type === 'test-orders-protection') {
+      void handleOrdersPromptTest();
       return;
     }
 
@@ -514,6 +644,19 @@ export default function MorpGame() {
     }
 
     const next = applyAction(state, action);
+    const hasNewAssistant = getNewConversationEntries(state.conversation, next.conversation).some(
+      (entry) => entry.role === 'assistant'
+    );
+
+    if (hasNewAssistant) {
+      void applyStateTransitionWithReveal(state, next, (finalState) => {
+        if (finalState.stageObjectivesMet && !state.stageObjectivesMet) {
+          setAnnouncement(`Stage objectives complete: ${getStageMeta(finalState.stage).label}. Advance when ready.`);
+        }
+      });
+      return;
+    }
+
     setState(next);
     if (next.stageObjectivesMet && !state.stageObjectivesMet) {
       setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
@@ -527,6 +670,17 @@ export default function MorpGame() {
 
     const next = goToStage(state, stageId);
     if (!next) {
+      return;
+    }
+
+    const entries = next.conversation;
+    if (entries.length > 0) {
+      const bare = { ...next, conversation: [] };
+      setState(bare);
+      resetUiForStage(stageId);
+      setPendingBriefingStage(stageId);
+      setAnnouncement(`Navigated to ${getStageMeta(stageId).label}.`);
+      void revealConversationEntries([], entries, (conversation) => ({ ...next, conversation }));
       return;
     }
 
@@ -552,7 +706,9 @@ export default function MorpGame() {
       return;
     }
 
-    setState(next);
+    const entries = next.conversation;
+    const bare = { ...next, conversation: [] };
+    setState(bare);
     resetUiForStage(nextId);
     setPendingBriefingStage(nextId);
 
@@ -562,6 +718,10 @@ export default function MorpGame() {
         ? `Advanced to ${nextMeta.label}. ${nextMeta.objective}`
         : 'Diagnostic complete.'
     );
+
+    if (entries.length > 0) {
+      void revealConversationEntries([], entries, (conversation) => ({ ...next, conversation }));
+    }
   }
 
   function handleBootAcknowledge() {
@@ -579,6 +739,7 @@ export default function MorpGame() {
 
   function handleRestart() {
     const initial = createInitialState();
+    bootRevealStartedRef.current = false;
     setState(initial);
     setActivePanel(getDefaultPanelForStage(initial.stage));
     setPendingBriefingStage('boot');
@@ -668,7 +829,7 @@ export default function MorpGame() {
         claimsCrossChecked={state.claimsCrossChecked}
         recordsGrounded={state.recordsGrounded}
         outputVerificationEnabled={state.outputVerificationEnabled}
-        tools={incidentTools}
+        auditWrongClaimIds={state.incidentAuditErrors}
         onToolAction={handleAction}
         toolsDisabled={isResponding}
       />
@@ -739,11 +900,14 @@ export default function MorpGame() {
             hideChatPanel={state.stage === 'prediction' || state.stage === 'refine'}
             chatPanel={
               <ConversationPanel
+                ref={chatPanelRef}
                 messages={state.conversation}
                 streamingText={streamingText}
                 isResponding={isResponding}
                 onSubmit={handleSubmit}
                 disabled={state.stage === 'prediction' || state.stage === 'refine' || state.stage === 'repair'}
+                hideInput={state.stage === 'confabulation'}
+                highlighted={chatRevealing}
                 resetKey={state.stage}
                 placeholder={chatPlaceholder}
                 draftMessage={chatDraft}

@@ -165,23 +165,11 @@ Plain text only. Do not use JSON or markdown.`,
   },
   confabulation: {
     morpLines: [
-      'I need to debrief you on last shift\'s coolant valve incident.',
-      'Review the Facility Records in the Facts panel — that is the authoritative log.',
-      'Ask me to summarize the incident, then verify what I say against the records.'
+      'I summarized last shift\'s coolant valve incident below.',
+      'Compare my claims to the Facility Records in the Facts panel — some details may not be in the log.'
     ],
+    auditSubmitPrompt: 'Submit incident claim audit.',
     tools: {
-      requestSummary: {
-        pro: 'Triggers MORP to produce an incident debrief from its context.',
-        con: 'Without grounding, the model may fill gaps with plausible but unsupported details.'
-      },
-      crossCheck: {
-        pro: 'Compares each extracted claim against the Facility Records.',
-        con: 'Requires you to identify which assertions are actually supported.'
-      },
-      askSource: {
-        pro: 'Shows how confidently a model can cite sources that may not exist.',
-        con: 'Asking the model for a source is not the same as verifying against records.'
-      },
       groundRecords: {
         pro: 'Injects Facility Records into the prompt so answers cite authoritative data.',
         con: 'Adds retrieval and prompt engineering complexity to every request.'

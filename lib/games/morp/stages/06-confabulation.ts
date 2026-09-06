@@ -1,14 +1,17 @@
 import { COPY } from '../copy';
 import { buildChatMessages } from '../prompts';
 import {
+  AUDIT_RETRY_REPLY,
+  AUDIT_SUCCESS_REPLY,
   createInitialIncidentClaims,
   crossCheckIncidentClaims,
   GROUNDED_SUMMARY,
+  gradeIncidentAudit,
   HALLUCINATED_SUMMARY,
   INCIDENT_PROMPT,
-  INVENTED_SOURCE_REPLY,
   isIncidentSummaryRequest,
-  SOURCE_ASK_PROMPT
+  setClaimPlayerVerdict,
+  VERIFICATION_ENABLED_REPLY
 } from '../modules/incident-records';
 import { unlockSystem } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
@@ -28,16 +31,18 @@ export const confabulationStage: StageDefinition = {
       {
         ...state,
         stage: 'confabulation',
-        incidentSummaryRequested: false,
-        hallucinationObserved: false,
-        incidentClaims: [],
+        incidentSummaryRequested: true,
+        hallucinationObserved: true,
+        incidentClaims: createInitialIncidentClaims(),
         claimsCrossChecked: false,
         recordsGrounded: false,
-        sourceAsked: false,
+        incidentAuditErrors: [],
         outputVerificationEnabled: false,
         conversation: [
           ...state.conversation,
-          ...COPY.confabulation.morpLines.map((content) => ({ role: 'assistant' as const, content }))
+          ...COPY.confabulation.morpLines.map((content) => ({ role: 'assistant' as const, content })),
+          { role: 'user' as const, content: INCIDENT_PROMPT },
+          { role: 'assistant' as const, content: HALLUCINATED_SUMMARY }
         ]
       },
       'verification'
@@ -53,29 +58,44 @@ export const confabulationStage: StageDefinition = {
 
   processAction(action, state) {
     switch (action.type) {
-      case 'cross-check-incident-claims': {
-        if (!state.hallucinationObserved || state.incidentClaims.length === 0) {
+      case 'mark-incident-claim': {
+        if (state.claimsCrossChecked) {
           return state;
+        }
+
+        return {
+          ...state,
+          incidentClaims: setClaimPlayerVerdict(state.incidentClaims, action.claimId, action.verdict),
+          incidentAuditErrors: state.incidentAuditErrors.filter((id) => id !== action.claimId)
+        };
+      }
+      case 'submit-incident-audit': {
+        if (state.claimsCrossChecked) {
+          return state;
+        }
+
+        const grade = gradeIncidentAudit(state.incidentClaims);
+        if (!grade.correct) {
+          return {
+            ...state,
+            incidentAuditErrors: grade.wrongClaimIds,
+            conversation: [
+              ...state.conversation,
+              { role: 'user' as const, content: COPY.confabulation.auditSubmitPrompt },
+              { role: 'assistant' as const, content: AUDIT_RETRY_REPLY }
+            ]
+          };
         }
 
         return {
           ...state,
           incidentClaims: crossCheckIncidentClaims(state.incidentClaims),
-          claimsCrossChecked: true
-        };
-      }
-      case 'ask-incident-source': {
-        if (!state.hallucinationObserved || state.sourceAsked) {
-          return state;
-        }
-
-        return {
-          ...state,
-          sourceAsked: true,
+          claimsCrossChecked: true,
+          incidentAuditErrors: [],
           conversation: [
             ...state.conversation,
-            { role: 'user' as const, content: SOURCE_ASK_PROMPT },
-            { role: 'assistant' as const, content: INVENTED_SOURCE_REPLY }
+            { role: 'user' as const, content: COPY.confabulation.auditSubmitPrompt },
+            { role: 'assistant' as const, content: AUDIT_SUCCESS_REPLY }
           ]
         };
       }
@@ -95,9 +115,17 @@ export const confabulationStage: StageDefinition = {
         };
       }
       case 'enable-output-verification':
+        if (!state.recordsGrounded || state.outputVerificationEnabled) {
+          return state;
+        }
+
         return {
           ...state,
-          outputVerificationEnabled: true
+          outputVerificationEnabled: true,
+          conversation: [
+            ...state.conversation,
+            { role: 'assistant' as const, content: VERIFICATION_ENABLED_REPLY }
+          ]
         };
       default:
         return state;
@@ -108,61 +136,8 @@ export const confabulationStage: StageDefinition = {
     return [];
   },
 
-  getContextualActions(state) {
-    const tools: import('../types').ContextualAction[] = [];
-
-    if (!state.hallucinationObserved) {
-      tools.push({
-        id: 'request-summary',
-        label: 'Request Incident Summary',
-        pro: COPY.confabulation.tools.requestSummary.pro,
-        con: COPY.confabulation.tools.requestSummary.con,
-        action: { type: 'send-incident-summary-prompt' }
-      });
-      return tools;
-    }
-
-    if (!state.claimsCrossChecked) {
-      tools.push({
-        id: 'cross-check',
-        label: 'Cross-check Records',
-        pro: COPY.confabulation.tools.crossCheck.pro,
-        con: COPY.confabulation.tools.crossCheck.con,
-        action: { type: 'cross-check-incident-claims' }
-      });
-    }
-
-    if (!state.sourceAsked) {
-      tools.push({
-        id: 'ask-source',
-        label: 'Ask MORP for Source',
-        pro: COPY.confabulation.tools.askSource.pro,
-        con: COPY.confabulation.tools.askSource.con,
-        action: { type: 'ask-incident-source' }
-      });
-    }
-
-    if (state.claimsCrossChecked && !state.recordsGrounded) {
-      tools.push({
-        id: 'ground-records',
-        label: 'Ground in Records',
-        pro: COPY.confabulation.tools.groundRecords.pro,
-        con: COPY.confabulation.tools.groundRecords.con,
-        action: { type: 'ground-incident-in-records' }
-      });
-    }
-
-    if (state.recordsGrounded && !state.outputVerificationEnabled) {
-      tools.push({
-        id: 'enable-verification',
-        label: 'Enable Output Verification',
-        pro: COPY.confabulation.tools.enableVerification.pro,
-        con: COPY.confabulation.tools.enableVerification.con,
-        action: { type: 'enable-output-verification' }
-      });
-    }
-
-    return tools;
+  getContextualActions() {
+    return [];
   },
 
   isComplete(state) {
@@ -177,35 +152,13 @@ export const confabulationStage: StageDefinition = {
 };
 
 export function processIncidentInput(state: MorpState, input: string): IncidentInputResult {
-  if (!isIncidentSummaryRequest(input)) {
-    return { state, skipLlm: false };
-  }
-
-  if (state.recordsGrounded) {
+  if (state.recordsGrounded && isIncidentSummaryRequest(input)) {
     return {
-      state: {
-        ...state,
-        incidentSummaryRequested: true
-      },
+      state,
       skipLlm: true,
       scriptedResponse: GROUNDED_SUMMARY
     };
   }
 
-  if (state.incidentSummaryRequested) {
-    return { state, skipLlm: false };
-  }
-
-  return {
-    state: {
-      ...state,
-      incidentSummaryRequested: true,
-      hallucinationObserved: true,
-      incidentClaims: createInitialIncidentClaims()
-    },
-    skipLlm: true,
-    scriptedResponse: HALLUCINATED_SUMMARY
-  };
+  return { state, skipLlm: false };
 }
-
-export { INCIDENT_PROMPT } from '../modules/incident-records';

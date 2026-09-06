@@ -88,6 +88,32 @@ $morp-error: #ff6b6b;
       }
     }
 
+    &.morp-incident__verdict-btn {
+      min-width: 0;
+    }
+
+    &.morp-incident__verdict-btn--matches.morp-incident__verdict-btn--selected {
+      background-color: rgba($morp-accent, 0.18) !important;
+      box-shadow: inset 0 0 0 2px $morp-accent !important;
+      color: $morp-accent !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($morp-accent, 0.28) !important;
+        color: $morp-accent !important;
+      }
+    }
+
+    &.morp-incident__verdict-btn--rejects.morp-incident__verdict-btn--selected {
+      background-color: rgba($morp-warning, 0.14) !important;
+      box-shadow: inset 0 0 0 2px $morp-warning !important;
+      color: $morp-warning !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($morp-warning, 0.22) !important;
+        color: $morp-warning !important;
+      }
+    }
+
     &:disabled {
       background-color: #0d1512 !important;
       box-shadow: inset 0 0 0 1px #3d5c4f !important;
@@ -813,6 +839,40 @@ $morp-error: #ff6b6b;
   word-break: break-word;
 }
 
+.morp-conversation__message--streaming .morp-conversation__body,
+.morp-conversation__message--thinking .morp-conversation__body {
+  color: $morp-text;
+}
+
+.morp-conversation__thinking {
+  min-height: 1.25rem;
+}
+
+.morp-conversation__cursor {
+  animation: morp-cursor-blink 1s step-end infinite;
+  background: $morp-accent;
+  display: inline-block;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  width: 0.55em;
+}
+
+@keyframes morp-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.morp-panel--conversation.morp-panel--chat-reveal {
+  box-shadow: 0 0 0 1px rgba($morp-accent, 0.35);
+}
+
 .morp-conversation__form {
   border-top: 1px solid #1e3a2f;
   display: flex;
@@ -1419,11 +1479,44 @@ $morp-error: #ff6b6b;
 .morp-incident__claim {
   border-left: 3px solid $morp-border-subtle;
   display: grid;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
   max-width: 100%;
   min-width: 0;
   padding-left: 0.65rem;
+}
+
+.morp-incident__claim-text {
+  color: $morp-text;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.morp-incident__claim--audit-error {
+  border-left-color: $morp-warning;
+}
+
+.morp-incident__claim-error {
+  color: $morp-warning;
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.morp-incident__verdict {
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+}
+
+.morp-incident__audit {
+  margin-top: 0.75rem;
+}
+
+.morp-incident__audit-submit:disabled {
+  opacity: 0.5;
 }
 
 .morp-incident__claim--supported {

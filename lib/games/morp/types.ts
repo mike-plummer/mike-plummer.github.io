@@ -39,10 +39,13 @@ export type ContextStrategy = 'unbounded' | 'truncate' | 'summarize' | 'memory';
 
 export type IncidentClaimStatus = 'unchecked' | 'supported' | 'unsupported';
 
+export type IncidentPlayerVerdict = 'supported' | 'unsupported';
+
 export interface IncidentClaim {
   id: string;
   text: string;
   status: IncidentClaimStatus;
+  playerVerdict: IncidentPlayerVerdict | null;
 }
 
 export interface RefineSamplingConfig {
@@ -144,10 +147,9 @@ export type StageAction =
   | { type: 'apply-context-summary'; summary: string; usedLlm?: boolean }
   | { type: 'store-context-in-memory' }
   | { type: 'clear-context-memory' }
-  | { type: 'cross-check-incident-claims' }
-  | { type: 'ask-incident-source' }
+  | { type: 'mark-incident-claim'; claimId: string; verdict: IncidentPlayerVerdict }
+  | { type: 'submit-incident-audit' }
   | { type: 'ground-incident-in-records' }
-  | { type: 'send-incident-summary-prompt' }
   | { type: 'enable-output-verification' }
   | { type: 'set-recursion-limit'; value: number | null }
   | { type: 'start-recursion' }
@@ -226,7 +228,7 @@ export interface MorpState {
   incidentClaims: IncidentClaim[];
   claimsCrossChecked: boolean;
   recordsGrounded: boolean;
-  sourceAsked: boolean;
+  incidentAuditErrors: string[];
   outputVerificationEnabled: boolean;
 
   // Recursion

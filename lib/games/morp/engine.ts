@@ -22,6 +22,7 @@ export interface MessageResult {
   state: MorpState;
   response: string;
   report: DiagnosticReport | null;
+  scripted?: boolean;
 }
 
 function createBaseState(): MorpState {
@@ -80,7 +81,7 @@ function createBaseState(): MorpState {
     incidentClaims: [],
     claimsCrossChecked: false,
     recordsGrounded: false,
-    sourceAsked: false,
+    incidentAuditErrors: [],
     outputVerificationEnabled: false,
     recursionDepth: 0,
     recursionLimit: 3,
@@ -191,14 +192,17 @@ export async function processInput(
       : buildChatMessages(next, input);
 
   let response = '';
+  let scripted = false;
   if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
     response = ordersResult.scriptedResponse;
+    scripted = true;
   } else if (
     state.stage === 'confabulation' &&
     incidentResult?.skipLlm &&
     incidentResult.scriptedResponse
   ) {
     response = incidentResult.scriptedResponse;
+    scripted = true;
   } else {
     try {
       const result = await streamChat({
@@ -220,20 +224,23 @@ export async function processInput(
     conversation: [
       ...next.conversation,
       { role: 'user' as const, content: input },
-      { role: 'assistant' as const, content: response }
+      ...(scripted ? [] : [{ role: 'assistant' as const, content: response }])
     ]
   };
 
-  if (state.stage === 'amnesia') {
-    next = recordAmnesiaTurn(next, input, response);
-  }
+  if (!scripted) {
+    if (state.stage === 'amnesia') {
+      next = recordAmnesiaTurn(next, input, response);
+    }
 
-  stage.inspectResponse(response, next);
+    stage.inspectResponse(response, next);
+  }
 
   return {
     state: syncStageObjectives(next),
     response,
-    report: null
+    report: null,
+    scripted
   };
 }
 

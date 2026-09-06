@@ -57,7 +57,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Facts',
     shortLabel: 'FACTS',
     objective:
-      'Request an incident summary, cross-check claims against Facility Records, then ground responses and enable output verification.',
+      'Review MORP\'s incident summary, audit each claim against Facility Records, then ground responses and enable output verification.',
     conceptContext:
       'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may produce confident-sounding answers with invented specifics — hallucinations. Reliable systems cross-check critical claims against authoritative sources and mitigate with grounding and output verification.',
     completionHint: 'You have identified and mitigated hallucinated claims. Advance to continue.'
@@ -250,15 +250,15 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
     case 'confabulation':
       return [
         {
-          label: 'Request incident summary and observe claims',
+          label: "Review MORP's incident summary",
           complete: state.hallucinationObserved
         },
         {
-          label: 'Cross-check claims against Facility Records',
+          label: 'Audit each claim against Facility Records',
           complete: state.claimsCrossChecked
         },
         {
-          label: 'Ground in records and enable output verification',
+          label: 'Ground responses and enable verification',
           complete: state.recordsGrounded && state.outputVerificationEnabled
         }
       ];
