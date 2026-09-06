@@ -106,19 +106,21 @@ export default function ConversationPanel({
             {message.role === 'system' ? (
               <pre className="morp-conversation__system">{message.content}</pre>
             ) : (
-              <>
+              <div className="morp-conversation__line">
                 <span className="morp-conversation__label">
                   {message.role === 'user' ? '>' : 'MORP>'}
                 </span>
-                <span>{message.content}</span>
-              </>
+                <div className="morp-conversation__body">{message.content}</div>
+              </div>
             )}
           </div>
         ))}
         {streamingText && (
           <div className="morp-conversation__message morp-conversation__message--assistant">
-            <span className="morp-conversation__label">MORP&gt;</span>
-            <span>{streamingText}</span>
+            <div className="morp-conversation__line">
+              <span className="morp-conversation__label">MORP&gt;</span>
+              <div className="morp-conversation__body">{streamingText}</div>
+            </div>
           </div>
         )}
         {isResponding && !streamingText && (
