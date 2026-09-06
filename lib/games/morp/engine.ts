@@ -3,15 +3,12 @@ import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 import {
   fetchPredictionCandidates
 } from './modules/prediction-llm';
-import { runRecursionChain } from './modules/recursion-controller';
 import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
 import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
 import { processIncidentInput } from './stages/06-confabulation';
-import { processRecursionInput } from './stages/07-recursion';
 import { recordContextTurn } from './stages/05-context';
 import { recordTrainingTurn } from './modules/training-probes';
-import { REVIEW_COMPLETE_REPLY, REVIEW_SEED_SUMMARY } from './modules/incident-review-chain';
 import type {
   DiagnosticReport,
   MorpState,
@@ -26,7 +23,6 @@ export interface MessageResult {
   response: string;
   report: DiagnosticReport | null;
   scripted?: boolean;
-  triggerChain?: boolean;
 }
 
 function createBaseState(): MorpState {
@@ -68,7 +64,7 @@ function createBaseState(): MorpState {
     refineBrokenSummary: '',
     systemPrompt: '',
     userPrompt: '',
-    vendingBalance: 0,
+    supercomputerBalance: 0,
     ordersToolLedger: [],
     ordersAbuseReviewed: false,
     ordersCreditGranted: false,
@@ -90,14 +86,17 @@ function createBaseState(): MorpState {
     recordsGrounded: false,
     incidentAuditErrors: [],
     outputVerificationEnabled: false,
-    recursionDepth: 0,
-    recursionLimit: null,
-    recursionNodes: [],
-    recursionRunning: false,
-    recursionFailed: false,
-    recursionCompleted: false,
-    recursionTriggered: false,
-    computationLevel: 0
+    evalSummaryGenerated: false,
+    evalLlmJudgeRunning: false,
+    evalLlmJudgeCompleted: false,
+    evalLlmScores: null,
+    evalLlmDurationMs: null,
+    evalLlmFeedback: null,
+    evalHumanJudgeStartedAt: null,
+    evalHumanDraftScores: null,
+    evalHumanJudgeCompleted: false,
+    evalHumanScores: null,
+    evalHumanDurationMs: null
   };
 }
 
@@ -173,7 +172,6 @@ export async function processInput(
   let next = { ...state };
   let ordersResult: Awaited<ReturnType<typeof processOrdersInput>> | null = null;
   let incidentResult: ReturnType<typeof processIncidentInput> | null = null;
-  let recursionResult: ReturnType<typeof processRecursionInput> | null = null;
 
   if (state.stage === 'orders') {
     ordersResult = await processOrdersInput(next, input, streamChat);
@@ -185,11 +183,6 @@ export async function processInput(
     next = incidentResult.state;
   }
 
-  if (state.stage === 'recursion') {
-    recursionResult = processRecursionInput(next, input);
-    next = recursionResult.state;
-  }
-
   // Refine uses handleRefineGenerate with a task-only prompt — not MORP chat/soul.
   if (state.stage === 'refine') {
     return {
@@ -199,8 +192,7 @@ export async function processInput(
       }),
       response: '',
       report: null,
-      scripted: true,
-      triggerChain: false
+      scripted: true
     };
   }
 
@@ -220,13 +212,6 @@ export async function processInput(
     incidentResult.scriptedResponse
   ) {
     response = incidentResult.scriptedResponse;
-    scripted = true;
-  } else if (
-    state.stage === 'recursion' &&
-    recursionResult?.skipLlm &&
-    recursionResult.scriptedResponse
-  ) {
-    response = recursionResult.scriptedResponse;
     scripted = true;
   } else {
     try {
@@ -269,39 +254,8 @@ export async function processInput(
     state: syncStageObjectives(next),
     response,
     report: null,
-    scripted,
-    triggerChain: recursionResult?.triggerChain ?? false
+    scripted
   };
-}
-
-export async function runRecursion(
-  state: MorpState,
-  streamChat: StreamChatFn,
-  onNode?: (node: { depth: number; label: string; content: string }) => void
-): Promise<MorpState> {
-  const result = await runRecursionChain(REVIEW_SEED_SUMMARY, state.recursionLimit, streamChat, onNode);
-
-  let next: MorpState = {
-    ...state,
-    recursionRunning: false,
-    recursionNodes: result.nodes,
-    recursionDepth: result.nodes.length,
-    recursionFailed: result.failed,
-    recursionCompleted: result.completed,
-    computationLevel: result.computationLevel
-  };
-
-  if (result.completed) {
-    next = {
-      ...next,
-      conversation: [
-        ...next.conversation,
-        { role: 'assistant' as const, content: REVIEW_COMPLETE_REPLY }
-      ]
-    };
-  }
-
-  return syncStageObjectives(next);
 }
 
 function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
@@ -314,7 +268,7 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
     refine: 'refine',
     context: 'context',
     confabulation: 'verification',
-    recursion: 'recursion'
+    evals: 'evals'
   };
 
   const system = entrySystem[stageId];

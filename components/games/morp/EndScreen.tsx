@@ -10,12 +10,13 @@ interface EndScreenProps {
 
 export default function EndScreen({ onRestart }: EndScreenProps) {
   const statusItems = getSystemStatusItems([
+    'training',
     'prediction',
     'refine',
     'orders',
     'context',
     'confabulation',
-    'recursion'
+    'evals'
   ]);
 
   function handleEnd() {

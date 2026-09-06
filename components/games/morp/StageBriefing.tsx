@@ -11,12 +11,69 @@ interface StageBriefingProps {
   onToggleExpanded: () => void;
 }
 
-function StageConceptContext({ context }: { context: string }) {
+function BriefingSection({
+  title,
+  titleId,
+  children
+}: {
+  title: string;
+  titleId?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="morp-briefing__context">
-      <h3 className="morp-briefing__context-title">How This Works</h3>
-      <p className="morp-briefing__context-text">{context}</p>
+    <div className="morp-briefing__section">
+      <h3 id={titleId} className="morp-briefing__section-title">
+        {title}
+      </h3>
+      <div className="morp-briefing__section-body">{children}</div>
     </div>
+  );
+}
+
+function StageSuggestions({ suggestions }: { suggestions: string[] }) {
+  return (
+    <ul className="morp-briefing__suggestions-list">
+      {suggestions.map((suggestion) => (
+        <li key={suggestion}>{suggestion}</li>
+      ))}
+    </ul>
+  );
+}
+
+function StageObjectiveContent({
+  objective,
+  objectives,
+  suggestions
+}: {
+  objective: string;
+  objectives: ReturnType<typeof getStageObjectives>;
+  suggestions?: string[];
+}) {
+  return (
+    <>
+      <p className="morp-briefing__section-text">{objective}</p>
+      {objectives.length > 0 && (
+        <ul className="morp-briefing__objectives">
+          {objectives.map((item) => (
+            <li
+              key={item.label}
+              className={`morp-briefing__objective-item${item.complete ? ' morp-briefing__objective-item--complete' : ' morp-briefing__objective-item--incomplete'}`}
+            >
+              <span className="morp-briefing__objective-marker" aria-hidden="true">
+                {item.complete ? '✓' : '✗'}
+              </span>
+              <span>{item.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {suggestions && suggestions.length > 0 && (
+        <div className="morp-briefing__suggestions">
+          <p className="morp-briefing__suggestions-label">Try this</p>
+          <StageSuggestions suggestions={suggestions} />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -33,13 +90,18 @@ export default function StageBriefing({
 
   if (!acknowledged) {
     return (
-      <section className="morp-briefing morp-briefing--intro" aria-labelledby="stage-briefing-heading">
+      <section className="morp-briefing morp-briefing--intro" aria-labelledby="stage-briefing-context">
         <p className="morp-briefing__stage">{stageLabel}</p>
-        <h2 id="stage-briefing-heading" className="morp-briefing__title">
-          Your Objective
-        </h2>
-        <p className="morp-briefing__objective">{meta.objective}</p>
-        <StageConceptContext context={meta.conceptContext} />
+        <BriefingSection title="How This Works" titleId="stage-briefing-context">
+          <p className="morp-briefing__section-text">{meta.conceptContext}</p>
+        </BriefingSection>
+        <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
+          <StageObjectiveContent
+            objective={meta.objective}
+            objectives={[]}
+            suggestions={meta.suggestions}
+          />
+        </BriefingSection>
         <button type="button" className="button morp-briefing__begin" onClick={onAcknowledge}>
           Begin Stage
         </button>
@@ -64,14 +126,9 @@ export default function StageBriefing({
   }
 
   return (
-    <section className="morp-briefing morp-briefing--reference" aria-labelledby="stage-briefing-heading">
+    <section className="morp-briefing morp-briefing--reference" aria-labelledby="stage-briefing-context">
       <div className="morp-briefing__header">
-        <div>
-          <p className="morp-briefing__stage">{stageLabel}</p>
-          <h2 id="stage-briefing-heading" className="morp-briefing__title">
-            Current Objective
-          </h2>
-        </div>
+        <p className="morp-briefing__stage">{stageLabel}</p>
         <button
           type="button"
           className="button small alt morp-briefing__collapse"
@@ -81,23 +138,16 @@ export default function StageBriefing({
           Hide briefing
         </button>
       </div>
-      <p className="morp-briefing__objective">{meta.objective}</p>
-      {objectives.length > 0 && (
-        <ul className="morp-briefing__objectives">
-          {objectives.map((objective) => (
-            <li
-              key={objective.label}
-              className={`morp-briefing__objective-item${objective.complete ? ' morp-briefing__objective-item--complete' : ' morp-briefing__objective-item--incomplete'}`}
-            >
-              <span className="morp-briefing__objective-marker" aria-hidden="true">
-                {objective.complete ? '✓' : '✗'}
-              </span>
-              <span>{objective.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <StageConceptContext context={meta.conceptContext} />
+      <BriefingSection title="How This Works" titleId="stage-briefing-context">
+        <p className="morp-briefing__section-text">{meta.conceptContext}</p>
+      </BriefingSection>
+      <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
+        <StageObjectiveContent
+          objective={meta.objective}
+          objectives={objectives}
+          suggestions={meta.suggestions}
+        />
+      </BriefingSection>
     </section>
   );
 }

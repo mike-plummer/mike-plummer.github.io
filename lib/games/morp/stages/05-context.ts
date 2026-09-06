@@ -188,19 +188,19 @@ export const contextStage: StageDefinition = {
         label: 'Store in Memory',
         pro: COPY.context.tools.memory.pro,
         con: COPY.context.tools.memory.con,
-        action: { type: 'store-context-in-memory' }
+        action: { type: 'store-context-in-memory' },
+        ...(hasActiveContextMemory(state.contextMemory)
+          ? {
+              secondaryAction: {
+                label: 'Clear Memory',
+                pro: COPY.context.tools.clearMemory.pro,
+                con: COPY.context.tools.clearMemory.con,
+                action: { type: 'clear-context-memory' }
+              }
+            }
+          : {})
       }
     ];
-
-    if (hasActiveContextMemory(state.contextMemory)) {
-      actions.push({
-        id: 'clear-memory',
-        label: 'Clear Memory',
-        pro: COPY.context.tools.clearMemory.pro,
-        con: COPY.context.tools.clearMemory.con,
-        action: { type: 'clear-context-memory' }
-      });
-    }
 
     return actions;
   },

@@ -1,6 +1,7 @@
 import type { StageId } from '../types';
 
 export type SystemStatusId =
+  | 'training'
   | 'prediction'
   | 'sampling'
   | 'prompts'
@@ -8,7 +9,7 @@ export type SystemStatusId =
   | 'memory'
   | 'context'
   | 'verification'
-  | 'recursion';
+  | 'evals';
 
 export type SystemStatusState = 'broken' | 'repaired';
 
@@ -27,6 +28,13 @@ export interface SystemStatusItem extends SystemStatusDefinition {
 export type OverallMorpStatus = 'DEGRADED' | 'OPERATIONAL';
 
 export const SYSTEM_STATUS_DEFINITIONS: SystemStatusDefinition[] = [
+  {
+    id: 'training',
+    label: 'TRAINING',
+    brokenStatus: 'UNVERIFIED',
+    repairedStatus: 'VERIFIED',
+    repairedByStage: 'training'
+  },
   {
     id: 'prediction',
     label: 'PREDICTION',
@@ -77,11 +85,11 @@ export const SYSTEM_STATUS_DEFINITIONS: SystemStatusDefinition[] = [
     repairedByStage: 'confabulation'
   },
   {
-    id: 'recursion',
-    label: 'RECURSION',
-    brokenStatus: 'UNBOUNDED',
-    repairedStatus: 'LIMITED',
-    repairedByStage: 'recursion'
+    id: 'evals',
+    label: 'EVALS',
+    brokenStatus: 'UNSCORED',
+    repairedStatus: 'CALIBRATED',
+    repairedByStage: 'evals'
   }
 ];
 

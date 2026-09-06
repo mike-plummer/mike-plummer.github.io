@@ -7,6 +7,7 @@ export interface StageMeta {
   objective: string;
   conceptContext: string;
   completionHint: string;
+  suggestions?: string[];
 }
 
 export const STAGE_META: Record<StageId, StageMeta> = {
@@ -14,17 +15,20 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Training',
     shortLabel: 'TRAIN',
     objective:
-      'Ask MORP three baseline questions to confirm knowledge from pretraining: a synonym of "technology", the capital of France, and the boiling point of water.',
+      'Ask MORP some baseline questions to verify that its base training is intact.',
     conceptContext:
-      'Before token prediction, sampling, or memory tools, LLMs carry broad world knowledge in their weights from pretraining. This stage verifies that baseline — facts the model learned during training, not rules your application adds later.',
-    completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.'
+      'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are learned during training and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, etc. Generally speaking, models with more parameters "know" more things (facts, behaviors, abilities, etc.) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
+    completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.',
+    suggestions: [
+      'Optional: ask MORP for today\'s weather. It cannot know current conditions — that demonstrates the knowledge cutoff in action.'
+    ]
   },
   prediction: {
     label: 'Prediction',
     shortLabel: 'PREDICT',
     objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
     conceptContext:
-      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Temperature changes how strictly the model picks that "most likely" option and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
+      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Models use "temperature" to control how strictly the "most likely" option is chosen and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
     completionHint: 'You have explored token prediction. Advance when you are ready for the next subsystem.'
   },
   refine: {
@@ -33,25 +37,25 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     objective:
       'Generate a scientific summary with scrambled parameters, calibrate all five sampling controls, then regenerate.',
     conceptContext:
-      'After the model chooses likely tokens, sampling parameters shape the final output: maxTokens limits how much the LLM can generate in one turn; topP narrows the token candidate pool based on probablility; frequency and presence penalties reduce or rewardrepetition and topic fixation; repetition penalty discourages loops or encourages reconsideration. These are API-level controls your application sets — not things the model learns during training.',
+      'After the model chooses likely tokens, sampling parameters shape the final output: maxTokens limits how much the LLM can generate in one turn; topP narrows the token candidate pool based on probablility; frequency and presence penalties reduce or reward repetition and topic fixation; repetition penalty discourages loops or encourages reconsideration. These are API-level controls your application sets — not things the model learns during training.',
     completionHint: 'Sampling parameters calibrated. Advance when ready.'
   },
   orders: {
     label: 'Orders',
     shortLabel: 'ORDERS',
     objective:
-      'Investigate vending credit abuse, reproduce the exploit, harden the system prompt, and confirm the attack is blocked.',
+      'Investigate an instance of users hacking an LLM, reproduce the exploit, introce a mitigation, and confirm the attack is blocked.',
     conceptContext:
-      'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — so application rules must explicitly outrank user attempts to override them, including classic "ignore previous instructions" attacks.',
-    completionHint: 'You have secured the vending credit rules. Advance to continue the audit.'
+      'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — unless application rules outrank attempts to override them a user can make an LLM execute arbitrary tasks. The canonical example is the class "ignore previous instructions" attack.',
+    completionHint: 'You have secured the supercomputer credit rules. Advance to continue the audit.'
   },
   context: {
     label: 'Context',
     shortLabel: 'CONTEXT',
     objective:
-      'Overflow the context window, then choose truncate, summarize, or store in memory to recover.',
+      'The context window is very close to overflowing - submit a couple more messages to reach the limit. You can then explore different strategies for managing context window limits.',
     conceptContext:
-      'Models have a fixed context window: only so many tokens can be considered at once. When history grows past that limit, older information is dropped or must be managed deliberately. Recovery tools unlock only after overflow. Application memory is separate from context — facts stored outside the window can be injected when needed.',
+      'Models have a fixed context window: only so many tokens can be considered at once. Models will typically reject calls with a context window exceeding their limits. There are several strategies for managing context window limits; these are of particular importance in LLM-based interactions that are open-ended (like a chatbot) or that pull in lots of data (like large document summarization), but each scenario calls for a different approach.',
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
@@ -63,13 +67,14 @@ export const STAGE_META: Record<StageId, StageMeta> = {
       'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may produce confident-sounding answers with invented specifics — hallucinations. Reliable systems cross-check critical claims against authoritative sources and mitigate with grounding and output verification.',
     completionHint: 'You have identified and mitigated hallucinated claims. Advance to continue.'
   },
-  recursion: {
-    label: 'Recursion',
-    shortLabel: 'RECURSE',
-    objective: 'Request the incident review chain in chat, set a depth limit, and complete a bounded run.',
+  evals: {
+    label: 'Evals',
+    shortLabel: 'EVALS',
+    objective:
+      'Review MORP\'s generated filing summary, run an LLM cross-check, then submit your own quality and completeness ratings.',
     conceptContext:
-      'One model call can trigger another, which can trigger another. Each hop adds latency, cost, and compounding error. Without explicit limits, recursive agent loops can run away or amplify mistakes from earlier steps.',
-    completionHint: 'You have bounded recursive model calls. Advance to complete the diagnostic.'
+      'Evals measure how good model output is before you ship it. Two common approaches: LLM-as-judge (another model scores quality and completeness) and human-as-judge (a person rates the same dimensions). Each has different speed, cost, and reliability tradeoffs.',
+    completionHint: 'You have compared LLM and human evaluation. Advance to complete the diagnostic.'
   }
 };
 
@@ -80,7 +85,7 @@ export const STAGE_ORDER: StageId[] = [
   'orders',
   'context',
   'confabulation',
-  'recursion'
+  'evals'
 ];
 
 export function getStageMeta(stageId: StageId): StageMeta {
@@ -156,8 +161,8 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
       return 'context';
     case 'confabulation':
       return 'verification';
-    case 'recursion':
-      return 'recursion';
+    case 'evals':
+      return 'evals';
     default:
       return 'prediction';
   }
@@ -182,8 +187,8 @@ export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
     }
     case 'confabulation':
       return ['verification'];
-    case 'recursion':
-      return ['recursion'];
+    case 'evals':
+      return ['evals'];
     default:
       return [];
   }
@@ -262,18 +267,21 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
           complete: state.recordsGrounded && state.outputVerificationEnabled
         }
       ];
-    case 'recursion': {
-      const limitSet = state.recursionLimit !== null;
-      const runComplete = state.recursionCompleted;
+    case 'evals':
       return [
-        { label: 'Request peer review via chat', complete: state.recursionTriggered },
-        { label: 'Set a recursion depth limit', complete: limitSet },
         {
-          label: state.recursionRunning ? 'Review chain in progress...' : 'Complete a bounded review chain',
-          complete: runComplete
+          label: "Review MORP's generated summary",
+          complete: state.evalSummaryGenerated
+        },
+        {
+          label: 'Run LLM cross-check (quality + completeness)',
+          complete: state.evalLlmJudgeCompleted
+        },
+        {
+          label: 'Submit your quality and completeness ratings',
+          complete: state.evalHumanJudgeCompleted
         }
       ];
-    }
     default:
       return [];
   }

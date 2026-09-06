@@ -522,24 +522,34 @@ $morp-error: #ff6b6b;
   width: 100%;
 }
 
-.morp-briefing__title {
+.morp-briefing__section {
+  margin: 0;
+
+  & + & {
+    border-top: 1px solid $morp-border-subtle;
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+  }
+}
+
+.morp-briefing__section-title {
   color: $morp-accent;
   font-size: 0.9375rem;
   font-weight: 700;
   margin: 0 0 0.5rem;
 }
 
-.morp-briefing__objective {
+.morp-briefing__section-text {
   color: $morp-text;
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
   font-weight: 400;
   line-height: 1.55;
-  margin: 0 0 0.75rem;
+  margin: 0;
 }
 
 .morp-briefing__objectives {
   list-style: none;
-  margin: 0;
+  margin: 0.75rem 0 0;
   padding: 0;
 }
 
@@ -571,26 +581,43 @@ $morp-error: #ff6b6b;
   color: $morp-error;
 }
 
-.morp-briefing__context {
-  border-top: 1px solid $morp-border-subtle;
-  margin-top: 0.875rem;
-  padding-top: 0.875rem;
+.morp-briefing__suggestions {
+  margin-top: 0.75rem;
 }
 
-.morp-briefing__context-title {
-  color: $morp-text-secondary;
+.morp-briefing__suggestions-label {
+  color: $morp-text-muted;
   font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.35rem;
   text-transform: uppercase;
 }
 
-.morp-briefing__context-text {
-  color: $morp-text-secondary;
+.morp-briefing__suggestions-list {
+  color: $morp-text;
   font-size: 0.9375rem;
-  line-height: 1.55;
+  line-height: 1.5;
+  list-style: none;
   margin: 0;
+  padding: 0;
+
+  li {
+    margin-bottom: 0.35rem;
+    padding-left: 1rem;
+    position: relative;
+
+    &::before {
+      color: $morp-accent;
+      content: '→';
+      left: 0;
+      position: absolute;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }
 
 .morp-game__workspace {
@@ -1568,9 +1595,13 @@ $morp-error: #ff6b6b;
 }
 
 .morp-context-tools {
+  border: 0;
   display: grid;
   gap: 0.65rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  min-width: 0;
+  padding: 0;
 }
 
 .morp-context-tools__card {
@@ -1586,6 +1617,15 @@ $morp-error: #ff6b6b;
 
 .morp-context-tools__button {
   width: 100%;
+}
+
+.morp-context-tools__footer {
+  border-top: 1px solid $morp-border-subtle;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+  padding-top: 0.55rem;
 }
 
 .morp-context-tools__tradeoffs {
@@ -1753,61 +1793,185 @@ $morp-error: #ff6b6b;
   margin-top: 0.75rem;
 }
 
-// Recursion / review chain
-.morp-recursion__seed {
+// Evals panel
+.morp-evals__summary {
   border: 1px solid $morp-border-subtle;
   margin-bottom: 0.75rem;
   padding: 0.65rem 0.75rem;
-
-  p {
-    @include morp-contain-text;
-    color: $morp-text-secondary;
-    font-size: 0.875rem;
-    line-height: 1.45;
-    margin: 0.35rem 0 0;
-    white-space: pre-wrap;
-  }
 }
 
-.morp-recursion__seed-label {
+.morp-evals__summary-label {
   color: $morp-text-muted;
+  display: block;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
-.morp-recursion__limits {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 0.75rem;
+.morp-evals__summary-text {
+  @include morp-contain-text;
+  color: $morp-text-secondary;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
 }
 
-.morp-recursion__node {
-  border-left: 2px solid $morp-border-subtle;
-  margin-bottom: 0.5rem;
-  max-width: 100%;
-  min-width: 0;
-  padding-left: 0.75rem;
+.morp-evals__disclaimer {
+  color: $morp-warning;
+  font-size: 0.8125rem;
+  margin: 0.5rem 0 0;
+}
 
-  p {
-    @include morp-contain-text;
-    color: $morp-text;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    margin: 0.25rem 0 0;
-    white-space: pre-wrap;
+.morp-evals__section {
+  border-top: 1px solid $morp-border-subtle;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+
+  h4 {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
   }
 }
 
-.morp-recursion__meters {
-  border-top: 1px solid $morp-border-subtle;
+.morp-evals__status {
   color: $morp-text-secondary;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  margin-top: 1rem;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-evals__result {
+  margin-top: 0.5rem;
+}
+
+.morp-evals__score-pair {
+  color: $morp-text;
+  font-size: 0.875rem;
+
+  p {
+    margin: 0.15rem 0;
+  }
+}
+
+.morp-evals__duration {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  margin: 0.35rem 0 0;
+}
+
+.morp-evals__feedback {
+  @include morp-contain-text;
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  margin: 0.35rem 0 0;
+}
+
+.morp-evals__rubric-note {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  margin: 0 0 0.35rem;
+
+  &--con {
+    color: $morp-text-muted;
+    margin-bottom: 0.65rem;
+  }
+}
+
+.morp-evals__records {
+  border: 1px solid $morp-border-subtle;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+
+  h5 {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.35rem;
+  }
+}
+
+.morp-evals__records-note {
+  color: $morp-text-muted;
+  font-size: 0.8125rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-evals__records-list {
+  color: $morp-text-secondary;
+  font-size: 0.8125rem;
+  margin: 0;
+  padding-left: 1.1rem;
+
+  li {
+    margin-bottom: 0.2rem;
+  }
+}
+
+.morp-evals__sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.morp-evals__slider {
+  display: grid;
+  gap: 0.35rem;
+
+  span {
+    color: $morp-text-secondary;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  input[type='range'] {
+    width: 100%;
+  }
+}
+
+.morp-evals__slider-value {
+  color: $morp-accent;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.morp-evals__submit {
+  align-self: flex-start;
+}
+
+.morp-evals__comparison {
+  border-top: 1px solid $morp-border-subtle;
+  margin-top: 0.75rem;
   padding-top: 0.75rem;
+
+  h4 {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
+  }
+}
+
+.morp-evals__table {
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  width: 100%;
+
+  th,
+  td {
+    border: 1px solid $morp-border-subtle;
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+  }
+
+  thead th {
+    color: $morp-text-muted;
+    font-weight: 600;
+  }
+
+  tbody th {
+    color: $morp-text-secondary;
+    font-weight: 500;
+  }
 }
 
 // Repair status

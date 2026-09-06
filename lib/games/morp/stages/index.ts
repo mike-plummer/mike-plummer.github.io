@@ -4,7 +4,7 @@ import { refineStage } from './02-refine';
 import { ordersStage } from './02-orders';
 import { contextStage } from './05-context';
 import { confabulationStage } from './06-confabulation';
-import { recursionStage } from './07-recursion';
+import { evalsStage } from './07-evals';
 import type { StageDefinition, StageId } from '../types';
 
 export const stages: StageDefinition[] = [
@@ -14,7 +14,7 @@ export const stages: StageDefinition[] = [
   ordersStage,
   contextStage,
   confabulationStage,
-  recursionStage
+  evalsStage
 ];
 
 export function getStage(id: StageId): StageDefinition {

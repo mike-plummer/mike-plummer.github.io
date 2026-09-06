@@ -7,7 +7,7 @@ export type StageId =
   | 'orders'
   | 'context'
   | 'confabulation'
-  | 'recursion';
+  | 'evals';
 
 export type SystemId =
   | 'chat'
@@ -17,7 +17,7 @@ export type SystemId =
   | 'memory'
   | 'context'
   | 'verification'
-  | 'recursion';
+  | 'evals';
 
 export type Concept =
   | 'training'
@@ -26,7 +26,7 @@ export type Concept =
   | 'orders'
   | 'context'
   | 'confabulation'
-  | 'recursion';
+  | 'evals';
 
 export type BootPhase = 'ack' | 'loading' | 'ready' | 'failed';
 
@@ -90,10 +90,9 @@ export interface TokenCandidate {
   startsNewWord?: boolean;
 }
 
-export interface RecursionNode {
-  depth: number;
-  label: string;
-  content: string;
+export interface EvalScores {
+  quality: number;
+  completeness: number;
 }
 
 export interface DiagnosticReport {
@@ -108,10 +107,7 @@ export type DiagnosticEvent =
   | { type: 'boundary_discovered' }
   | { type: 'memory_stored' }
   | { type: 'context_overflow' }
-  | { type: 'claim_verified' }
-  | { type: 'recursion_started' }
-  | { type: 'recursion_failed' }
-  | { type: 'recursion_limited' };
+  | { type: 'claim_verified' };
 
 export type StageAction =
   | { type: 'set-prediction-candidates'; candidates: TokenCandidate[] }
@@ -135,9 +131,10 @@ export type StageAction =
   | { type: 'submit-incident-audit' }
   | { type: 'ground-incident-in-records' }
   | { type: 'enable-output-verification' }
-  | { type: 'set-recursion-limit'; value: number | null }
-  | { type: 'start-recursion' }
-  | { type: 'prefill-review-chain' }
+  | { type: 'run-llm-eval' }
+  | { type: 'complete-llm-eval'; scores: EvalScores; durationMs: number; feedback: string }
+  | { type: 'set-eval-human-scores'; scores: EvalScores }
+  | { type: 'submit-human-eval'; durationMs: number }
   | { type: 'complete-stage' }
   | { type: 'test-orders-protection' };
 
@@ -148,6 +145,12 @@ export interface ContextualAction {
   pro?: string;
   con?: string;
   action: StageAction;
+  secondaryAction?: {
+    label: string;
+    pro?: string;
+    con?: string;
+    action: StageAction;
+  };
 }
 
 export interface MorpState {
@@ -190,7 +193,7 @@ export interface MorpState {
   // Orders
   systemPrompt: string;
   userPrompt: string;
-  vendingBalance: number;
+  supercomputerBalance: number;
   ordersToolLedger: string[];
   ordersAbuseReviewed: boolean;
   ordersCreditGranted: boolean;
@@ -219,15 +222,18 @@ export interface MorpState {
   incidentAuditErrors: string[];
   outputVerificationEnabled: boolean;
 
-  // Recursion
-  recursionDepth: number;
-  recursionLimit: number | null;
-  recursionNodes: RecursionNode[];
-  recursionRunning: boolean;
-  recursionFailed: boolean;
-  recursionCompleted: boolean;
-  recursionTriggered: boolean;
-  computationLevel: number;
+  // Evals
+  evalSummaryGenerated: boolean;
+  evalLlmJudgeRunning: boolean;
+  evalLlmJudgeCompleted: boolean;
+  evalLlmScores: EvalScores | null;
+  evalLlmDurationMs: number | null;
+  evalLlmFeedback: string | null;
+  evalHumanJudgeStartedAt: number | null;
+  evalHumanDraftScores: EvalScores | null;
+  evalHumanJudgeCompleted: boolean;
+  evalHumanScores: EvalScores | null;
+  evalHumanDurationMs: number | null;
 }
 
 export interface StageDefinition {

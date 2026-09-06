@@ -11,8 +11,8 @@ function migrateStageId(stageId: string): StageId {
   if (stageId === 'remember' || stageId === 'intrusion' || stageId === 'amnesia') {
     return 'context';
   }
-  if (stageId === 'repair') {
-    return 'recursion';
+  if (stageId === 'repair' || stageId === 'recursion') {
+    return 'evals';
   }
   return stageId as StageId;
 }

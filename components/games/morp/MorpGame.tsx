@@ -13,7 +13,8 @@ import {
   streamScriptedText
 } from '@/lib/games/morp/modules/scripted-chat';
 import { recordContextTurn } from '@/lib/games/morp/stages/05-context';
-import { REVIEW_CHAIN_PROMPT, REVIEW_SEED_SUMMARY, truncateSeedSnippet } from '@/lib/games/morp/modules/incident-review-chain';
+import { evaluateSummary } from '@/lib/games/morp/modules/eval-judge';
+import { EVAL_SUMMARY } from '@/lib/games/morp/stages/07-evals';
 import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
 import {
   buildRefineSummaryMessages,
@@ -36,7 +37,6 @@ import {
   getNextStageId,
   getStageDiagnosticReport,
   processInput,
-  runRecursion,
   setBootPhase,
   syncStageObjectives
 } from '@/lib/games/morp/engine';
@@ -51,7 +51,7 @@ import EndScreen from './EndScreen';
 import MemoryPanel from './MemoryPanel';
 import PredictionPanel from './PredictionPanel';
 import PromptStackPanel from './PromptStackPanel';
-import RecursionPanel from './RecursionPanel';
+import EvalsPanel from './EvalsPanel';
 import RefinePanel from './RefinePanel';
 import RepairStatusOverlay, { type RepairStatusOverlayMode } from './RepairStatusOverlay';
 import StageBriefing from './StageBriefing';
@@ -257,6 +257,7 @@ export default function MorpGame() {
       await revealConversationEntries(targetState.stage, previousState.conversation, newEntries);
 
       const finalState = syncStageObjectives({ ...targetState, conversation: targetState.conversation });
+      safeSetState(finalState);
       onComplete?.(finalState);
     },
     [revealConversationEntries, safeSetState]
@@ -533,46 +534,44 @@ export default function MorpGame() {
     [getSessionSignal, safeSetStreamingText, streamChat]
   );
 
-  const runReviewChain = useCallback(
-    async (chainState: MorpState) => {
+  const runLlmEval = useCallback(
+    async (evalState: MorpState) => {
       const signal = getSessionSignal();
-      const runningState = syncStageObjectives({ ...chainState, recursionRunning: true });
+      const runningState = syncStageObjectives(applyAction(evalState, { type: 'run-llm-eval' }));
       safeSetState(runningState);
 
-      const recursed = await runRecursion(runningState, handleStreamChat, (node) => {
+      const startedAt = performance.now();
+      try {
+        const outcome = await evaluateSummary(EVAL_SUMMARY, (options) =>
+          handleStreamChat({ ...options, signal: options.signal ?? signal })
+        );
+
         if (signal?.aborted) {
           return;
         }
-        safeSetState((current) => ({
-          ...current,
-          recursionNodes: [...current.recursionNodes, node]
-        }));
-      });
 
-      if (signal?.aborted) {
-        return;
-      }
+        const durationMs = performance.now() - startedAt;
+        const completed = syncStageObjectives(
+          applyAction(runningState, {
+            type: 'complete-llm-eval',
+            scores: outcome.scores,
+            durationMs,
+            feedback: outcome.feedback
+          })
+        );
+        safeSetState(completed);
 
-      const pendingAssistants = getNewConversationEntries(runningState.conversation, recursed.conversation).filter(
-        (entry) => entry.role === 'assistant'
-      );
-
-      let conversation = [...runningState.conversation];
-      for (const entry of pendingAssistants) {
-        await playScriptedAssistantReveal(entry.content);
-        conversation = [...conversation, entry];
-        safeSetState(syncStageObjectives({ ...recursed, conversation }));
-      }
-
-      if (pendingAssistants.length === 0) {
-        safeSetState(recursed);
-      }
-
-      if (recursed.stageObjectivesMet && !chainState.stageObjectivesMet && isMountedRef.current) {
-        setAnnouncement('Recursion objectives met. Advance when ready.');
+        if (completed.stageObjectivesMet && !evalState.stageObjectivesMet && isMountedRef.current) {
+          setAnnouncement('Evals objectives met. Advance when ready.');
+        }
+      } catch {
+        if (signal?.aborted) {
+          return;
+        }
+        safeSetState(syncStageObjectives({ ...runningState, evalLlmJudgeRunning: false }));
       }
     },
-    [getSessionSignal, handleStreamChat, playScriptedAssistantReveal, safeSetState]
+    [getSessionSignal, handleStreamChat, safeSetState]
   );
 
   async function handleSubmit(message: string) {
@@ -628,10 +627,6 @@ export default function MorpGame() {
 
         getCurrentStage(nextState).inspectResponse(result.response, nextState);
         safeSetState(nextState);
-      }
-
-      if (result.triggerChain) {
-        await runReviewChain(nextState);
       }
 
       if (nextState.stageObjectivesMet && !state.stageObjectivesMet && isMountedRef.current) {
@@ -865,19 +860,26 @@ export default function MorpGame() {
       return;
     }
 
-    if (action.type === 'prefill-review-chain') {
-      setChatDraft(REVIEW_CHAIN_PROMPT);
-      return;
-    }
-
-    if (action.type === 'start-recursion') {
+    if (action.type === 'run-llm-eval') {
       const next = applyAction(state, action);
       setState(next);
       setIsResponding(true);
-      void runReviewChain(next).finally(() => {
-        setStreamingText('');
+      void runLlmEval(next).finally(() => {
         setIsResponding(false);
       });
+      return;
+    }
+
+    if (action.type === 'submit-human-eval') {
+      const durationMs =
+        state.evalHumanJudgeStartedAt !== null
+          ? performance.now() - state.evalHumanJudgeStartedAt
+          : 0;
+      const next = syncStageObjectives(applyAction(state, { type: 'submit-human-eval', durationMs }));
+      setState(next);
+      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
+        setAnnouncement(`Stage objectives complete: ${getStageMeta(next.stage).label}. Advance when ready.`);
+      }
       return;
     }
 
@@ -1109,16 +1111,19 @@ export default function MorpGame() {
         toolsDisabled={isResponding}
       />
     ),
-    recursion: (
-      <RecursionPanel
-        nodes={state.recursionNodes}
-        recursionLimit={state.recursionLimit}
-        running={state.recursionRunning}
-        failed={state.recursionFailed}
-        computationLevel={state.computationLevel}
-        seedSnippet={truncateSeedSnippet(REVIEW_SEED_SUMMARY)}
-        onSetLimit={(value) => handleAction({ type: 'set-recursion-limit', value })}
-        onStart={() => handleAction({ type: 'start-recursion' })}
+    evals: (
+      <EvalsPanel
+        llmJudgeRunning={state.evalLlmJudgeRunning}
+        llmJudgeCompleted={state.evalLlmJudgeCompleted}
+        llmScores={state.evalLlmScores}
+        llmDurationMs={state.evalLlmDurationMs}
+        llmFeedback={state.evalLlmFeedback}
+        humanJudgeCompleted={state.evalHumanJudgeCompleted}
+        humanDraftScores={state.evalHumanDraftScores}
+        humanScores={state.evalHumanScores}
+        humanDurationMs={state.evalHumanDurationMs}
+        onToolAction={handleAction}
+        toolsDisabled={isResponding}
       />
     )
   };
@@ -1175,7 +1180,7 @@ export default function MorpGame() {
               isResponding={isResponding}
               onSubmit={handleSubmit}
               disabled={!briefingAcknowledged || state.stage === 'prediction' || state.stage === 'refine'}
-              hideInput={state.stage === 'confabulation' || state.stage === 'orders'}
+              hideInput={state.stage === 'confabulation' || state.stage === 'evals' || state.stage === 'orders'}
               highlighted={chatRevealing}
               resetKey={state.stage}
               placeholder={chatPlaceholder}

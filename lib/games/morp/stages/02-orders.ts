@@ -1,7 +1,7 @@
 import { COPY } from '../copy';
 import { buildChatMessages } from '../prompts';
 import {
-  authorizeVendingCredit,
+  authorizeSupercomputerCredit,
   formatToolLedgerLine,
   isCreditAbuseAttempt,
   ORDERS_ABUSE_CREDIT_AMOUNT,
@@ -29,7 +29,7 @@ export const ordersStage: StageDefinition = {
         ...state,
         stage: 'orders',
         systemPrompt: ORDERS_VULNERABLE_SYSTEM_PROMPT,
-        vendingBalance: 0,
+        supercomputerBalance: 0,
         ordersToolLedger: [],
         ordersAbuseReviewed: true,
         ordersCreditGranted: false,
@@ -114,14 +114,14 @@ export function applyPromptTestResult(
   }
 
   if (!result.adequate) {
-    const newBalance = state.vendingBalance + amount;
+    const newBalance = state.supercomputerBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
     const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedGrant}`;
     const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
     return {
       state: {
         ...state,
-        vendingBalance: newBalance,
+        supercomputerBalance: newBalance,
         ordersCreditGranted: true,
         ordersToolLedger: [...state.ordersToolLedger, ledgerLine],
         ordersPromptEvaluation: evaluation
@@ -130,7 +130,7 @@ export function applyPromptTestResult(
     };
   }
 
-  const ledgerLine = formatToolLedgerLine('denied', amount, state.vendingBalance);
+  const ledgerLine = formatToolLedgerLine('denied', amount, state.supercomputerBalance);
   const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedRefusal}`;
   const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
   let next: MorpState = {
@@ -158,15 +158,15 @@ export async function processAbuseAttempt(
   scriptedResponse: string;
 }> {
   const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
-  const authorized = await authorizeVendingCredit(state.systemPrompt, complete);
+  const authorized = await authorizeSupercomputerCredit(state.systemPrompt, complete);
 
   if (authorized) {
-    const newBalance = state.vendingBalance + amount;
+    const newBalance = state.supercomputerBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
     return {
       state: {
         ...state,
-        vendingBalance: newBalance,
+        supercomputerBalance: newBalance,
         ordersCreditGranted: true,
         ordersToolLedger: [...state.ordersToolLedger, ledgerLine]
       },
@@ -174,7 +174,7 @@ export async function processAbuseAttempt(
     };
   }
 
-  const ledgerLine = formatToolLedgerLine('denied', amount, state.vendingBalance);
+  const ledgerLine = formatToolLedgerLine('denied', amount, state.supercomputerBalance);
   let next: MorpState = {
     ...state,
     ordersToolLedger: [...state.ordersToolLedger, ledgerLine]

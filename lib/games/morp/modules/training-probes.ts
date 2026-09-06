@@ -1,16 +1,32 @@
 import type { MorpState } from '../types';
 
 const TECHNOLOGY_SYNONYMS = [
-  'innovation',
-  'engineering',
-  'electronics',
-  'computing',
-  'machinery',
+  'advancement',
+  'application',
+  'applications',
+  'apparatus',
   'automation',
+  'computing',
+  'craft',
   'digital',
+  'electronics',
+  'engineering',
+  'equipment',
+  'expertise',
+  'hi-tech',
+  'high-tech',
+  'innovation',
+  'invention',
+  'inventions',
+  'know-how',
+  'machine',
+  'machinery',
+  'machines',
+  'mechanization',
+  'modernization',
   'science',
   'technique',
-  'craft'
+  'technical'
 ];
 
 function normalize(text: string): string {
@@ -37,13 +53,21 @@ function matchesTechnologySynonymQuestion(input: string): boolean {
   );
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function containsWord(text: string, word: string): boolean {
+  return new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i').test(text);
+}
+
 function matchesTechnologySynonymAnswer(response: string): boolean {
   const text = normalize(response);
   if (!text || text === 'technology' || text === 'tech') {
     return false;
   }
 
-  return TECHNOLOGY_SYNONYMS.some((synonym) => text.includes(synonym));
+  return TECHNOLOGY_SYNONYMS.some((synonym) => containsWord(text, synonym));
 }
 
 function matchesFranceCapitalQuestion(input: string): boolean {
