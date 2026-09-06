@@ -68,10 +68,20 @@ export function LLMProvider({
 
     sync();
     const unsubscribe = subscribeLLM(sync);
+
+    const disposeOnPageHide = () => {
+      void disposeLLM();
+    };
+    window.addEventListener('pagehide', disposeOnPageHide);
+
     return () => {
       unsubscribe();
+      window.removeEventListener('pagehide', disposeOnPageHide);
       interruptLLM();
-      void disposeLLM();
+      // React Strict Mode remounts providers in dev; unloading WebGPU there deadlocks init.
+      if (process.env.NODE_ENV === 'production') {
+        void disposeLLM();
+      }
     };
   }, []);
 

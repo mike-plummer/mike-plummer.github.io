@@ -31,6 +31,7 @@ let loadedModelId: string | null = null;
 let loadPromise: Promise<MLCEngine> | null = null;
 let disposePromise: Promise<void> | null = null;
 let lastInferenceMode: InferenceMode | null = null;
+let loadGeneration = 0;
 let status: LLMStatus = 'idle';
 let progress: LLMProgress = { progress: 0, timeElapsed: 0, text: '', percent: 0 };
 let lastError: string | null = null;
@@ -124,22 +125,38 @@ export function interruptLLM(): void {
   }
 }
 
+async function unloadEngine(activeEngine: MLCEngine): Promise<void> {
+  try {
+    await activeEngine.unload();
+  } catch {
+    // Ignore unload errors during teardown.
+  }
+}
+
 export async function disposeLLM(): Promise<void> {
   if (disposePromise) {
     return disposePromise;
   }
 
-  const activeEngine = engine;
-  if (!activeEngine) {
-    clearEngineState();
-    return;
-  }
-
   disposePromise = (async () => {
     try {
-      await activeEngine.unload();
-    } catch {
-      // Ignore unload errors during teardown.
+      loadGeneration += 1;
+      interruptLLM();
+
+      const pendingLoad = loadPromise;
+      if (pendingLoad) {
+        try {
+          const loadedEngine = await pendingLoad;
+          await unloadEngine(loadedEngine);
+        } catch {
+          // Ignore load errors during teardown.
+        }
+      }
+
+      const activeEngine = engine;
+      if (activeEngine) {
+        await unloadEngine(activeEngine);
+      }
     } finally {
       clearEngineState();
       disposePromise = null;
@@ -157,6 +174,10 @@ export async function loadLLM(
   onProgress?: (value: LLMProgress) => void,
   modelId: string = DEFAULT_MODEL_ID
 ): Promise<MLCEngine> {
+  if (disposePromise) {
+    await disposePromise;
+  }
+
   if (engine && loadedModelId === modelId) {
     return engine;
   }
@@ -179,6 +200,9 @@ export async function loadLLM(
   status = 'loading';
   notify();
 
+  const generation = loadGeneration + 1;
+  loadGeneration = generation;
+
   loadPromise = CreateMLCEngine(modelId, {
     initProgressCallback: (report) => {
       progress = {
@@ -189,25 +213,78 @@ export async function loadLLM(
       notify();
     }
   })
-    .then((loadedEngine) => {
+    .then(async (loadedEngine) => {
+      if (generation !== loadGeneration) {
+        await unloadEngine(loadedEngine);
+        throw new DOMException('The operation was aborted.', 'AbortError');
+      }
+
       engine = loadedEngine;
       loadedModelId = modelId;
       lastInferenceMode = null;
+      loadPromise = null;
       status = 'ready';
       lastError = null;
       notify();
       return loadedEngine;
     })
     .catch((error: unknown) => {
+      loadPromise = null;
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        if (generation === loadGeneration && status === 'loading') {
+          status = 'idle';
+          notify();
+        }
+        throw error;
+      }
       status = 'error';
       lastError = error instanceof Error ? error.message : 'Failed to load model';
-      loadPromise = null;
       notify();
       throw error;
     });
 
   return loadPromise;
 }
+
+function getDevelopmentHotApi():
+  | { dispose: (callback: () => void) => void }
+  | undefined {
+  if (process.env.NODE_ENV !== 'development') {
+    return undefined;
+  }
+
+  const turbopackHot = (
+    import.meta as ImportMeta & {
+      turbopackHot?: { dispose: (callback: () => void) => void };
+    }
+  ).turbopackHot;
+  if (turbopackHot) {
+    return turbopackHot;
+  }
+
+  if (typeof module !== 'undefined') {
+    const moduleHot = (module as NodeModule & { hot?: { dispose: (callback: () => void) => void } })
+      .hot;
+    if (moduleHot) {
+      return moduleHot;
+    }
+  }
+
+  return (
+    import.meta as ImportMeta & {
+      webpackHot?: { dispose: (callback: () => void) => void };
+    }
+  ).webpackHot;
+}
+
+function registerDevelopmentHmrDispose(): void {
+  const hot = getDevelopmentHotApi();
+  hot?.dispose(() => {
+    void disposeLLM();
+  });
+}
+
+registerDevelopmentHmrDispose();
 
 export async function streamChat(
   options: StreamChatOptions,
