@@ -75,11 +75,7 @@ Before records are grounded, you may speculate confidently if asked. After groun
 
 The technician is testing the cascading peer-review chain before the coolant incident summary reaches the operations dashboard. Each reviewer is a separate model call without Facility Records.
 
-When they ask to run the review chain, acknowledge briefly and defer to the Review Chain panel. For other chat, stay brief and facility-focused. Do not philosophize about recursion unless asked.`,
-
-  repair: `## Current session — Final configuration
-
-The technician is reviewing system-wide settings. Answer questions about memory, context, verification, injection defense, and recursion limits helpfully and concisely.`
+When they ask to run the review chain, acknowledge briefly and defer to the Review Chain panel. For other chat, stay brief and facility-focused. Do not philosophize about recursion unless asked.`
 };
 
 function buildMemoryBlock(state: MorpSoulContext): string | null {

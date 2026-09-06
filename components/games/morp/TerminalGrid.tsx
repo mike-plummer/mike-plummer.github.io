@@ -20,8 +20,7 @@ const PANEL_ORDER: SystemId[] = [
   'memory',
   'context',
   'verification',
-  'recursion',
-  'repair'
+  'recursion'
 ];
 
 export default function TerminalGrid({

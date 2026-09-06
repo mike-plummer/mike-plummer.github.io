@@ -32,6 +32,5 @@ export const STAGE_ORDER = [
   'orders',
   'amnesia',
   'confabulation',
-  'recursion',
-  'repair'
+  'recursion'
 ] as const;

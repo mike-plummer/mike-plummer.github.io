@@ -2,12 +2,22 @@
 
 import { COPY } from '@/lib/games/morp/copy';
 import { clearCheckpoint } from '@/lib/games/morp/engine';
+import { getSystemStatusItems } from '@/lib/games/morp/modules/system-status';
 
 interface EndScreenProps {
   onRestart: () => void;
 }
 
 export default function EndScreen({ onRestart }: EndScreenProps) {
+  const statusItems = getSystemStatusItems([
+    'prediction',
+    'refine',
+    'orders',
+    'amnesia',
+    'confabulation',
+    'recursion'
+  ]);
+
   function handleEnd() {
     clearCheckpoint();
     onRestart();
@@ -17,13 +27,9 @@ export default function EndScreen({ onRestart }: EndScreenProps) {
     <div className="morp-ending" role="dialog" aria-labelledby="ending-title">
       <h2 id="ending-title">{COPY.ending.statusHeader}</h2>
       <div className="morp-ending__status">
-        <p>PREDICTION — ONLINE</p>
-        <p>PROMPTS — STABLE</p>
-        <p>MEMORY — STABLE</p>
-        <p>CONTEXT — STABLE</p>
-        <p>INJECTION — MITIGATED</p>
-        <p>VERIFICATION — ENABLED</p>
-        <p>RECURSION — LIMITED</p>
+        {statusItems.map((item) => (
+          <p key={item.id}>{item.label} — {item.repairedStatus}</p>
+        ))}
         <p className="morp-ending__operational">MORP STATUS: OPERATIONAL</p>
       </div>
       <div className="morp-ending__dialogue">

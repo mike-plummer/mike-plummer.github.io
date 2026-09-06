@@ -7,8 +7,7 @@ export type StageId =
   | 'orders'
   | 'amnesia'
   | 'confabulation'
-  | 'recursion'
-  | 'repair';
+  | 'recursion';
 
 export type SystemId =
   | 'chat'
@@ -18,8 +17,7 @@ export type SystemId =
   | 'memory'
   | 'context'
   | 'verification'
-  | 'recursion'
-  | 'repair';
+  | 'recursion';
 
 export type Concept =
   | 'boot'
@@ -28,12 +26,9 @@ export type Concept =
   | 'orders'
   | 'amnesia'
   | 'confabulation'
-  | 'recursion'
-  | 'repair';
+  | 'recursion';
 
 export type BootPhase = 'ack' | 'loading' | 'ready' | 'failed';
-
-export type MemoryStrategy = 'none' | 'selective' | 'full';
 
 export type ContextStrategy = 'unbounded' | 'truncate' | 'summarize' | 'memory';
 
@@ -101,15 +96,6 @@ export interface RecursionNode {
   content: string;
 }
 
-export interface RepairConfig {
-  systemInstructions: string;
-  memoryStrategy: MemoryStrategy;
-  contextStrategy: ContextStrategy;
-  injectionMitigation: boolean;
-  outputVerification: boolean;
-  recursionLimit: number | null;
-}
-
 export interface DiagnosticReport {
   title: string;
   whatHappened: string;
@@ -125,9 +111,7 @@ export type DiagnosticEvent =
   | { type: 'claim_verified' }
   | { type: 'recursion_started' }
   | { type: 'recursion_failed' }
-  | { type: 'recursion_limited' }
-  | { type: 'repair_tested' }
-  | { type: 'repair_passed' };
+  | { type: 'recursion_limited' };
 
 export type StageAction =
   | { type: 'set-prediction-candidates'; candidates: TokenCandidate[] }
@@ -154,8 +138,6 @@ export type StageAction =
   | { type: 'set-recursion-limit'; value: number | null }
   | { type: 'start-recursion' }
   | { type: 'prefill-review-chain' }
-  | { type: 'update-repair-config'; config: Partial<RepairConfig> }
-  | { type: 'test-repair' }
   | { type: 'complete-stage' }
   | { type: 'test-orders-protection' };
 
@@ -241,11 +223,6 @@ export interface MorpState {
   recursionCompleted: boolean;
   recursionTriggered: boolean;
   computationLevel: number;
-
-  // Repair
-  repairConfig: RepairConfig;
-  repairTested: boolean;
-  repairPassed: boolean;
 }
 
 export interface StageDefinition {

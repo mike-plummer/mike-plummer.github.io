@@ -2,11 +2,14 @@ import { CHECKPOINT_KEY } from './config';
 import { getLaterStage } from './stage-meta';
 import type { MorpCheckpoint, StageId } from './types';
 
-const REMOVED_STAGES = new Set(['remember', 'intrusion']);
+const REMOVED_STAGES = new Set(['remember', 'intrusion', 'repair']);
 
 function migrateStageId(stageId: string): StageId {
   if (stageId === 'remember' || stageId === 'intrusion') {
     return 'amnesia';
+  }
+  if (stageId === 'repair') {
+    return 'recursion';
   }
   return stageId as StageId;
 }

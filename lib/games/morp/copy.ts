@@ -200,14 +200,17 @@ Plain text only. Do not use JSON or markdown.`,
       keyIdea: 'LLM applications need boundaries around model calls. Recursive chains amplify problems quickly.'
     }
   },
-  repair: {
-    title: 'MORP CONTROL SYSTEM',
-    report: {
-      title: 'DIAGNOSTIC COMPLETE: SYSTEM REPAIR',
-      whatHappened: 'You configured the application around MORP rather than trying to fix the model itself.',
-      keyIdea:
-        'Reliable LLM applications require engineering around the model: prompts, memory, context, verification, and limits.'
-    }
+  systemStatus: {
+    heading: 'System Status',
+    introTitle: 'AUDIT BASELINE',
+    introDescription:
+      'These application layers around MORP are degraded. Each diagnostic stage you complete should restore one or more subsystems.',
+    transitionTitle: 'SUBSYSTEM UPDATE',
+    transitionDescription: 'The layer you just repaired is highlighted below.',
+    manualTitle: 'CURRENT STATUS',
+    manualDescription: 'Live repair status for application layers around MORP.',
+    continueLabel: 'CONTINUE',
+    closeLabel: 'CLOSE'
   },
   ending: {
     statusHeader: 'SYSTEM STATUS',

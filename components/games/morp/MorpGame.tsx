@@ -43,7 +43,7 @@ import {
   setBootPhase,
   syncStageObjectives
 } from '@/lib/games/morp/engine';
-import { getDefaultPanelForStage, getNextStageMeta, getStageMeta, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
+import { getDefaultPanelForStage, getStageMeta, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
 import type { ConversationEntry, MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
 import IncidentReviewPanel from './IncidentReviewPanel';
@@ -57,7 +57,7 @@ import PredictionPanel from './PredictionPanel';
 import PromptStackPanel from './PromptStackPanel';
 import RecursionPanel from './RecursionPanel';
 import RefinePanel from './RefinePanel';
-import RepairPanel from './RepairPanel';
+import RepairStatusOverlay, { type RepairStatusOverlayMode } from './RepairStatusOverlay';
 import StageBriefing from './StageBriefing';
 import StageCompleteBanner from './StageCompleteBanner';
 import StageProgress from './StageProgress';
@@ -65,6 +65,18 @@ import TerminalGrid from './TerminalGrid';
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface PendingStageTransition {
+  nextState: MorpState;
+  nextId: StageId;
+  entries: ConversationEntry[];
+}
+
+interface RepairStatusOverlayState {
+  open: boolean;
+  mode: RepairStatusOverlayMode;
+  completedStage?: StageId;
 }
 
 async function waitForMemoryAccess(
@@ -95,6 +107,11 @@ export default function MorpGame() {
   const [contextSummarizing, setContextSummarizing] = useState(false);
   const [chatDraft, setChatDraft] = useState<string | null>(null);
   const [chatRevealing, setChatRevealing] = useState(false);
+  const [repairStatusOverlay, setRepairStatusOverlay] = useState<RepairStatusOverlayState>({
+    open: false,
+    mode: 'manual'
+  });
+  const [pendingStageTransition, setPendingStageTransition] = useState<PendingStageTransition | null>(null);
   const gameRef = useRef<HTMLElement>(null);
   const chatPanelRef = useRef<HTMLElement>(null);
   const bootRevealStartedRef = useRef(false);
@@ -312,6 +329,10 @@ export default function MorpGame() {
 
     if (next.stageObjectivesMet && !state.stageObjectivesMet) {
       setAnnouncement('Prediction objectives met. Advance when ready.');
+    }
+
+    if (next.predictionInput.trim()) {
+      void refreshPredictionCandidates(next.predictionInput, next.predictionTemperature);
     }
   }
 
@@ -651,20 +672,6 @@ export default function MorpGame() {
       return;
     }
 
-    if (action.type === 'update-repair-config') {
-      setState((current) => applyAction(current, action));
-      return;
-    }
-
-    if (action.type === 'test-repair') {
-      const next = applyAction(state, action);
-      setState(next);
-      if (next.stageObjectivesMet && !state.stageObjectivesMet) {
-        setAnnouncement('Repair configuration valid. Advance to complete the diagnostic.');
-      }
-      return;
-    }
-
     if (action.type === 'prefill-review-chain') {
       setChatDraft(REVIEW_CHAIN_PROMPT);
       return;
@@ -736,30 +743,51 @@ export default function MorpGame() {
   }
 
   function handleContinueReport() {
+    const completedStage = state.stage;
     const nextId = getNextStageId(state.stage);
     const next = advanceStage(state);
 
     if (!nextId) {
-      setState({ ...next, showEnding: true });
+      setState({ ...next, pendingReport: null, showEnding: true });
       return;
     }
 
-    const entries = next.conversation;
-    const bare = { ...next, conversation: [] };
-    setState(bare);
-    resetUiForStage(nextId);
-    setPendingBriefingStage(nextId);
+    setPendingStageTransition({
+      nextState: next,
+      nextId,
+      entries: next.conversation
+    });
+    setState({ ...next, pendingReport: null });
+    setRepairStatusOverlay({
+      open: true,
+      mode: 'transition',
+      completedStage
+    });
+  }
 
-    const nextMeta = getNextStageMeta(state.stage);
-    setAnnouncement(
-      nextMeta
-        ? `Advanced to ${nextMeta.label}. ${nextMeta.objective}`
-        : 'Diagnostic complete.'
-    );
+  function handleRepairStatusContinue() {
+    const { mode } = repairStatusOverlay;
+    setRepairStatusOverlay((current) => ({ ...current, open: false }));
 
-    if (entries.length > 0) {
-      void revealConversationEntries([], entries, (conversation) => ({ ...next, conversation }));
+    if (mode === 'transition' && pendingStageTransition) {
+      const { nextState, nextId, entries } = pendingStageTransition;
+      setPendingStageTransition(null);
+      const bare = { ...nextState, conversation: [] };
+      setState(bare);
+      resetUiForStage(nextId);
+      setPendingBriefingStage(nextId);
+
+      const nextMeta = getStageMeta(nextId);
+      setAnnouncement(`Advanced to ${nextMeta.label}. ${nextMeta.objective}`);
+
+      if (entries.length > 0) {
+        void revealConversationEntries([], entries, (conversation) => ({ ...nextState, conversation }));
+      }
     }
+  }
+
+  function handleStatusOpen() {
+    setRepairStatusOverlay({ open: true, mode: 'manual' });
   }
 
   function handleBootAcknowledge() {
@@ -781,6 +809,8 @@ export default function MorpGame() {
     setState(initial);
     setActivePanel(getDefaultPanelForStage(initial.stage));
     setPendingBriefingStage('boot');
+    setRepairStatusOverlay({ open: false, mode: 'manual' });
+    setPendingStageTransition(null);
   }
 
   if (state.showEnding) {
@@ -883,15 +913,6 @@ export default function MorpGame() {
         onSetLimit={(value) => handleAction({ type: 'set-recursion-limit', value })}
         onStart={() => handleAction({ type: 'start-recursion' })}
       />
-    ),
-    repair: (
-      <RepairPanel
-        config={state.repairConfig}
-        tested={state.repairTested}
-        passed={state.repairPassed}
-        onChange={(config) => handleAction({ type: 'update-repair-config', config })}
-        onTest={() => handleAction({ type: 'test-repair' })}
-      />
     )
   };
 
@@ -904,8 +925,12 @@ export default function MorpGame() {
           state={state}
           stage={pendingBriefingStage}
           onAcknowledge={() => {
+            const wasBoot = pendingBriefingStage === 'boot';
             setPendingBriefingStage(null);
             resetScrollPosition();
+            if (wasBoot) {
+              setRepairStatusOverlay({ open: true, mode: 'intro' });
+            }
           }}
         />
       ) : (
@@ -925,6 +950,7 @@ export default function MorpGame() {
             furthestStage={state.furthestStage}
             stageObjectivesMet={state.stageObjectivesMet}
             onStageSelect={handleStageSelect}
+            onStatusOpen={handleStatusOpen}
             disabled={isResponding}
           />
 
@@ -944,7 +970,7 @@ export default function MorpGame() {
                 streamingText={streamingText}
                 isResponding={isResponding}
                 onSubmit={handleSubmit}
-                disabled={state.stage === 'prediction' || state.stage === 'refine' || state.stage === 'repair'}
+                disabled={state.stage === 'prediction' || state.stage === 'refine'}
                 hideInput={state.stage === 'confabulation'}
                 highlighted={chatRevealing}
                 resetKey={state.stage}
@@ -970,6 +996,15 @@ export default function MorpGame() {
               report={state.pendingReport}
               currentStage={state.stage}
               onContinue={handleContinueReport}
+            />
+          )}
+
+          {repairStatusOverlay.open && (
+            <RepairStatusOverlay
+              mode={repairStatusOverlay.mode}
+              completedStages={state.completedStages}
+              completedStage={repairStatusOverlay.completedStage}
+              onContinue={handleRepairStatusContinue}
             />
           )}
 

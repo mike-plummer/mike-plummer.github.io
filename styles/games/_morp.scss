@@ -45,6 +45,22 @@ $morp-error: #ff6b6b;
     color: inherit;
   }
 
+  .morp-status__row--broken .morp-status__value {
+    color: $morp-warning;
+  }
+
+  .morp-status__row--repaired .morp-status__value {
+    color: $morp-accent;
+  }
+
+  .morp-status__overall {
+    color: $morp-warning;
+
+    &--operational {
+      color: $morp-accent;
+    }
+  }
+
   strong, b {
     color: $morp-text;
     font-weight: 600;
@@ -261,12 +277,21 @@ $morp-error: #ff6b6b;
   padding-bottom: 0.75rem;
 }
 
+.morp-progress__main {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
 .morp-progress__list {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
   gap: 0.35rem;
   list-style: none;
   margin: 0 0 0.5rem;
+  min-width: 0;
   padding: 0;
 }
 
@@ -354,6 +379,67 @@ $morp-error: #ff6b6b;
     color: $morp-text;
     font-weight: 600;
   }
+}
+
+.morp-progress__status {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed $morp-border;
+  color: $morp-text-secondary;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 0.35rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  min-width: 5.5rem;
+  padding: 0.55rem 0.7rem;
+  text-transform: uppercase;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &--attention {
+    border-color: $morp-warning;
+    color: $morp-warning;
+  }
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated;
+    border-color: $morp-accent;
+    color: $morp-accent;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+#main .morp-game .morp-progress__status {
+  appearance: none;
+  border-radius: 0;
+  box-shadow: none !important;
+  height: auto;
+  width: auto;
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated !important;
+    box-shadow: none !important;
+  }
+}
+
+.morp-progress__status-prefix {
+  color: $morp-text-muted;
+  font-size: 0.6875rem;
+}
+
+.morp-progress__status-label {
+  font-weight: 700;
 }
 
 // Stage briefing
@@ -1602,17 +1688,126 @@ $morp-error: #ff6b6b;
   padding-top: 0.75rem;
 }
 
-// Repair
-.morp-repair__diagram pre {
-  @include morp-contain-text;
-  color: $morp-text-secondary;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  margin: 0 0 1rem;
-  overflow-x: hidden;
-  white-space: pre-wrap;
+// Repair status
+.morp-status-overlay {
+  align-items: center;
+  background: rgba(8, 11, 13, 0.92);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.5rem;
+  position: fixed;
+  z-index: 110;
 }
 
+.morp-status-overlay__panel {
+  background: $morp-bg-elevated;
+  border: 1px solid $morp-border;
+  max-height: min(90vh, 44rem);
+  max-width: 36rem;
+  overflow: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  width: 100%;
+}
+
+.morp-status-overlay__eyebrow {
+  color: $morp-text-muted;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.morp-status-overlay__heading {
+  color: $morp-text;
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-status-overlay__description {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.morp-status-overlay__continue {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.morp-status__header {
+  margin-bottom: 0.75rem;
+}
+
+.morp-status__title {
+  color: $morp-text;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.morp-status__subtitle {
+  color: $morp-text-muted;
+  font-size: 0.8125rem;
+  margin: 0.2rem 0 0;
+}
+
+.morp-status__list {
+  border: 1px solid $morp-border-subtle;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.morp-status__row {
+  align-items: center;
+  border-bottom: 1px solid $morp-border-subtle;
+  display: flex;
+  font-size: 0.875rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &--highlight {
+    animation: morp-status-highlight 1.2s ease;
+    background: rgba($morp-accent, 0.08);
+  }
+}
+
+.morp-status__label {
+  color: $morp-text;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.morp-status__value {
+  font-weight: 700;
+}
+
+.morp-status__overall {
+  border-top: 1px solid $morp-border-subtle;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+}
+
+@keyframes morp-status-highlight {
+  0% {
+    background: rgba($morp-accent, 0.28);
+  }
+
+  100% {
+    background: rgba($morp-accent, 0.08);
+  }
+}
+
+// Legacy repair panel (removed)
 .morp-field {
   display: block;
   margin-bottom: 0.75rem;

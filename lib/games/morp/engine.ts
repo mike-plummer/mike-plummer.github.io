@@ -93,17 +93,7 @@ function createBaseState(): MorpState {
     recursionFailed: false,
     recursionCompleted: false,
     recursionTriggered: false,
-    computationLevel: 0,
-    repairConfig: {
-      systemInstructions: '',
-      memoryStrategy: 'none',
-      contextStrategy: 'unbounded',
-      injectionMitigation: false,
-      outputVerification: false,
-      recursionLimit: null
-    },
-    repairTested: false,
-    repairPassed: false
+    computationLevel: 0
   };
 }
 
@@ -302,8 +292,7 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
     refine: 'refine',
     amnesia: 'context',
     confabulation: 'verification',
-    recursion: 'recursion',
-    repair: 'repair'
+    recursion: 'recursion'
   };
 
   const system = entrySystem[stageId];
@@ -384,11 +373,5 @@ export function completeBoot(state: MorpState): MorpState {
   return { ...state, bootPhase: 'ready' };
 }
 
-export function evaluateRepair(state: MorpState): boolean {
-  const stage = getStage('repair');
-  return stage.isComplete(state);
-}
-
 export { loadCheckpoint, saveCheckpoint, clearCheckpoint } from './checkpoint';
-export { evaluateRepairConfig } from './stages/final-repair';
 export { getNextStageId } from './stages';

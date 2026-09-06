@@ -5,7 +5,6 @@ import { ordersStage } from './02-orders';
 import { amnesiaStage } from './05-amnesia';
 import { confabulationStage } from './06-confabulation';
 import { recursionStage } from './07-recursion';
-import { repairStage } from './final-repair';
 import type { StageDefinition, StageId } from '../types';
 
 export const stages: StageDefinition[] = [
@@ -15,8 +14,7 @@ export const stages: StageDefinition[] = [
   ordersStage,
   amnesiaStage,
   confabulationStage,
-  recursionStage,
-  repairStage
+  recursionStage
 ];
 
 export function getStage(id: StageId): StageDefinition {

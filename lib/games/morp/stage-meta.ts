@@ -68,15 +68,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     objective: 'Request the incident review chain in chat, set a depth limit, and complete a bounded run.',
     conceptContext:
       'One model call can trigger another, which can trigger another. Each hop adds latency, cost, and compounding error. Without explicit limits, recursive agent loops can run away or amplify mistakes from earlier steps.',
-    completionHint: 'You have bounded recursive model calls. Advance to the final repair.'
-  },
-  repair: {
-    label: 'System Repair',
-    shortLabel: 'REPAIR',
-    objective: 'Configure all subsystems and pass the configuration test.',
-    conceptContext:
-      'A dependable LLM application is mostly engineering around the model: instruction design, memory, context management, injection defenses, verification, and recursion limits. Output verification — which you enabled during the Facts stage — is one of those layers. The model is one component — the system you build determines how safely it behaves.',
-    completionHint: 'MORP is ready for final deployment. Complete the diagnostic.'
+    completionHint: 'You have bounded recursive model calls. Advance to complete the diagnostic.'
   }
 };
 
@@ -87,8 +79,7 @@ export const STAGE_ORDER: StageId[] = [
   'orders',
   'amnesia',
   'confabulation',
-  'recursion',
-  'repair'
+  'recursion'
 ];
 
 export function getStageMeta(stageId: StageId): StageMeta {
@@ -166,8 +157,6 @@ export function getDefaultPanelForStage(stageId: StageId): SystemId {
       return 'verification';
     case 'recursion':
       return 'recursion';
-    case 'repair':
-      return 'repair';
     default:
       return 'prediction';
   }
@@ -194,8 +183,6 @@ export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
       return ['verification'];
     case 'recursion':
       return ['recursion'];
-    case 'repair':
-      return ['repair'];
     default:
       return [];
   }
@@ -274,8 +261,6 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
         }
       ];
     }
-    case 'repair':
-      return [{ label: 'Configure subsystems and pass the configuration test', complete: state.repairPassed }];
     default:
       return [];
   }
