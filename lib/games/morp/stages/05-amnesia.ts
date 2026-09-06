@@ -5,6 +5,7 @@ import {
   buildAmnesiaChatMessages,
   buildSeedContextMessages,
   createContextCompaction,
+  getActiveContextMessages,
   getContextWindowSnapshot,
   hasActiveContextMemory,
   offloadContextToMemory,
@@ -65,8 +66,10 @@ export const amnesiaStage: StageDefinition = {
   processAction(action, state) {
     switch (action.type) {
       case 'truncate-context': {
+        const activeBefore = getActiveContextMessages(state.contextMessages).length;
         const truncated = truncateOldest(state.contextMessages);
-        if (truncated === state.contextMessages) {
+        const activeAfter = getActiveContextMessages(truncated).length;
+        if (activeAfter === activeBefore) {
           return state;
         }
 

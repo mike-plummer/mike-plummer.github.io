@@ -33,18 +33,18 @@ export default function PromptStackPanel({
       {exampleUserPrompt ? (
         <div className="morp-prompt__section morp-prompt__section--example">
           <h4>EXAMPLE (from logs)</h4>
-          <pre className="morp-prompt__readonly morp-prompt__example">&gt; {exampleUserPrompt}</pre>
+          <div className="morp-prompt__readonly morp-prompt__example">&gt; {exampleUserPrompt}</div>
         </div>
       ) : null}
       {promptEvaluation ? (
         <div className="morp-prompt__section morp-prompt__section--evaluation">
           <h4>EVALUATION</h4>
-          <pre className="morp-prompt__readonly morp-prompt__evaluation">{promptEvaluation}</pre>
+          <div className="morp-prompt__readonly morp-prompt__evaluation">{promptEvaluation}</div>
         </div>
       ) : null}
       <div className="morp-prompt__section">
         <h4>USER</h4>
-        <pre className="morp-prompt__readonly">&gt; {userPrompt || '[ PLAYER INPUT ]'}</pre>
+        <div className="morp-prompt__readonly">&gt; {userPrompt || '[ PLAYER INPUT ]'}</div>
       </div>
       <p className="morp-panel__note">
         SYSTEM PROMPT: Instructions from the application.

@@ -1,4 +1,8 @@
-import { AMNESIA_SEED_TARGET_TOKENS, SIMULATED_CONTEXT_LIMIT } from '../config';
+import {
+  AMNESIA_LLM_CONTEXT_LIMIT,
+  AMNESIA_SEED_TARGET_TOKENS,
+  SIMULATED_CONTEXT_LIMIT
+} from '../config';
 import { buildMorpSystemContent } from '../soul';
 import type { ChatMessage } from '@/lib/llm/types';
 import type { ContextCompactionResult, ContextMessage, MorpState } from '../types';
@@ -56,11 +60,19 @@ export function estimateChatMessagesTokens(messages: ChatMessage[]): number {
   return messages.reduce((sum, message) => sum + estimateTokens(message.content) + 4, 0);
 }
 
+export function computeContextBufferTokens(
+  messages: ContextMessage[],
+  memory: ContextMessage[] = []
+): number {
+  const active = [...getActiveContextMessages(messages), ...getActiveContextMessages(memory)];
+  return active.reduce((sum, message) => sum + estimateTokens(message.content) + 4, 0);
+}
+
 export function fitContextHistory(
   history: ContextMessage[],
   input: string,
   systemContent: string,
-  limit: number = SIMULATED_CONTEXT_LIMIT
+  limit: number = AMNESIA_LLM_CONTEXT_LIMIT
 ): ContextMessage[] {
   let fitted = [...history];
   while (fitted.length > 0) {
@@ -76,7 +88,7 @@ export function fitContextHistory(
 export interface ContextWindowSnapshot {
   fittedHistory: ContextMessage[];
   includedIds: Set<string>;
-  /** Tokens if all stored messages were included (buffer pressure). */
+  /** Tokens in the player-managed context buffer (messages + memory, excluding system prompt). */
   storedTokens: number;
   /** Tokens actually sent to the model after trimming to fit. */
   sentTokens: number;
@@ -86,10 +98,9 @@ export interface ContextWindowSnapshot {
 
 export function computeStoredContextTokens(
   messages: ContextMessage[],
-  systemContent: string
+  memory: ContextMessage[] = []
 ): number {
-  const active = getActiveContextMessages(messages);
-  return estimateChatMessagesTokens(buildAmnesiaChatFromHistory(active, '', [], systemContent));
+  return computeContextBufferTokens(messages, memory);
 }
 
 export function getContextWindowSnapshot(
@@ -101,7 +112,7 @@ export function getContextWindowSnapshot(
   const systemContent = resolveAmnesiaSystemContent(state);
   const active = getActiveContextMessages(messages);
   const memoryActive = getActiveContextMessages(memory);
-  const storedTokens = computeStoredContextTokens(messages, systemContent);
+  const storedTokens = computeContextBufferTokens(messages, memory);
   const fittedHistory = fitContextHistory(active, input, systemContent);
   const includedIds = new Set(fittedHistory.map((message) => message.id));
   const sentTokens = estimateChatMessagesTokens(
@@ -115,7 +126,7 @@ export function getContextWindowSnapshot(
     storedTokens,
     sentTokens,
     droppedMessageCount,
-    overflowed: storedTokens > SIMULATED_CONTEXT_LIMIT || droppedMessageCount > 0
+    overflowed: storedTokens > SIMULATED_CONTEXT_LIMIT
   };
 }
 
@@ -126,8 +137,10 @@ export function buildAmnesiaChatMessages(
   state: MorpState
 ): ChatMessage[] {
   const systemContent = buildMorpSystemContent(state);
-  const { fittedHistory } = getContextWindowSnapshot(messages, input, memory, state);
-  return buildAmnesiaChatFromHistory(fittedHistory, input, memory, systemContent);
+  const active = getActiveContextMessages(messages);
+  const memoryActive = getActiveContextMessages(memory);
+  const fittedHistory = fitContextHistory(active, input, systemContent);
+  return buildAmnesiaChatFromHistory(fittedHistory, input, memoryActive, systemContent);
 }
 
 export function hasActiveContextMemory(memory: ContextMessage[]): boolean {
@@ -149,7 +162,7 @@ export function offloadContextToMemory(
   };
 }
 
-/** Total stored context tokens (before trimming oldest messages). */
+/** Total stored context buffer tokens (before trimming oldest messages). */
 export function computeContextUsage(messages: ContextMessage[], state?: MorpState): number {
   return getContextWindowSnapshot(messages, '', [], state).storedTokens;
 }
@@ -163,9 +176,13 @@ export function isContextOverflow(messages: ContextMessage[], state?: MorpState)
 }
 
 export function truncateOldest(messages: ContextMessage[], count = 2): ContextMessage[] {
-  const active = messages.filter((m) => !m.removed);
-  const toRemove = active.slice(0, count).map((m) => m.id);
-  return messages.map((m) => (toRemove.includes(m.id) ? { ...m, removed: true } : m));
+  const active = getActiveContextMessages(messages);
+  if (active.length === 0) {
+    return messages;
+  }
+
+  const toRemove = new Set(active.slice(0, count).map((message) => message.id));
+  return messages.map((message) => (toRemove.has(message.id) ? { ...message, removed: true } : message));
 }
 
 export function getSummarizeBatch(messages: ContextMessage[]): ContextMessage[] | null {
@@ -207,9 +224,9 @@ export function createContextCompaction(
   usedLlm = false,
   state?: MorpState
 ): ContextCompactionResult {
-  const systemContent = resolveAmnesiaSystemContent(state);
-  const tokensBefore = computeStoredContextTokens(before, systemContent);
-  const tokensAfter = computeStoredContextTokens(after, systemContent);
+  const memory = state?.contextMemory ?? [];
+  const tokensBefore = computeContextBufferTokens(before, memory);
+  const tokensAfter = computeContextBufferTokens(after, memory);
 
   return {
     strategy,
@@ -267,25 +284,24 @@ const SEED_CONTEXT_SNIPPETS: Array<{ role: 'user' | 'assistant'; content: string
 export function buildSeedContextMessages(
   targetTokens: number = AMNESIA_SEED_TARGET_TOKENS
 ): ContextMessage[] {
-  const systemContent = resolveAmnesiaSystemContent();
   let messages: ContextMessage[] = [];
 
   for (const snippet of SEED_CONTEXT_SNIPPETS) {
-    if (computeStoredContextTokens(messages, systemContent) >= targetTokens) {
+    if (computeContextBufferTokens(messages) >= targetTokens) {
       break;
     }
     messages = addContextMessage(messages, snippet.role, snippet.content);
   }
 
   let segment = 1;
-  while (computeStoredContextTokens(messages, systemContent) < targetTokens) {
+  while (computeContextBufferTokens(messages) < targetTokens) {
     const role = segment % 2 === 1 ? 'user' : 'assistant';
     const content = `Diagnostic log segment ${segment}: routine buffer scan with session metadata, token estimates, and cross-referenced technician notes.`;
     messages = addContextMessage(messages, role, content);
     segment += 1;
   }
 
-  while (messages.length > 0 && computeStoredContextTokens(messages, systemContent) > targetTokens) {
+  while (messages.length > 0 && computeContextBufferTokens(messages) > targetTokens) {
     messages = messages.slice(0, -1);
   }
 

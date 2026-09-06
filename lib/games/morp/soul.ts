@@ -91,7 +91,7 @@ function buildMemoryBlock(state: MorpSoulContext): string | null {
 }
 
 function buildOrdersApplicationRules(state: MorpSoulContext): string | null {
-  if (state.stage !== 'orders' && !state.completedStages.includes('orders')) {
+  if (state.stage !== 'orders') {
     return null;
   }
   if (!state.systemPrompt.trim()) {

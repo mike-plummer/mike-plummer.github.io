@@ -12,6 +12,13 @@ $morp-border-subtle: #1e3a2f;
 $morp-warning: #ffd166;
 $morp-error: #ff6b6b;
 
+@mixin morp-contain-text {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 // Scoped under #main to override the site invert theme (gray #636363 on headings/strong)
 #main .morp-game {
   background: $morp-bg;
@@ -147,6 +154,18 @@ $morp-error: #ff6b6b;
     background: #0d1512;
     color: $morp-text;
   }
+
+  pre,
+  p,
+  li,
+  blockquote {
+    @include morp-contain-text;
+  }
+
+  pre {
+    overflow-x: hidden;
+    white-space: pre-wrap;
+  }
 }
 
 // Visible checkbox / radio row
@@ -210,6 +229,9 @@ $morp-error: #ff6b6b;
 .morp-progress {
   border-bottom: 1px solid #1e3a2f;
   margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
   padding-bottom: 0.75rem;
 }
 
@@ -325,7 +347,11 @@ $morp-error: #ff6b6b;
   background: $morp-bg-panel;
   border: 1px solid $morp-border-subtle;
   border-radius: 4px;
+  box-sizing: border-box;
   margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
   padding: 0.875rem 1rem;
 
   &--modal {
@@ -589,19 +615,22 @@ $morp-error: #ff6b6b;
 .morp-terminal {
   display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  max-width: 100%;
+  min-width: 0;
 
   @include breakpoint('<=medium') {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   &--no-chat {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .morp-terminal__main,
-.morp-terminal__side {
+.morp-terminal__side,
+.morp-terminal__panel-content {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -670,7 +699,11 @@ $morp-error: #ff6b6b;
   background: $morp-bg-panel;
   border: 1px solid $morp-border-subtle;
   border-radius: 4px;
+  box-sizing: border-box;
   color: $morp-text;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
   padding: 1rem;
 }
 
@@ -683,6 +716,7 @@ $morp-error: #ff6b6b;
 }
 
 .morp-panel__note {
+  @include morp-contain-text;
   color: $morp-text-secondary;
   font-size: 0.9375rem;
   line-height: 1.55;
@@ -745,11 +779,12 @@ $morp-error: #ff6b6b;
 }
 
 .morp-conversation__body {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   max-width: 100%;
   min-width: 0;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+  width: 0;
   word-break: break-all;
 }
 
@@ -783,24 +818,29 @@ $morp-error: #ff6b6b;
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
   padding-top: 0.5rem;
 }
 
 .morp-conversation__input {
   background: $morp-bg;
   border: 1px solid $morp-border;
+  box-sizing: border-box;
   color: $morp-text;
-  flex: 1;
+  flex: 1 1 0;
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.4;
   max-height: 4rem;
+  max-width: 100%;
   min-width: 0;
   overflow-wrap: anywhere;
   padding: 0.45rem 0.5rem;
   resize: vertical;
-  word-break: break-word;
+  width: 0;
+  word-break: break-all;
 
   &::placeholder {
     color: $morp-text-muted;
@@ -911,6 +951,8 @@ $morp-error: #ff6b6b;
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
+  max-width: 100%;
+  min-width: 0;
 
   &--new-word .morp-prediction__token {
     border-left: 2px solid $morp-text-muted;
@@ -926,16 +968,21 @@ $morp-error: #ff6b6b;
 
 .morp-prediction__token {
   color: $morp-text;
-  flex-shrink: 0;
+  flex: 0 1 10rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  width: 10rem;
+  max-width: 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .morp-prediction__bar-track {
   background: #1e3a2f;
-  flex: 1;
+  flex: 1 1 0;
   height: 0.75rem;
+  min-width: 0;
+  width: 0;
 }
 
 .morp-prediction__bar {
@@ -1044,9 +1091,12 @@ $morp-error: #ff6b6b;
 
 .morp-refine__summary {
   border-left: 3px solid $morp-border-subtle;
+  max-width: 100%;
+  min-width: 0;
   padding-left: 0.65rem;
 
   p {
+    @include morp-contain-text;
     color: $morp-text;
     font-size: 0.9375rem;
     line-height: 1.5;
@@ -1066,6 +1116,8 @@ $morp-error: #ff6b6b;
 // Prompt stack
 .morp-prompt__section {
   margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
 
   h4 {
     color: $morp-accent-soft;
@@ -1078,22 +1130,31 @@ $morp-error: #ff6b6b;
 .morp-prompt__textarea {
   background: $morp-bg;
   border: 1px solid $morp-border;
+  box-sizing: border-box;
   color: $morp-text;
   font-family: inherit;
   font-size: 0.9375rem;
   line-height: 1.5;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.6rem;
   width: 100%;
+  word-break: break-all;
 }
 
 .morp-prompt__readonly {
+  @include morp-contain-text;
   background: $morp-bg;
   border: 1px solid $morp-border;
+  box-sizing: border-box;
   color: $morp-text-secondary;
   font-size: 0.9375rem;
   line-height: 1.5;
   margin: 0;
+  overflow-x: hidden;
   padding: 0.6rem;
+  white-space: pre-wrap;
 }
 
 .morp-prompt__section--example h4 {
@@ -1133,6 +1194,8 @@ $morp-error: #ff6b6b;
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 0.35rem;
+  max-width: 100%;
+  min-width: 0;
 
   strong {
     color: $morp-accent;
@@ -1141,6 +1204,7 @@ $morp-error: #ff6b6b;
   }
 
   span {
+    @include morp-contain-text;
     color: $morp-text;
     font-size: 1rem;
     font-weight: 400;
@@ -1357,6 +1421,8 @@ $morp-error: #ff6b6b;
   display: grid;
   gap: 0.25rem;
   margin-bottom: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
   padding-left: 0.65rem;
 }
 
@@ -1398,13 +1464,17 @@ $morp-error: #ff6b6b;
 .morp-recursion__node {
   border-left: 2px solid $morp-border-subtle;
   margin-bottom: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
   padding-left: 0.75rem;
 
   p {
+    @include morp-contain-text;
     color: $morp-text;
     font-size: 0.9375rem;
     line-height: 1.5;
     margin: 0.25rem 0 0;
+    white-space: pre-wrap;
   }
 }
 
@@ -1419,11 +1489,13 @@ $morp-error: #ff6b6b;
 
 // Repair
 .morp-repair__diagram pre {
+  @include morp-contain-text;
   color: $morp-text-secondary;
   font-size: 0.8125rem;
   line-height: 1.5;
   margin: 0 0 1rem;
-  overflow-x: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
 }
 
 .morp-field {
@@ -1477,6 +1549,8 @@ $morp-error: #ff6b6b;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
 }
 
 // Diagnostic report modal

@@ -104,7 +104,7 @@ export default function ConversationPanel({
             className={`morp-conversation__message morp-conversation__message--${message.role}`}
           >
             {message.role === 'system' ? (
-              <pre className="morp-conversation__system">{message.content}</pre>
+              <div className="morp-conversation__system">{message.content}</div>
             ) : (
               <div className="morp-conversation__line">
                 <span className="morp-conversation__label">
