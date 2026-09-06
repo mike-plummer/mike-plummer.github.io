@@ -188,11 +188,15 @@ Plain text only. Do not use JSON or markdown.`,
     }
   },
   recursion: {
-    morpOffer: 'I can ask another MORP instance to analyze my response. Would you like me to try?',
+    morpLines: [
+      'Output verification is on, but the filing pipeline still runs a cascading peer review on every incident summary.',
+      'Each reviewer spawns another model call to check the last one. TECH-07 never configured a depth limit.',
+      'Ask me to run the review chain on the coolant incident. Watch the Review Chain panel — you will need to cap how deep it goes.'
+    ],
     report: {
       title: 'DIAGNOSTIC COMPLETE: RECURSION',
       whatHappened:
-        'Recursive model calls consumed context, time, and computation. Without limits, the chain became unstable.',
+        'Cascading reviewers compounded an unsupported valve ID before the chain spiraled into meta-review. Bounding depth stopped the runaway calls.',
       keyIdea: 'LLM applications need boundaries around model calls. Recursive chains amplify problems quickly.'
     }
   },

@@ -16,6 +16,7 @@ import {
   streamScriptedText
 } from '@/lib/games/morp/modules/scripted-chat';
 import { recordAmnesiaTurn } from '@/lib/games/morp/stages/05-amnesia';
+import { REVIEW_CHAIN_PROMPT, REVIEW_SEED_SUMMARY, truncateSeedSnippet } from '@/lib/games/morp/modules/incident-review-chain';
 import { getContextWindowSnapshot, getSummarizeBatch, hasActiveContextMemory } from '@/lib/games/morp/modules/context-manager';
 import {
   buildRefineSummaryMessages,
@@ -344,6 +345,40 @@ export default function MorpGame() {
     [streamChat]
   );
 
+  const runReviewChain = useCallback(
+    async (chainState: MorpState) => {
+      const runningState = syncStageObjectives({ ...chainState, recursionRunning: true });
+      setState(runningState);
+
+      const recursed = await runRecursion(runningState, handleStreamChat, (node) => {
+        setState((current) => ({
+          ...current,
+          recursionNodes: [...current.recursionNodes, node]
+        }));
+      });
+
+      const pendingAssistants = getNewConversationEntries(runningState.conversation, recursed.conversation).filter(
+        (entry) => entry.role === 'assistant'
+      );
+
+      let conversation = [...runningState.conversation];
+      for (const entry of pendingAssistants) {
+        await playScriptedAssistantReveal(entry.content);
+        conversation = [...conversation, entry];
+        setState(syncStageObjectives({ ...recursed, conversation }));
+      }
+
+      if (pendingAssistants.length === 0) {
+        setState(recursed);
+      }
+
+      if (recursed.stageObjectivesMet && !chainState.stageObjectivesMet) {
+        setAnnouncement('Recursion objectives met. Advance when ready.');
+      }
+    },
+    [handleStreamChat, playScriptedAssistantReveal]
+  );
+
   async function handleSubmit(message: string) {
     if (!inGameplay || isResponding) {
       return;
@@ -392,6 +427,10 @@ export default function MorpGame() {
 
       getCurrentStage(nextState).inspectResponse(result.response, nextState);
       setState(nextState);
+    }
+
+    if (result.triggerChain) {
+      await runReviewChain(nextState);
     }
 
     setStreamingText('');
@@ -626,19 +665,18 @@ export default function MorpGame() {
       return;
     }
 
+    if (action.type === 'prefill-review-chain') {
+      setChatDraft(REVIEW_CHAIN_PROMPT);
+      return;
+    }
+
     if (action.type === 'start-recursion') {
       const next = applyAction(state, action);
-      setState({ ...next, recursionRunning: true });
-      runRecursion(next, handleStreamChat, (node) => {
-        setState((current) => ({
-          ...current,
-          recursionNodes: [...current.recursionNodes, node]
-        }));
-      }).then((recursed) => {
-        setState(recursed);
-        if (recursed.stageObjectivesMet) {
-          setAnnouncement('Recursion objectives met. Advance when ready.');
-        }
+      setState(next);
+      setIsResponding(true);
+      void runReviewChain(next).finally(() => {
+        setStreamingText('');
+        setIsResponding(false);
       });
       return;
     }
@@ -841,6 +879,7 @@ export default function MorpGame() {
         running={state.recursionRunning}
         failed={state.recursionFailed}
         computationLevel={state.computationLevel}
+        seedSnippet={truncateSeedSnippet(REVIEW_SEED_SUMMARY)}
         onSetLimit={(value) => handleAction({ type: 'set-recursion-limit', value })}
         onStart={() => handleAction({ type: 'start-recursion' })}
       />

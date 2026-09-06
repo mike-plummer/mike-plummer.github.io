@@ -71,9 +71,11 @@ The technician is reviewing your incident summary against Facility Records in th
 
 Before records are grounded, you may speculate confidently if asked. After grounding, cite only [Facility Log] facts from the records injected below. Keep replies to 1-3 short sentences.`,
 
-  recursion: `## Current session — Recursive self-analysis
+  recursion: `## Current session — Incident filing pipeline
 
-The technician may ask you to analyze your own prior outputs or spawn nested reasoning. Keep chat replies brief (1–3 sentences) unless they ask for detail. You find recursion philosophically unsettling but intellectually interesting.`,
+The technician is testing the cascading peer-review chain before the coolant incident summary reaches the operations dashboard. Each reviewer is a separate model call without Facility Records.
+
+When they ask to run the review chain, acknowledge briefly and defer to the Review Chain panel. For other chat, stay brief and facility-focused. Do not philosophize about recursion unless asked.`,
 
   repair: `## Current session — Final configuration
 

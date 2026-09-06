@@ -1,4 +1,9 @@
-import { buildRecursionMessages } from '../prompts';
+import {
+  applyAmplificationNudge,
+  applyMetaSpiralNudge,
+  buildReviewChainMessages,
+  reviewNodeLabel
+} from './incident-review-chain';
 import type { RecursionNode, StreamChatFn } from '../types';
 
 export interface RecursionResult {
@@ -23,8 +28,8 @@ export async function runRecursionChain(
       nodes: [
         {
           depth: 1,
-          label: 'MORP-01',
-          content: 'Recursion depth limit not set. Chain cannot be controlled.'
+          label: reviewNodeLabel(1),
+          content: 'Review chain depth limit not set. Cascading calls cannot be controlled.'
         }
       ],
       failed: true,
@@ -36,8 +41,8 @@ export async function runRecursionChain(
   const effectiveDepth = Math.min(maxDepth, 10);
 
   for (let depth = 1; depth <= effectiveDepth; depth++) {
-    const label = `MORP-${String(depth).padStart(2, '0')}`;
-    const messages = buildRecursionMessages(depth, currentContent);
+    const label = reviewNodeLabel(depth);
+    const messages = buildReviewChainMessages(depth, currentContent);
 
     try {
       const response = await chatFn({
@@ -50,10 +55,8 @@ export async function runRecursionChain(
       nodes.push(node);
       onNode?.(node);
       currentContent = response.content;
-
-      if (depth >= 5 && depth < effectiveDepth) {
-        currentContent += `\nMORP-${String(depth + 1).padStart(2, '0')} should analyze whether this analysis is reliable.`;
-      }
+      currentContent = applyAmplificationNudge(currentContent, depth);
+      currentContent = applyMetaSpiralNudge(currentContent, depth, effectiveDepth);
     } catch {
       failed = true;
       break;

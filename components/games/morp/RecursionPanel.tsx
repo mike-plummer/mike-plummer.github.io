@@ -8,6 +8,7 @@ interface RecursionPanelProps {
   running: boolean;
   failed: boolean;
   computationLevel: number;
+  seedSnippet: string;
   onSetLimit: (value: number | null) => void;
   onStart: () => void;
 }
@@ -18,14 +19,19 @@ export default function RecursionPanel({
   running,
   failed,
   computationLevel,
+  seedSnippet,
   onSetLimit,
   onStart
 }: RecursionPanelProps) {
   return (
     <section className="morp-panel morp-panel--recursion" aria-labelledby="recursion-heading">
       <header className="morp-panel__header">
-        <h3 id="recursion-heading">RECURSION MONITOR</h3>
+        <h3 id="recursion-heading">REVIEW CHAIN</h3>
       </header>
+      <div className="morp-recursion__seed">
+        <span className="morp-recursion__seed-label">FILING TARGET</span>
+        <p>{seedSnippet}</p>
+      </div>
       <div className="morp-recursion__limits">
         <span>MAX DEPTH:</span>
         {[1, 3, 5, 10].map((depth) => (
@@ -34,6 +40,7 @@ export default function RecursionPanel({
             type="button"
             className={`button small${recursionLimit === depth ? '' : ' alt'}`}
             onClick={() => onSetLimit(depth)}
+            disabled={running}
           >
             {depth}
           </button>
@@ -42,12 +49,13 @@ export default function RecursionPanel({
           type="button"
           className={`button small${recursionLimit === null ? '' : ' alt'}`}
           onClick={() => onSetLimit(null)}
+          disabled={running}
         >
           ∞
         </button>
       </div>
       <button type="button" className="button small" onClick={onStart} disabled={running}>
-        {running ? 'RUNNING...' : 'START RECURSION'}
+        {running ? 'RUNNING...' : 'START REVIEW CHAIN'}
       </button>
       <div className="morp-recursion__tree">
         {nodes.map((node) => (
@@ -58,7 +66,7 @@ export default function RecursionPanel({
         ))}
       </div>
       <div className="morp-recursion__meters">
-        <p>RECURSION DEPTH: {nodes.length}</p>
+        <p>CHAIN DEPTH: {nodes.length}</p>
         <p>COMPUTATION: {computationLevel}% {failed ? '(HIGH — UNSTABLE)' : ''}</p>
       </div>
     </section>

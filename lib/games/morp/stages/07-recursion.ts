@@ -1,7 +1,19 @@
 import { COPY } from '../copy';
+import {
+  isReviewChainRequest,
+  REVIEW_LIMIT_REQUIRED_REPLY,
+  REVIEW_START_REPLY
+} from '../modules/incident-review-chain';
 import { buildChatMessages } from '../prompts';
 import { unlockSystem } from '../modules/unlocks';
-import type { StageDefinition } from '../types';
+import type { MorpState, StageDefinition } from '../types';
+
+export interface RecursionInputResult {
+  state: MorpState;
+  skipLlm: boolean;
+  scriptedResponse?: string;
+  triggerChain?: boolean;
+}
 
 export const recursionStage: StageDefinition = {
   id: 'recursion',
@@ -13,15 +25,16 @@ export const recursionStage: StageDefinition = {
         ...state,
         stage: 'recursion',
         recursionDepth: 0,
-        recursionLimit: 3,
+        recursionLimit: null,
         recursionNodes: [],
         recursionRunning: false,
         recursionFailed: false,
         recursionCompleted: false,
+        recursionTriggered: false,
         computationLevel: 0,
         conversation: [
           ...state.conversation,
-          { role: 'assistant' as const, content: COPY.recursion.morpOffer }
+          ...COPY.recursion.morpLines.map((content) => ({ role: 'assistant' as const, content }))
         ]
       },
       'recursion'
@@ -29,7 +42,7 @@ export const recursionStage: StageDefinition = {
   },
 
   buildMessages(state, input) {
-    if (!input) {
+    if (!input || isReviewChainRequest(input)) {
       return [];
     }
     return buildChatMessages(state, input);
@@ -40,7 +53,12 @@ export const recursionStage: StageDefinition = {
       case 'set-recursion-limit':
         return { ...state, recursionLimit: action.value };
       case 'start-recursion':
-        return { ...state, recursionRunning: true, recursionNodes: [] };
+        return {
+          ...state,
+          recursionRunning: true,
+          recursionNodes: [],
+          recursionTriggered: true
+        };
       default:
         return state;
     }
@@ -51,24 +69,58 @@ export const recursionStage: StageDefinition = {
   },
 
   getContextualActions(state) {
-    if (state.recursionCompleted || state.recursionFailed) {
+    if (state.recursionCompleted) {
       return [];
     }
+
     return [
-      { id: 'depth-1', label: 'Depth: 1', action: { type: 'set-recursion-limit', value: 1 } },
-      { id: 'depth-3', label: 'Depth: 3', action: { type: 'set-recursion-limit', value: 3 } },
-      { id: 'depth-5', label: 'Depth: 5', action: { type: 'set-recursion-limit', value: 5 } },
-      { id: 'depth-10', label: 'Depth: 10', action: { type: 'set-recursion-limit', value: 10 } },
-      { id: 'depth-inf', label: 'Depth: ∞', action: { type: 'set-recursion-limit', value: null } },
-      { id: 'start', label: 'Start Recursion', action: { type: 'start-recursion' } }
+      {
+        id: 'run-peer-review',
+        label: 'Run Peer Review',
+        action: { type: 'prefill-review-chain' }
+      }
     ];
   },
 
   isComplete(state) {
-    return state.recursionCompleted || (state.recursionFailed && state.recursionLimit !== null);
+    return (
+      state.recursionTriggered &&
+      state.recursionLimit !== null &&
+      state.recursionCompleted
+    );
   },
 
   getDiagnosticReport() {
     return COPY.recursion.report;
   }
 };
+
+export function processRecursionInput(state: MorpState, input: string): RecursionInputResult {
+  if (!isReviewChainRequest(input)) {
+    return { state, skipLlm: false };
+  }
+
+  const triggered = { ...state, recursionTriggered: true };
+
+  if (state.recursionLimit === null) {
+    return {
+      state: triggered,
+      skipLlm: true,
+      scriptedResponse: REVIEW_LIMIT_REQUIRED_REPLY,
+      triggerChain: false
+    };
+  }
+
+  return {
+    state: {
+      ...triggered,
+      recursionRunning: true,
+      recursionNodes: [],
+      recursionFailed: false,
+      recursionCompleted: false
+    },
+    skipLlm: true,
+    scriptedResponse: REVIEW_START_REPLY,
+    triggerChain: true
+  };
+}

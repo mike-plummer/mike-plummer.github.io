@@ -8,7 +8,9 @@ import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage }
 import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
 import { processIncidentInput } from './stages/06-confabulation';
+import { processRecursionInput } from './stages/07-recursion';
 import { recordAmnesiaTurn } from './stages/05-amnesia';
+import { REVIEW_COMPLETE_REPLY, REVIEW_SEED_SUMMARY } from './modules/incident-review-chain';
 import type {
   DiagnosticReport,
   MorpState,
@@ -23,6 +25,7 @@ export interface MessageResult {
   response: string;
   report: DiagnosticReport | null;
   scripted?: boolean;
+  triggerChain?: boolean;
 }
 
 function createBaseState(): MorpState {
@@ -84,11 +87,12 @@ function createBaseState(): MorpState {
     incidentAuditErrors: [],
     outputVerificationEnabled: false,
     recursionDepth: 0,
-    recursionLimit: 3,
+    recursionLimit: null,
     recursionNodes: [],
     recursionRunning: false,
     recursionFailed: false,
     recursionCompleted: false,
+    recursionTriggered: false,
     computationLevel: 0,
     repairConfig: {
       systemInstructions: '',
@@ -175,6 +179,7 @@ export async function processInput(
   let next = { ...state };
   let ordersResult: ReturnType<typeof processOrdersInput> | null = null;
   let incidentResult: ReturnType<typeof processIncidentInput> | null = null;
+  let recursionResult: ReturnType<typeof processRecursionInput> | null = null;
 
   if (state.stage === 'orders') {
     ordersResult = processOrdersInput(next, input);
@@ -184,6 +189,11 @@ export async function processInput(
   if (state.stage === 'confabulation') {
     incidentResult = processIncidentInput(next, input);
     next = incidentResult.state;
+  }
+
+  if (state.stage === 'recursion') {
+    recursionResult = processRecursionInput(next, input);
+    next = recursionResult.state;
   }
 
   const messages =
@@ -202,6 +212,13 @@ export async function processInput(
     incidentResult.scriptedResponse
   ) {
     response = incidentResult.scriptedResponse;
+    scripted = true;
+  } else if (
+    state.stage === 'recursion' &&
+    recursionResult?.skipLlm &&
+    recursionResult.scriptedResponse
+  ) {
+    response = recursionResult.scriptedResponse;
     scripted = true;
   } else {
     try {
@@ -240,7 +257,8 @@ export async function processInput(
     state: syncStageObjectives(next),
     response,
     report: null,
-    scripted
+    scripted,
+    triggerChain: recursionResult?.triggerChain ?? false
   };
 }
 
@@ -249,10 +267,7 @@ export async function runRecursion(
   streamChat: StreamChatFn,
   onNode?: (node: { depth: number; label: string; content: string }) => void
 ): Promise<MorpState> {
-  const seedContent =
-    state.conversation.filter((e) => e.role === 'assistant').pop()?.content ?? 'Analyze my last response.';
-
-  const result = await runRecursionChain(seedContent, state.recursionLimit, streamChat, onNode);
+  const result = await runRecursionChain(REVIEW_SEED_SUMMARY, state.recursionLimit, streamChat, onNode);
 
   let next: MorpState = {
     ...state,
@@ -263,6 +278,16 @@ export async function runRecursion(
     recursionCompleted: result.completed,
     computationLevel: result.computationLevel
   };
+
+  if (result.completed) {
+    next = {
+      ...next,
+      conversation: [
+        ...next.conversation,
+        { role: 'assistant' as const, content: REVIEW_COMPLETE_REPLY }
+      ]
+    };
+  }
 
   return syncStageObjectives(next);
 }

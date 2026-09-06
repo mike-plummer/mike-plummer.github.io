@@ -1545,7 +1545,29 @@ $morp-error: #ff6b6b;
   margin-top: 0.75rem;
 }
 
-// Recursion
+// Recursion / review chain
+.morp-recursion__seed {
+  border: 1px solid $morp-border-subtle;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+
+  p {
+    @include morp-contain-text;
+    color: $morp-text-secondary;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    margin: 0.35rem 0 0;
+    white-space: pre-wrap;
+  }
+}
+
+.morp-recursion__seed-label {
+  color: $morp-text-muted;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
 .morp-recursion__limits {
   align-items: center;
   display: flex;

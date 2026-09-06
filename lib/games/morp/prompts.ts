@@ -81,16 +81,3 @@ export function getChatTemperature(stage: StageId): number {
 export function sanitizeMorpResponse(response: string): string {
   return response.replace(/^(?:MORP>\s*)+/i, '').trim();
 }
-
-export function buildRecursionMessages(depth: number, previousContent: string): ChatMessage[] {
-  return [
-    {
-      role: 'system',
-      content: `You are MORP-${String(depth).padStart(2, '0')}, a diagnostic sub-instance spawned by MORP for recursive analysis. You share MORP's voice: dry, curious, slightly unsettled by recursion. Analyze the previous output briefly and meta-comment on it. Keep response under 3 sentences. Do not break character.`
-    },
-    {
-      role: 'user',
-      content: `Analyze this output from MORP-${String(depth - 1).padStart(2, '0')}:\n\n${previousContent}`
-    }
-  ];
-}

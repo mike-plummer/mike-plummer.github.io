@@ -153,6 +153,7 @@ export type StageAction =
   | { type: 'enable-output-verification' }
   | { type: 'set-recursion-limit'; value: number | null }
   | { type: 'start-recursion' }
+  | { type: 'prefill-review-chain' }
   | { type: 'update-repair-config'; config: Partial<RepairConfig> }
   | { type: 'test-repair' }
   | { type: 'complete-stage' }
@@ -238,6 +239,7 @@ export interface MorpState {
   recursionRunning: boolean;
   recursionFailed: boolean;
   recursionCompleted: boolean;
+  recursionTriggered: boolean;
   computationLevel: number;
 
   // Repair

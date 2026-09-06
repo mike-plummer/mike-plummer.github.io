@@ -65,7 +65,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   recursion: {
     label: 'Recursion',
     shortLabel: 'RECURSE',
-    objective: 'Run a recursion chain with a sensible depth limit.',
+    objective: 'Request the incident review chain in chat, set a depth limit, and complete a bounded run.',
     conceptContext:
       'One model call can trigger another, which can trigger another. Each hop adds latency, cost, and compounding error. Without explicit limits, recursive agent loops can run away or amplify mistakes from earlier steps.',
     completionHint: 'You have bounded recursive model calls. Advance to the final repair.'
@@ -264,12 +264,12 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
       ];
     case 'recursion': {
       const limitSet = state.recursionLimit !== null;
-      const runComplete =
-        state.recursionCompleted || (state.recursionFailed && state.recursionLimit !== null);
+      const runComplete = state.recursionCompleted;
       return [
+        { label: 'Request peer review via chat', complete: state.recursionTriggered },
         { label: 'Set a recursion depth limit', complete: limitSet },
         {
-          label: state.recursionRunning ? 'Recursion in progress...' : 'Complete a recursion run',
+          label: state.recursionRunning ? 'Review chain in progress...' : 'Complete a bounded review chain',
           complete: runComplete
         }
       ];
