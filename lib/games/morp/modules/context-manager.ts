@@ -4,11 +4,16 @@ import {
   MEMORY_CAPACITY,
   SIMULATED_CONTEXT_LIMIT
 } from '../config';
+import { REFINE_SUMMARY_SYSTEM_PROMPT } from './refine-sampling';
 import { buildMorpSystemContent } from '../soul';
 import type { ChatMessage } from '@/lib/llm/types';
 import type { ContextCompactionResult, ContextMessage, MorpState } from '../types';
 
 function resolveAmnesiaSystemContent(state?: MorpState): string {
+  if (state?.stage === 'refine') {
+    return REFINE_SUMMARY_SYSTEM_PROMPT;
+  }
+
   if (state) {
     return buildMorpSystemContent(state);
   }

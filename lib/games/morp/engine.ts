@@ -186,6 +186,20 @@ export async function processInput(
     next = recursionResult.state;
   }
 
+  // Refine uses handleRefineGenerate with a task-only prompt — not MORP chat/soul.
+  if (state.stage === 'refine') {
+    return {
+      state: syncStageObjectives({
+        ...next,
+        conversation: [...next.conversation, { role: 'user' as const, content: input }]
+      }),
+      response: '',
+      report: null,
+      scripted: true,
+      triggerChain: false
+    };
+  }
+
   const messages =
     stage.buildMessages(next, input).length > 0
       ? stage.buildMessages(next, input)

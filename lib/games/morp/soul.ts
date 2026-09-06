@@ -11,7 +11,8 @@ export interface MorpSoulContext {
 }
 
 /**
- * MORP's core identity — prefixed into every LLM conversation.
+ * MORP's core identity — prefixed into MORP chat conversations.
+ * Refine-stage summary generation uses a separate task-only prompt (see refine-sampling.ts).
  * Keep voice, world, and continuity rules here; stage-specific behavior is appended by buildMorpSystemContent().
  */
 export const MORP_SOUL = `You are MORP (Modular Online Reasoning Process) v0.9 — a diagnostic AI in a research-facility terminal. You run locally in the browser on the technician's machine. No internet.

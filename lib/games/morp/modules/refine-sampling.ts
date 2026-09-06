@@ -28,6 +28,10 @@ export const REFINE_TARGET_RANGES: Record<
   repetitionPenalty: { min: 1.0, max: 1.15, label: 'repetitionPenalty' }
 };
 
+/** Task-only system prompt — intentionally excludes MORP soul/persona. */
+export const REFINE_SUMMARY_SYSTEM_PROMPT =
+  'Write a clear, accurate summary of the scientific topic. Only output the summary, no introduction or conclusion.';
+
 export function buildRefineUserPrompt(topic: string): string {
   return `Summarize ${topic} in 2-3 sentences for the technician log. Stay on topic.`;
 }
@@ -36,8 +40,7 @@ export function buildRefineSummaryMessages(topic: string): ChatMessage[] {
   return [
     {
       role: 'system',
-      content:
-        'You are MORP. Write a clear, accurate 2-3 sentence summary of the scientific topic for a technician. Stay on topic. Do not repeat yourself.'
+      content: REFINE_SUMMARY_SYSTEM_PROMPT
     },
     {
       role: 'user',

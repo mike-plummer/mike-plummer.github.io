@@ -32,6 +32,7 @@ export const refineStage: StageDefinition = {
   },
 
   buildMessages() {
+    // Summary generation is handled by handleRefineGenerate — not MORP chat/soul.
     return [];
   },
 
