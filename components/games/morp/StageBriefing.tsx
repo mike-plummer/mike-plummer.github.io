@@ -11,15 +11,7 @@ interface StageBriefingProps {
   onToggleExpanded: () => void;
 }
 
-function BriefingSection({
-  title,
-  titleId,
-  children
-}: {
-  title: string;
-  titleId?: string;
-  children: React.ReactNode;
-}) {
+function BriefingSection({ title, titleId, children }: { title: string; titleId?: string; children: React.ReactNode }) {
   return (
     <div className="morp-briefing__section">
       <h3 id={titleId} className="morp-briefing__section-title">
@@ -96,11 +88,7 @@ export default function StageBriefing({
           <p className="morp-briefing__section-text">{meta.conceptContext}</p>
         </BriefingSection>
         <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
-          <StageObjectiveContent
-            objective={meta.objective}
-            objectives={[]}
-            suggestions={meta.suggestions}
-          />
+          <StageObjectiveContent objective={meta.objective} objectives={[]} suggestions={meta.suggestions} />
         </BriefingSection>
         <button type="button" className="button morp-briefing__begin" onClick={onAcknowledge}>
           Begin Stage
@@ -112,12 +100,7 @@ export default function StageBriefing({
   if (!expanded) {
     return (
       <section className="morp-briefing morp-briefing--collapsed" aria-label="Stage briefing">
-        <button
-          type="button"
-          className="morp-briefing__toggle"
-          onClick={onToggleExpanded}
-          aria-expanded={false}
-        >
+        <button type="button" className="morp-briefing__toggle" onClick={onToggleExpanded} aria-expanded={false}>
           <span className="morp-briefing__toggle-label">{stageLabel}</span>
           <span className="morp-briefing__toggle-hint">Show briefing</span>
         </button>
@@ -142,11 +125,7 @@ export default function StageBriefing({
         <p className="morp-briefing__section-text">{meta.conceptContext}</p>
       </BriefingSection>
       <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
-        <StageObjectiveContent
-          objective={meta.objective}
-          objectives={objectives}
-          suggestions={meta.suggestions}
-        />
+        <StageObjectiveContent objective={meta.objective} objectives={objectives} suggestions={meta.suggestions} />
       </BriefingSection>
     </section>
   );

@@ -31,6 +31,7 @@ let loadedModelId: string | null = null;
 let loadPromise: Promise<MLCEngine> | null = null;
 let disposePromise: Promise<void> | null = null;
 let lastInferenceMode: InferenceMode | null = null;
+let activeRequestId = 0;
 let loadGeneration = 0;
 let status: LLMStatus = 'idle';
 let progress: LLMProgress = { progress: 0, timeElapsed: 0, text: '', percent: 0 };
@@ -62,12 +63,25 @@ function throwIfAborted(signal?: AbortSignal): void {
   }
 }
 
-function bindAbortSignal(activeEngine: MLCEngine, signal?: AbortSignal): () => void {
+function beginRequest(): number {
+  return ++activeRequestId;
+}
+
+// web-llm exposes a single interruptGenerate() per engine — aborting one in-flight
+// request cancels whichever generation is active. Callers pass AbortSignal per request;
+// we only interrupt when the aborted request is still active so late aborts cannot
+// kill newer work. True per-request isolation would need a request queue (larger refactor).
+function bindAbortSignal(activeEngine: MLCEngine, signal?: AbortSignal, requestId?: number): () => void {
   if (!signal) {
     return () => {};
   }
 
+  const id = requestId ?? beginRequest();
+
   const onAbort = () => {
+    if (id !== activeRequestId) {
+      return;
+    }
     try {
       activeEngine.interruptGenerate();
     } catch {
@@ -94,6 +108,15 @@ async function ensureInferenceMode(activeEngine: MLCEngine, mode: InferenceMode)
   }
 
   lastInferenceMode = mode;
+}
+
+async function restoreChatInferenceMode(activeEngine: MLCEngine): Promise<void> {
+  try {
+    await activeEngine.resetChat();
+  } catch {
+    // Ignore reset errors during mode restoration.
+  }
+  lastInferenceMode = 'chat';
 }
 
 export function subscribeLLM(listener: Listener) {
@@ -285,7 +308,8 @@ export async function streamChat(
 ): Promise<StreamChatResult> {
   throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
-  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
+  const requestId = beginRequest();
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal, requestId);
 
   try {
     await ensureInferenceMode(activeEngine, 'chat');
@@ -321,7 +345,8 @@ export async function chatCompletion(
 ): Promise<StreamChatResult> {
   throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
-  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
+  const requestId = beginRequest();
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal, requestId);
 
   try {
     await ensureInferenceMode(activeEngine, 'chat');
@@ -402,7 +427,8 @@ export async function fetchNextTokenLogprobs(
 ): Promise<NextTokenLogprobsResult> {
   throwIfAborted(options.signal);
   const activeEngine = await loadLLM(undefined, modelId);
-  const unbindAbort = bindAbortSignal(activeEngine, options.signal);
+  const requestId = beginRequest();
+  const unbindAbort = bindAbortSignal(activeEngine, options.signal, requestId);
 
   try {
     throwIfAborted(options.signal);
@@ -451,5 +477,7 @@ export async function fetchNextTokenLogprobs(
     return { candidates: [] };
   } finally {
     unbindAbort();
+    // Logprobs probing uses completion/chat APIs that share KV state with streamChat.
+    await restoreChatInferenceMode(activeEngine);
   }
 }

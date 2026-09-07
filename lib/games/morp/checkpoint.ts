@@ -1,4 +1,5 @@
 import { CHECKPOINT_KEY } from './config';
+import { CheckpointSchema, type RawCheckpoint, RawCheckpointSchema } from './domain/schema';
 import { getLaterStage, STAGE_ORDER } from './stage-meta';
 import type { MorpCheckpoint, StageId } from './types';
 
@@ -22,7 +23,7 @@ function migrateStageId(stageId: string): StageId | null {
   return isValidStageId(migrated) ? migrated : null;
 }
 
-export function migrateCheckpoint(checkpoint: MorpCheckpoint): MorpCheckpoint | null {
+export function migrateCheckpoint(checkpoint: RawCheckpoint): MorpCheckpoint | null {
   const currentStage = migrateStageId(checkpoint.currentStage);
   if (!currentStage) {
     return null;
@@ -70,12 +71,19 @@ export function loadCheckpoint(): MorpCheckpoint | null {
     if (!raw) {
       return null;
     }
-    const parsed = JSON.parse(raw) as MorpCheckpoint & {
-      currentStage: string;
-      completedStages: string[];
-      furthestStage?: string;
-    };
-    return migrateCheckpoint(parsed);
+
+    const parsed = RawCheckpointSchema.safeParse(JSON.parse(raw));
+    if (!parsed.success) {
+      return null;
+    }
+
+    const migrated = migrateCheckpoint(parsed.data);
+    if (!migrated) {
+      return null;
+    }
+
+    const validated = CheckpointSchema.safeParse(migrated);
+    return validated.success ? validated.data : null;
   } catch {
     return null;
   }
@@ -86,8 +94,13 @@ export function saveCheckpoint(completedStages: StageId[], currentStage: StageId
     return;
   }
 
-  const checkpoint: MorpCheckpoint = { completedStages, currentStage, furthestStage };
-  window.localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(checkpoint));
+  const checkpoint = { completedStages, currentStage, furthestStage };
+  const validated = CheckpointSchema.safeParse(checkpoint);
+  if (!validated.success) {
+    return;
+  }
+
+  window.localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(validated.data));
 }
 
 export function clearCheckpoint() {

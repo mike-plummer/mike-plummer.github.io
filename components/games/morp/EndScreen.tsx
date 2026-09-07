@@ -29,7 +29,9 @@ export default function EndScreen({ onRestart }: EndScreenProps) {
       <h2 id="ending-title">{COPY.ending.statusHeader}</h2>
       <div className="morp-ending__status">
         {statusItems.map((item) => (
-          <p key={item.id}>{item.label} — {item.repairedStatus}</p>
+          <p key={item.id}>
+            {item.label} — {item.repairedStatus}
+          </p>
         ))}
         <p className="morp-ending__operational">MORP STATUS: OPERATIONAL</p>
       </div>

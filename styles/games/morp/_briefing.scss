@@ -1,0 +1,336 @@
+@use './tokens' as *;
+
+// Stage briefing
+.morp-briefing {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.875rem 1rem;
+
+  &--intro {
+    border-color: $morp-accent;
+  }
+
+  &--collapsed {
+    padding: 0;
+  }
+
+  &--reference {
+    border-color: $morp-border;
+  }
+}
+
+.morp-briefing__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.morp-briefing__toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: $morp-text-secondary;
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: $morp-bg-elevated;
+    color: $morp-text;
+  }
+}
+
+.morp-briefing__toggle-label {
+  color: $morp-text;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.morp-briefing__toggle-hint {
+  color: $morp-accent-soft;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.morp-briefing__collapse {
+  flex-shrink: 0;
+}
+
+.morp-briefing__stage {
+  color: $morp-accent-soft;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.morp-briefing__begin {
+  margin-top: 1.25rem;
+  width: 100%;
+}
+
+.morp-briefing__section {
+  margin: 0;
+
+  & + & {
+    border-top: 1px solid $morp-border-subtle;
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+  }
+}
+
+.morp-briefing__section-title {
+  color: $morp-accent;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.morp-briefing__section-text {
+  color: $morp-text;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.morp-briefing__objectives {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.morp-briefing__objective-item {
+  align-items: flex-start;
+  color: $morp-text;
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 0.5rem;
+  line-height: 1.5;
+  margin-bottom: 0.35rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.morp-briefing__objective-marker {
+  flex-shrink: 0;
+  font-weight: 700;
+  width: 1.1rem;
+}
+
+.morp-briefing__objective-item--complete .morp-briefing__objective-marker {
+  color: $morp-accent;
+}
+
+.morp-briefing__objective-item--incomplete .morp-briefing__objective-marker {
+  color: $morp-error;
+}
+
+.morp-briefing__suggestions {
+  margin-top: 0.75rem;
+}
+
+.morp-briefing__suggestions-label {
+  color: $morp-text-muted;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.morp-briefing__suggestions-list {
+  color: $morp-text;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    margin-bottom: 0.35rem;
+    padding-left: 1rem;
+    position: relative;
+
+    &::before {
+      color: $morp-accent;
+      content: '→';
+      left: 0;
+      position: absolute;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Stage diagnostic report (post-stage)
+.morp-stage-report {
+  background: #0d1f17;
+  border: 1px solid #55ff99;
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+
+  &--collapsed {
+    padding: 0;
+  }
+
+  &--pending {
+    border-color: $morp-border-subtle;
+  }
+}
+
+.morp-stage-report__objectives-hint {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0 0 1rem;
+}
+
+.morp-stage-report__briefing-link {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: $morp-accent-soft;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+
+  &:hover {
+    color: $morp-accent;
+  }
+}
+
+.morp-stage-report__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.morp-stage-report__toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: $morp-text;
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: rgba(85, 255, 153, 0.08);
+  }
+}
+
+.morp-stage-report__toggle-label {
+  color: $morp-accent;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.morp-stage-report__toggle-hint {
+  color: $morp-text-secondary;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.morp-stage-report__collapse {
+  flex-shrink: 0;
+}
+
+.morp-stage-report__eyebrow {
+  color: $morp-accent-soft;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.morp-stage-report h2 {
+  color: $morp-accent;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.morp-stage-report__hint {
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 1rem;
+}
+
+.morp-stage-report__section {
+  margin-bottom: 1rem;
+
+  h3 {
+    color: $morp-accent-soft;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+.morp-stage-report__next {
+  color: $morp-text;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 1rem;
+
+  strong {
+    color: $morp-accent;
+  }
+}
+
+.morp-stage-report__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.morp-stage-report__continue {
+  min-width: 12rem;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}

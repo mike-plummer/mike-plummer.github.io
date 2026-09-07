@@ -4,9 +4,7 @@ import type { TokenCandidate } from '../types';
 export const PREDICTION_DISPLAY_COUNT = 5;
 export const PREDICTION_TOP_LOGPROBS_REQUEST = 5;
 
-export type FetchNextTokenLogprobsFn = (
-  options: NextTokenLogprobsOptions
-) => Promise<NextTokenLogprobsResult>;
+export type FetchNextTokenLogprobsFn = (options: NextTokenLogprobsOptions) => Promise<NextTokenLogprobsResult>;
 
 function stripLeadingSpaceMarker(raw: string): string {
   if (raw.startsWith('Ġ') || raw.startsWith('▁')) {

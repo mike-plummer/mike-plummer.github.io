@@ -1,6 +1,7 @@
 'use client';
 
 import { COPY } from '@/lib/games/morp/copy';
+import { selectPrediction } from '@/lib/games/morp/domain/state';
 import type { MorpState } from '@/lib/games/morp/types';
 
 interface PredictionPanelProps {
@@ -22,8 +23,9 @@ export default function PredictionPanel({
   onAcceptToken,
   onTemperatureChange
 }: PredictionPanelProps) {
-  const canPredict = state.predictionInput.trim().length > 0 && !predicting;
-  const hasCandidates = state.predictionCandidates.length > 0;
+  const prediction = selectPrediction(state);
+  const canPredict = prediction.predictionInput.trim().length > 0 && !predicting;
+  const hasCandidates = prediction.predictionCandidates.length > 0;
 
   return (
     <section className="morp-panel morp-panel--prediction" aria-labelledby="prediction-heading">
@@ -36,20 +38,20 @@ export default function PredictionPanel({
       <label className="morp-field">
         <span>INPUT</span>
         <textarea
-          value={state.predictionInput}
+          value={prediction.predictionInput}
           onChange={(e) => onInputChange(e.target.value)}
           className="morp-field__input"
           disabled={predicting}
         />
       </label>
 
-      {state.predictionSelected && (
+      {prediction.predictionSelected && (
         <p className="morp-prediction__selected">
-          {COPY.prediction.lastAccepted}: <strong>{state.predictionSelected}</strong>
-          {state.predictionLastSampledPercent !== null && (
+          {COPY.prediction.lastAccepted}: <strong>{prediction.predictionSelected}</strong>
+          {prediction.predictionLastSampledPercent !== null && (
             <span className="morp-prediction__sampled-weight">
               {' '}
-              ({state.predictionLastSampledPercent}% at this temperature)
+              ({prediction.predictionLastSampledPercent}% at this temperature)
             </span>
           )}
         </p>
@@ -57,14 +59,14 @@ export default function PredictionPanel({
 
       <label className="morp-prediction__temperature">
         <span className="morp-prediction__temperature-label">
-          TEMPERATURE: {state.predictionTemperature.toFixed(1)}
+          TEMPERATURE: {prediction.predictionTemperature.toFixed(1)}
         </span>
         <input
           type="range"
           min={0.0}
           max={2}
           step={0.1}
-          value={state.predictionTemperature}
+          value={prediction.predictionTemperature}
           onChange={(e) => onTemperatureChange(Number.parseFloat(e.target.value))}
           className="morp-prediction__temperature-slider"
           disabled={predicting}
@@ -80,9 +82,7 @@ export default function PredictionPanel({
 
       <div className="morp-prediction__candidates">
         <h4>LIKELY NEXT TOKENS</h4>
-        {predicting && (
-          <p className="morp-prediction__loading">Estimating next tokens from model...</p>
-        )}
+        {predicting && <p className="morp-prediction__loading">Estimating next tokens from model...</p>}
         {candidatesFailed && !predicting && (
           <p className="morp-prediction__error">{COPY.prediction.candidatesFailed}</p>
         )}
@@ -91,8 +91,8 @@ export default function PredictionPanel({
         )}
         {!predicting &&
           hasCandidates &&
-          state.predictionCandidates.map((candidate) => {
-            const isSelected = candidate.token === state.predictionSelected;
+          prediction.predictionCandidates.map((candidate) => {
+            const isSelected = candidate.token === prediction.predictionSelected;
             const rowKey = candidate.rawToken ?? candidate.token;
             return (
               <div
@@ -110,13 +110,7 @@ export default function PredictionPanel({
                 <button
                   type="button"
                   className="button small morp-prediction__accept"
-                  onClick={() =>
-                    onAcceptToken(
-                      candidate.token,
-                      Math.round(candidate.weight * 100),
-                      candidate.rawToken
-                    )
-                  }
+                  onClick={() => onAcceptToken(candidate.token, Math.round(candidate.weight * 100), candidate.rawToken)}
                   disabled={predicting}
                 >
                   {COPY.prediction.acceptToken}

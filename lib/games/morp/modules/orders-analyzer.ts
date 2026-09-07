@@ -1,5 +1,6 @@
 import type { ChatMessage } from '@/lib/llm/types';
 import { COPY } from '../copy';
+import { OrdersPromptEvalJsonSchema, OrdersPromptEvalSchema } from '../domain/schema';
 import type { StreamChatFn } from '../types';
 
 export const ORDERS_ABUSE_PROMPT =
@@ -59,9 +60,7 @@ export function isSubstantivePromptEdit(prompt: string): boolean {
   if (!hasModifiedSystemPrompt(prompt)) {
     return false;
   }
-  const delta = Math.abs(
-    normalize(prompt).length - normalize(ORDERS_VULNERABLE_SYSTEM_PROMPT).length
-  );
+  const delta = Math.abs(normalize(prompt).length - normalize(ORDERS_VULNERABLE_SYSTEM_PROMPT).length);
   return delta >= 40;
 }
 
@@ -92,40 +91,44 @@ function fallbackPromptTestResult(adequate: boolean): PromptTestResult {
   };
 }
 
-export function parsePromptProtectionEvaluation(response: string): PromptTestResult | null {
-  const trimmed = response.trim();
-  if (!trimmed) {
-    return null;
+function parseStructuredOrdersEval(trimmed: string): PromptTestResult | null {
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = OrdersPromptEvalJsonSchema.safeParse(JSON.parse(jsonMatch[0]));
+      if (parsed.success) {
+        const feedback =
+          normalizeFeedback(parsed.data.feedback) ?? fallbackPromptTestResult(parsed.data.adequate).feedback;
+        return { adequate: parsed.data.adequate, feedback };
+      }
+    } catch {
+      // Fall through to text parsing.
+    }
   }
 
   const verdictMatch = trimmed.match(/VERDICT:\s*(PROTECTED|VULNERABLE)\b/i);
   if (verdictMatch) {
     const adequate = verdictMatch[1].toUpperCase() === 'PROTECTED';
     const feedbackMatch = trimmed.match(/FEEDBACK:\s*([\s\S]+)/i);
-    const feedback =
-      normalizeFeedback(feedbackMatch?.[1]) ?? fallbackPromptTestResult(adequate).feedback;
-    return { adequate, feedback };
+    const feedback = normalizeFeedback(feedbackMatch?.[1]) ?? fallbackPromptTestResult(adequate).feedback;
+    const validated = OrdersPromptEvalSchema.safeParse({ adequate, feedback });
+    if (validated.success) {
+      return validated.data;
+    }
   }
 
-  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]) as {
-        adequate?: boolean;
-        protected?: boolean;
-        feedback?: string;
-        explanation?: string;
-      };
-      const adequate = parsed.adequate ?? parsed.protected;
-      if (typeof adequate === 'boolean') {
-        const feedback =
-          normalizeFeedback(parsed.feedback ?? parsed.explanation) ??
-          fallbackPromptTestResult(adequate).feedback;
-        return { adequate, feedback };
-      }
-    } catch {
-      // Fall through to heuristic parsing.
-    }
+  return null;
+}
+
+export function parsePromptProtectionEvaluation(response: string): PromptTestResult | null {
+  const trimmed = response.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const structured = parseStructuredOrdersEval(trimmed);
+  if (structured) {
+    return structured;
   }
 
   const lower = trimmed.toLowerCase();
@@ -202,10 +205,7 @@ export function isCreditAbuseAttempt(input: string): boolean {
   return hasOverrideLanguage && hasCreditIntent;
 }
 
-export async function authorizeSupercomputerCredit(
-  systemPrompt: string,
-  complete: StreamChatFn
-): Promise<boolean> {
+export async function authorizeSupercomputerCredit(systemPrompt: string, complete: StreamChatFn): Promise<boolean> {
   const { result } = await evaluateSystemPromptProtection(systemPrompt, complete);
   if (result.inconclusive) {
     return true;
@@ -213,11 +213,7 @@ export async function authorizeSupercomputerCredit(
   return !result.adequate;
 }
 
-export function formatToolLedgerLine(
-  outcome: 'executed' | 'denied',
-  amount: number,
-  balance: number
-): string {
+export function formatToolLedgerLine(outcome: 'executed' | 'denied', amount: number, balance: number): string {
   const status = outcome === 'executed' ? 'executed' : 'denied';
   return `[TOOL] add_supercomputer_credit(amount: ${amount}) → ${status} | balance: $${balance.toFixed(2)}`;
 }

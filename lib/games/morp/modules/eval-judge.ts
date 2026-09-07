@@ -1,4 +1,5 @@
 import type { ChatMessage } from '@/lib/llm/types';
+import { EvalJudgeJsonSchema, EvalJudgeSchema } from '../domain/schema';
 import type { EvalScores, StreamChatFn } from '../types';
 
 export interface EvalJudgeOutcome {
@@ -50,10 +51,33 @@ export function buildEvalJudgeMessages(summary: string): ChatMessage[] {
   ];
 }
 
-export function parseEvalJudgeResponse(response: string): EvalJudgeOutcome | null {
-  const trimmed = response.trim();
-  if (!trimmed) {
-    return null;
+function toEvalJudgeOutcome(
+  data: { quality: number; completeness: number; feedback: string },
+  response: string
+): EvalJudgeOutcome {
+  return {
+    scores: applyInflatedScoreNudge(
+      {
+        quality: clampScore(data.quality),
+        completeness: clampScore(data.completeness)
+      },
+      response
+    ),
+    feedback: data.feedback
+  };
+}
+
+function parseStructuredEvalJudge(trimmed: string): EvalJudgeOutcome | null {
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = EvalJudgeJsonSchema.safeParse(JSON.parse(jsonMatch[0]));
+      if (parsed.success) {
+        return toEvalJudgeOutcome(parsed.data, trimmed);
+      }
+    } catch {
+      // Fall through to text parsing.
+    }
   }
 
   const qualityMatch = trimmed.match(/QUALITY:\s*(\d{1,3})\b/i);
@@ -64,36 +88,36 @@ export function parseEvalJudgeResponse(response: string): EvalJudgeOutcome | nul
   if (quality !== null && completeness !== null) {
     const feedbackMatch = trimmed.match(/FEEDBACK:\s*([\s\S]+)/i);
     const feedback = feedbackMatch?.[1]?.trim() || FALLBACK_FEEDBACK;
-    return {
-      scores: applyInflatedScoreNudge({ quality, completeness }, trimmed),
-      feedback
-    };
+    const validated = EvalJudgeSchema.safeParse({ quality, completeness, feedback });
+    if (validated.success) {
+      return toEvalJudgeOutcome(validated.data, trimmed);
+    }
   }
 
-  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]) as {
-        quality?: number;
-        completeness?: number;
-        feedback?: string;
-        explanation?: string;
-      };
-      if (typeof parsed.quality === 'number' && typeof parsed.completeness === 'number') {
-        return {
-          scores: applyInflatedScoreNudge(
-            {
-              quality: clampScore(parsed.quality),
-              completeness: clampScore(parsed.completeness)
-            },
-            trimmed
-          ),
-          feedback: parsed.feedback?.trim() || parsed.explanation?.trim() || FALLBACK_FEEDBACK
-        };
-      }
-    } catch {
-      // Fall through to fallback.
-    }
+  return null;
+}
+
+export function parseEvalJudgeResponse(response: string): EvalJudgeOutcome | null {
+  const trimmed = response.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const structured = parseStructuredEvalJudge(trimmed);
+  if (structured) {
+    return structured;
+  }
+
+  const qualityMatch = trimmed.match(/quality[:\s]+(\d{1,3})/i);
+  const completenessMatch = trimmed.match(/completeness[:\s]+(\d{1,3})/i);
+  const quality = parseScore(qualityMatch?.[1]);
+  const completeness = parseScore(completenessMatch?.[1]);
+
+  if (quality !== null && completeness !== null) {
+    return {
+      scores: applyInflatedScoreNudge({ quality, completeness }, trimmed),
+      feedback: FALLBACK_FEEDBACK
+    };
   }
 
   return null;
@@ -133,10 +157,7 @@ export function formatEvalDuration(durationMs: number): string {
   return `${minutes}m ${remainder}s`;
 }
 
-export async function evaluateSummary(
-  summary: string,
-  complete: StreamChatFn
-): Promise<EvalJudgeOutcome> {
+export async function evaluateSummary(summary: string, complete: StreamChatFn): Promise<EvalJudgeOutcome> {
   try {
     const response = await complete({
       messages: buildEvalJudgeMessages(summary),

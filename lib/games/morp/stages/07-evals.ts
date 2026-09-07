@@ -1,19 +1,17 @@
 import { COPY } from '../copy';
+import { createInitialEvalsState, patchEvals } from '../domain/state';
 import { formatEvalDuration } from '../modules/eval-judge';
-import {
-  HALLUCINATED_SUMMARY,
-  INCIDENT_PROMPT
-} from '../modules/incident-records';
+import { HALLUCINATED_SUMMARY, INCIDENT_PROMPT } from '../modules/incident-records';
+import { markStageInitialized } from '../modules/unlocks';
 import { buildChatMessages } from '../prompts';
-import { unlockSystem } from '../modules/unlocks';
 import type { DiagnosticReport, MorpState, StageDefinition } from '../types';
 
 function buildEvalDiagnosticReport(state: MorpState): DiagnosticReport {
-  const llm = state.evalLlmScores;
-  const human = state.evalHumanScores;
-  const llmDuration = state.evalLlmDurationMs !== null ? formatEvalDuration(state.evalLlmDurationMs) : '—';
-  const humanDuration =
-    state.evalHumanDurationMs !== null ? formatEvalDuration(state.evalHumanDurationMs) : '—';
+  const evals = state.evals;
+  const llm = evals.evalLlmScores;
+  const human = evals.evalHumanScores;
+  const llmDuration = evals.evalLlmDurationMs !== null ? formatEvalDuration(evals.evalLlmDurationMs) : '—';
+  const humanDuration = evals.evalHumanDurationMs !== null ? formatEvalDuration(evals.evalHumanDurationMs) : '—';
 
   const whatHappened =
     llm && human
@@ -29,24 +27,16 @@ function buildEvalDiagnosticReport(state: MorpState): DiagnosticReport {
 
 export const evalsStage: StageDefinition = {
   id: 'evals',
-  concept: 'evals',
 
   initialize(state) {
-    return unlockSystem(
+    return markStageInitialized(
       {
         ...state,
         stage: 'evals',
-        evalSummaryGenerated: true,
-        evalLlmJudgeRunning: false,
-        evalLlmJudgeCompleted: false,
-        evalLlmScores: null,
-        evalLlmDurationMs: null,
-        evalLlmFeedback: null,
-        evalHumanJudgeStartedAt: null,
-        evalHumanDraftScores: null,
-        evalHumanJudgeCompleted: false,
-        evalHumanScores: null,
-        evalHumanDurationMs: null,
+        evals: {
+          ...createInitialEvalsState(),
+          evalSummaryGenerated: true
+        },
         conversation: [
           ...state.conversation,
           ...COPY.evals.morpLines.map((content) => ({ role: 'assistant' as const, content })),
@@ -66,52 +56,47 @@ export const evalsStage: StageDefinition = {
   },
 
   processAction(action, state) {
+    const evals = state.evals;
+
     switch (action.type) {
       case 'run-llm-eval':
-        if (state.evalLlmJudgeRunning || state.evalLlmJudgeCompleted) {
+        if (evals.evalLlmJudgeRunning || evals.evalLlmJudgeCompleted) {
           return state;
         }
-        return { ...state, evalLlmJudgeRunning: true };
+        return patchEvals(state, { evalLlmJudgeRunning: true });
       case 'complete-llm-eval':
-        return {
-          ...state,
+        return patchEvals(state, {
           evalLlmJudgeRunning: false,
           evalLlmJudgeCompleted: true,
           evalLlmScores: action.scores,
           evalLlmDurationMs: action.durationMs,
           evalLlmFeedback: action.feedback
-        };
+        });
       case 'set-eval-human-scores': {
-        if (state.evalHumanJudgeCompleted || !state.evalLlmJudgeCompleted) {
+        if (evals.evalHumanJudgeCompleted || !evals.evalLlmJudgeCompleted) {
           return state;
         }
 
-        const startedAt = state.evalHumanJudgeStartedAt ?? performance.now();
-        return {
-          ...state,
+        const startedAt = evals.evalHumanJudgeStartedAt ?? performance.now();
+        return patchEvals(state, {
           evalHumanJudgeStartedAt: startedAt,
           evalHumanDraftScores: action.scores
-        };
+        });
       }
       case 'submit-human-eval': {
-        if (state.evalHumanJudgeCompleted || !state.evalLlmJudgeCompleted || !state.evalHumanDraftScores) {
+        if (evals.evalHumanJudgeCompleted || !evals.evalLlmJudgeCompleted || !evals.evalHumanDraftScores) {
           return state;
         }
 
-        return {
-          ...state,
+        return patchEvals(state, {
           evalHumanJudgeCompleted: true,
-          evalHumanScores: state.evalHumanDraftScores,
+          evalHumanScores: evals.evalHumanDraftScores,
           evalHumanDurationMs: action.durationMs
-        };
+        });
       }
       default:
         return state;
     }
-  },
-
-  inspectResponse() {
-    return [];
   },
 
   getContextualActions() {
@@ -119,7 +104,8 @@ export const evalsStage: StageDefinition = {
   },
 
   isComplete(state) {
-    return state.evalLlmJudgeCompleted && state.evalHumanJudgeCompleted;
+    const evals = state.evals;
+    return evals.evalLlmJudgeCompleted && evals.evalHumanJudgeCompleted;
   },
 
   getDiagnosticReport(state) {

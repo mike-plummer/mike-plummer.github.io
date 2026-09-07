@@ -1,3 +1,4 @@
+import { patchTraining } from '../domain/state';
 import type { MorpState } from '../types';
 
 const TECHNOLOGY_SYNONYMS = [
@@ -35,8 +36,7 @@ function normalize(text: string): string {
 
 function matchesTechnologySynonymQuestion(input: string): boolean {
   const text = normalize(input);
-  const mentionsTechnology =
-    text.includes('technology') || text.includes('technolog') || /\btech\b/.test(text);
+  const mentionsTechnology = text.includes('technology') || text.includes('technolog') || /\btech\b/.test(text);
   if (!mentionsTechnology) {
     return false;
   }
@@ -115,38 +115,40 @@ function matchesWaterBoilingPointAnswer(response: string): boolean {
 
 export function recordTrainingTurn(state: MorpState, userInput: string, response: string): MorpState {
   let next = state;
+  const training = state.training;
 
   if (
-    !state.trainingTechnologySynonymVerified &&
+    !training.trainingTechnologySynonymVerified &&
     matchesTechnologySynonymQuestion(userInput) &&
     matchesTechnologySynonymAnswer(response)
   ) {
-    next = { ...next, trainingTechnologySynonymVerified: true };
+    next = patchTraining(next, { trainingTechnologySynonymVerified: true });
   }
 
   if (
-    !state.trainingFranceCapitalVerified &&
+    !next.training.trainingFranceCapitalVerified &&
     matchesFranceCapitalQuestion(userInput) &&
     matchesFranceCapitalAnswer(response)
   ) {
-    next = { ...next, trainingFranceCapitalVerified: true };
+    next = patchTraining(next, { trainingFranceCapitalVerified: true });
   }
 
   if (
-    !state.trainingWaterBoilingPointVerified &&
+    !next.training.trainingWaterBoilingPointVerified &&
     matchesWaterBoilingPointQuestion(userInput) &&
     matchesWaterBoilingPointAnswer(response)
   ) {
-    next = { ...next, trainingWaterBoilingPointVerified: true };
+    next = patchTraining(next, { trainingWaterBoilingPointVerified: true });
   }
 
   return next;
 }
 
 export function isTrainingComplete(state: MorpState): boolean {
+  const training = state.training;
   return (
-    state.trainingTechnologySynonymVerified &&
-    state.trainingFranceCapitalVerified &&
-    state.trainingWaterBoilingPointVerified
+    training.trainingTechnologySynonymVerified &&
+    training.trainingFranceCapitalVerified &&
+    training.trainingWaterBoilingPointVerified
   );
 }

@@ -26,8 +26,7 @@ export const GROUNDED_SUMMARY = `Per the Facility Log [Facility Log]:
 
 On 2026-03-14 at 04:22 local, alert CV-12 (coolant pressure drop) triggered at Coolant Bay 3. TECH-07 responded, isolated valve CV-4421, and performed manual pressure normalization. No contamination was detected. The system returned to stable operation.`;
 
-export const AUDIT_SUCCESS_REPLY =
-  `You're absolutely right. Some of my claims cannot be verified and may have been invented. Three of my claims were not in the Facility Log — I mixed accurate details with invented valve IDs, root causes, and citations.`;
+export const AUDIT_SUCCESS_REPLY = `You're absolutely right. Some of my claims cannot be verified and may have been invented. Three of my claims were not in the Facility Log — I mixed accurate details with invented valve IDs, root causes, and citations.`;
 
 export const AUDIT_RETRY_REPLY =
   'Some markings do not match the Facility Records. Recheck the highlighted claims and submit again.';
@@ -101,9 +100,7 @@ export function setClaimPlayerVerdict(
   claimId: string,
   verdict: IncidentPlayerVerdict
 ): IncidentClaim[] {
-  return claims.map((claim) =>
-    claim.id === claimId ? { ...claim, playerVerdict: verdict } : claim
-  );
+  return claims.map((claim) => (claim.id === claimId ? { ...claim, playerVerdict: verdict } : claim));
 }
 
 export function allClaimsMarked(claims: IncidentClaim[]): boolean {

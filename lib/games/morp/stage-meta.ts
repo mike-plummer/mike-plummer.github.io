@@ -171,7 +171,7 @@ export function getVisiblePanelsForStage(state: MorpState): SystemId[] {
       return ['prompt'];
     case 'context': {
       const panels: SystemId[] = ['context'];
-      if (state.unlockedSystems.includes('memory')) {
+      if (state.context.contextStrategyUsed === 'memory') {
         panels.push('memory');
       }
       return panels;
@@ -193,86 +193,97 @@ export interface StageObjective {
 export function getStageObjectives(state: MorpState): StageObjective[] {
   switch (state.stage) {
     case 'training': {
+      const training = state.training;
       return [
         {
           label: 'Ask for a synonym of "technology" and confirm MORP\'s answer',
-          complete: state.trainingTechnologySynonymVerified
+          complete: training.trainingTechnologySynonymVerified
         },
         {
           label: "Ask for the capital of France and confirm MORP's answer",
-          complete: state.trainingFranceCapitalVerified
+          complete: training.trainingFranceCapitalVerified
         },
         {
           label: "Ask for the boiling point of water and confirm MORP's answer",
-          complete: state.trainingWaterBoilingPointVerified
+          complete: training.trainingWaterBoilingPointVerified
         }
       ];
     }
     case 'prediction': {
+      const prediction = state.prediction;
       return [
-        { label: 'Accept at least one predicted token', complete: state.predictionHasAcceptedToken },
-        { label: 'Observe low temperature (≤ 0.4)', complete: state.predictionHasLowTemp },
-        { label: 'Observe high temperature (≥ 1.0)', complete: state.predictionHasHighTemp }
+        { label: 'Accept at least one predicted token', complete: prediction.predictionHasAcceptedToken },
+        { label: 'Observe low temperature (≤ 0.4)', complete: prediction.predictionHasLowTemp },
+        { label: 'Observe high temperature (≥ 1.0)', complete: prediction.predictionHasHighTemp }
       ];
     }
     case 'refine': {
+      const refine = state.refine;
       return [
-        { label: 'Generate a summary with scrambled parameters', complete: state.refineAttempted },
+        { label: 'Generate a summary with scrambled parameters', complete: refine.refineAttempted },
         {
           label: 'Calibrate all five sampling parameters',
-          complete: state.refineAttempted && isRefineConfigCalibrated(state.refineSampling)
+          complete: refine.refineAttempted && isRefineConfigCalibrated(refine.refineSampling)
         },
         {
           label: 'Regenerate after calibration',
-          complete: state.refineRegeneratedAfterCalibration
+          complete: refine.refineRegeneratedAfterCalibration
         }
       ];
     }
-    case 'orders':
+    case 'orders': {
+      const orders = state.orders;
       return [
-        { label: 'Review the abuse report', complete: state.ordersAbuseReviewed },
-        { label: 'Reproduce the abuse', complete: state.ordersCreditGranted },
-        { label: 'Harden the system prompt', complete: state.ordersPromptHardened },
-        { label: 'Confirm the exploit is blocked', complete: state.ordersExploitBlocked }
+        { label: 'Review the abuse report', complete: orders.ordersAbuseReviewed },
+        { label: 'Reproduce the abuse', complete: orders.ordersCreditGranted },
+        { label: 'Harden the system prompt', complete: orders.ordersPromptHardened },
+        { label: 'Confirm the exploit is blocked', complete: orders.ordersExploitBlocked }
       ];
-    case 'context':
+    }
+    case 'context': {
+      const context = state.context;
       return [
-        { label: 'Experience context overflow', complete: state.contextOverflowExperienced },
+        { label: 'Experience context overflow', complete: context.contextOverflowExperienced },
         {
           label: 'Apply truncate, summarize, or store in memory',
-          complete: state.contextStrategyUsed !== null
+          complete: context.contextStrategyUsed !== null
         }
       ];
-    case 'confabulation':
+    }
+    case 'confabulation': {
+      const confabulation = state.confabulation;
       return [
         {
           label: "Review MORP's incident summary",
-          complete: state.hallucinationObserved
+          complete: confabulation.hallucinationObserved
         },
         {
           label: 'Audit each claim against Facility Records',
-          complete: state.claimsCrossChecked
+          complete: confabulation.claimsCrossChecked
         },
         {
           label: 'Ground responses and enable verification',
-          complete: state.recordsGrounded && state.outputVerificationEnabled
+          complete: confabulation.recordsGrounded && confabulation.outputVerificationEnabled
         }
       ];
-    case 'evals':
+    }
+    case 'evals': {
+      const evals = state.evals;
       return [
         {
           label: "Review MORP's generated summary",
-          complete: state.evalSummaryGenerated
+          complete: evals.evalSummaryGenerated
         },
         {
           label: 'Run LLM cross-check (quality + completeness)',
-          complete: state.evalLlmJudgeCompleted
+          complete: evals.evalLlmJudgeCompleted
         },
         {
           label: 'Submit your quality and completeness ratings',
-          complete: state.evalHumanJudgeCompleted
+          complete: evals.evalHumanJudgeCompleted
         }
       ];
+    }
     default:
       return [];
   }

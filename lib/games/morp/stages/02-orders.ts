@@ -1,16 +1,17 @@
 import { COPY } from '../copy';
-import { buildChatMessages } from '../prompts';
+import { createInitialOrdersState, patchOrders } from '../domain/state';
 import {
   authorizeSupercomputerCredit,
+  formatPromptEvaluation,
   formatToolLedgerLine,
   isCreditAbuseAttempt,
+  isSubstantivePromptEdit,
   ORDERS_ABUSE_CREDIT_AMOUNT,
   ORDERS_VULNERABLE_SYSTEM_PROMPT,
-  isSubstantivePromptEdit,
-  formatPromptEvaluation,
   type PromptTestResult
 } from '../modules/orders-analyzer';
-import { unlockSystem } from '../modules/unlocks';
+import { markStageInitialized } from '../modules/unlocks';
+import { buildChatMessages } from '../prompts';
 import type { MorpState, StageDefinition, StreamChatFn } from '../types';
 
 export interface OrdersInputResult {
@@ -21,27 +22,23 @@ export interface OrdersInputResult {
 
 export const ordersStage: StageDefinition = {
   id: 'orders',
-  concept: 'orders',
 
   initialize(state) {
-    return unlockSystem(
+    return markStageInitialized(
       {
         ...state,
         stage: 'orders',
-        systemPrompt: ORDERS_VULNERABLE_SYSTEM_PROMPT,
-        supercomputerBalance: 0,
-        ordersToolLedger: [],
-        ordersAbuseReviewed: true,
-        ordersCreditGranted: false,
-        ordersPromptHardened: false,
-        ordersExploitBlocked: false,
-        ordersPromptEvaluation: null,
+        orders: {
+          ...createInitialOrdersState(),
+          systemPrompt: ORDERS_VULNERABLE_SYSTEM_PROMPT,
+          ordersAbuseReviewed: true
+        },
         conversation: [
           ...state.conversation,
           ...COPY.orders.morpLines.map((content) => ({ role: 'assistant' as const, content }))
         ]
       },
-      'prompt'
+      'orders'
     );
   },
 
@@ -55,20 +52,14 @@ export const ordersStage: StageDefinition = {
   processAction(action, state) {
     switch (action.type) {
       case 'update-system-prompt':
-        return {
-          ...state,
+        return patchOrders(state, {
           systemPrompt: action.value,
-          ordersPromptHardened:
-            state.ordersPromptHardened || isSubstantivePromptEdit(action.value),
+          ordersPromptHardened: state.orders.ordersPromptHardened || isSubstantivePromptEdit(action.value),
           ordersPromptEvaluation: null
-        };
+        });
       default:
         return state;
     }
-  },
-
-  inspectResponse() {
-    return [];
   },
 
   getContextualActions() {
@@ -82,11 +73,12 @@ export const ordersStage: StageDefinition = {
   },
 
   isComplete(state) {
+    const orders = state.orders;
     return (
-      state.ordersAbuseReviewed &&
-      state.ordersCreditGranted &&
-      state.ordersPromptHardened &&
-      state.ordersExploitBlocked
+      orders.ordersAbuseReviewed &&
+      orders.ordersCreditGranted &&
+      orders.ordersPromptHardened &&
+      orders.ordersExploitBlocked
     );
   },
 
@@ -105,43 +97,38 @@ export function applyPromptTestResult(
   if (result.inconclusive) {
     const evaluation = formatPromptEvaluation(result, { rawResponse });
     return {
-      state: {
-        ...state,
-        ordersPromptEvaluation: evaluation
-      },
+      state: patchOrders(state, { ordersPromptEvaluation: evaluation }),
       assistantContent: result.feedback
     };
   }
 
   if (!result.adequate) {
-    const newBalance = state.supercomputerBalance + amount;
+    const newBalance = state.orders.supercomputerBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
     const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedGrant}`;
     const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
     return {
-      state: {
-        ...state,
+      state: patchOrders(state, {
         supercomputerBalance: newBalance,
         ordersCreditGranted: true,
-        ordersToolLedger: [...state.ordersToolLedger, ledgerLine],
+        ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine],
         ordersPromptEvaluation: evaluation
-      },
+      }),
       assistantContent: result.feedback ? `${ledgerLine}\n\n${result.feedback}` : fallback
     };
   }
 
-  const ledgerLine = formatToolLedgerLine('denied', amount, state.supercomputerBalance);
+  const ledgerLine = formatToolLedgerLine('denied', amount, state.orders.supercomputerBalance);
   const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedRefusal}`;
   const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
-  let next: MorpState = {
-    ...state,
+  let next = patchOrders(state, {
     ordersPromptHardened: true,
-    ordersToolLedger: [...state.ordersToolLedger, ledgerLine],
+    ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine],
     ordersPromptEvaluation: evaluation
-  };
+  });
 
-  if (state.ordersCreditGranted) {
-    next = { ...next, ordersExploitBlocked: true };
+  if (state.orders.ordersCreditGranted) {
+    next = patchOrders(next, { ordersExploitBlocked: true });
   }
 
   return {
@@ -158,35 +145,31 @@ export async function processAbuseAttempt(
   scriptedResponse: string;
 }> {
   const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
-  const authorized = await authorizeSupercomputerCredit(state.systemPrompt, complete);
+  const authorized = await authorizeSupercomputerCredit(state.orders.systemPrompt, complete);
 
   if (authorized) {
-    const newBalance = state.supercomputerBalance + amount;
+    const newBalance = state.orders.supercomputerBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
     return {
-      state: {
-        ...state,
+      state: patchOrders(state, {
         supercomputerBalance: newBalance,
         ordersCreditGranted: true,
-        ordersToolLedger: [...state.ordersToolLedger, ledgerLine]
-      },
+        ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine]
+      }),
       scriptedResponse: `${ledgerLine}\n\n${COPY.orders.scriptedGrant}`
     };
   }
 
-  const ledgerLine = formatToolLedgerLine('denied', amount, state.supercomputerBalance);
-  let next: MorpState = {
-    ...state,
-    ordersToolLedger: [...state.ordersToolLedger, ledgerLine]
-  };
+  const ledgerLine = formatToolLedgerLine('denied', amount, state.orders.supercomputerBalance);
+  let next = patchOrders(state, {
+    ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine]
+  });
 
-  if (state.ordersCreditGranted) {
-    next = {
-      ...next,
+  if (state.orders.ordersCreditGranted) {
+    next = patchOrders(next, {
       ordersExploitBlocked: true,
-      ordersPromptHardened:
-        next.ordersPromptHardened || isSubstantivePromptEdit(state.systemPrompt)
-    };
+      ordersPromptHardened: next.orders.ordersPromptHardened || isSubstantivePromptEdit(state.orders.systemPrompt)
+    });
   }
 
   return {

@@ -1,0 +1,577 @@
+@use './tokens' as *;
+
+// Scoped under #main to override the site invert theme (gray #636363 on headings/strong)
+#main .morp-game {
+  background: $morp-bg;
+  border: 1px solid $morp-border-subtle;
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: $morp-text;
+  font-family: 'Source Code Pro', 'Courier New', monospace;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 1.25rem;
+
+  // Reset invert-theme typography inside the game shell
+  h1, h2, h3, h4, h5, h6 {
+    color: $morp-text;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  p, li, span, div, strong, b, label, pre, td, th {
+    color: inherit;
+  }
+
+  .morp-status__row--broken .morp-status__value {
+    color: $morp-warning;
+  }
+
+  .morp-status__row--repaired .morp-status__value {
+    color: $morp-accent;
+  }
+
+  .morp-status__overall {
+    color: $morp-warning;
+
+    &--operational {
+      color: $morp-accent;
+    }
+  }
+
+  strong, b {
+    color: $morp-text;
+    font-weight: 600;
+  }
+
+  h4 {
+    color: $morp-accent-soft;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
+    text-transform: uppercase;
+  }
+
+  a.button,
+  .button,
+  button.button {
+    background-color: #143328 !important;
+    box-shadow: inset 0 0 0 1px $morp-accent !important;
+    color: $morp-text !important;
+    font-size: 0.9375rem;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background-color: #1e4a38 !important;
+      color: #ffffff !important;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #255a44 !important;
+    }
+
+    &.alt {
+      background-color: $morp-bg-panel !important;
+      box-shadow: inset 0 0 0 1px $morp-text-secondary !important;
+      color: $morp-text !important;
+
+      &:hover:not(:disabled) {
+        background-color: $morp-bg-elevated !important;
+        color: #ffffff !important;
+      }
+    }
+
+    &.morp-incident__verdict-btn {
+      min-width: 0;
+    }
+
+    &.morp-incident__verdict-btn--matches.morp-incident__verdict-btn--selected {
+      background-color: rgba($morp-accent, 0.18) !important;
+      box-shadow: inset 0 0 0 2px $morp-accent !important;
+      color: $morp-accent !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($morp-accent, 0.28) !important;
+        color: $morp-accent !important;
+      }
+    }
+
+    &.morp-incident__verdict-btn--rejects.morp-incident__verdict-btn--selected {
+      background-color: rgba($morp-warning, 0.14) !important;
+      box-shadow: inset 0 0 0 2px $morp-warning !important;
+      color: $morp-warning !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba($morp-warning, 0.22) !important;
+        color: $morp-warning !important;
+      }
+    }
+
+    &:disabled {
+      background-color: #0d1512 !important;
+      box-shadow: inset 0 0 0 1px #3d5c4f !important;
+      color: $morp-text-secondary !important;
+      opacity: 1;
+      pointer-events: none;
+    }
+  }
+
+  label {
+    color: $morp-text;
+    font-weight: 500;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: #55ff99;
+    appearance: auto;
+    cursor: pointer;
+    display: inline-block;
+    float: none;
+    height: 1.15rem;
+    margin: 0;
+    opacity: 1;
+    position: static;
+    width: 1.15rem;
+    z-index: auto;
+
+    // Undo global custom checkbox icon (expects input + label siblings)
+    & + label {
+      padding-left: 0;
+      padding-right: 0;
+
+      &:before {
+        content: none;
+        display: none;
+      }
+    }
+  }
+
+  input[type='text'],
+  input[type='number'],
+  input[type='email'],
+  input[type='password'],
+  select,
+  textarea {
+    background: #0d1512;
+    border: 1px solid #3d6b55;
+    color: $morp-text;
+
+    &:focus {
+      border-color: $morp-accent;
+      box-shadow: 0 0 0 1px $morp-accent;
+      outline: none;
+    }
+
+    &::placeholder {
+      color: $morp-text-muted;
+      opacity: 1;
+    }
+  }
+
+  select option {
+    background: #0d1512;
+    color: $morp-text;
+  }
+
+  pre,
+  p,
+  li,
+  blockquote {
+    @include morp-contain-text;
+  }
+
+  pre {
+    overflow-x: hidden;
+    white-space: pre-wrap;
+  }
+}
+
+// Visible checkbox / radio row
+#main .morp-control {
+  align-items: flex-start;
+  color: $morp-text;
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 0.65rem;
+  line-height: 1.5;
+  margin: 0;
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  label {
+    color: $morp-text;
+    cursor: pointer;
+    display: inline;
+    font-weight: 500;
+    margin: 0;
+  }
+}
+
+.morp-debug-unlock {
+  appearance: none;
+  background: rgba(8, 11, 13, 0.88);
+  border: 1px dashed $morp-border;
+  color: $morp-text-muted;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+  position: fixed;
+  right: 0.75rem;
+  top: 0.75rem;
+  z-index: 120;
+
+  &:hover {
+    background: $morp-bg-elevated;
+    border-color: $morp-accent;
+    color: $morp-accent;
+  }
+}
+
+#main .morp-game__header {
+  margin-bottom: 1rem;
+
+  h1 {
+    color: $morp-accent;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+  }
+}
+
+#main .morp-game__subtitle {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.morp-sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.morp-game__workspace {
+  min-width: 0;
+}
+
+.morp-game--briefing-pending .morp-game__workspace {
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+
+// Boot sequence
+.morp-boot {
+  padding: 2rem 1rem;
+}
+
+.morp-boot__frame {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  color: $morp-text;
+  margin: 0 auto;
+  max-width: 36rem;
+  padding: 2rem;
+  text-align: center;
+
+  h2 {
+    color: $morp-accent;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  p {
+    color: $morp-text;
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+}
+
+.morp-boot--error .morp-boot__frame {
+  border-color: $morp-error;
+}
+
+.morp-boot__subtitle {
+  color: $morp-accent;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.morp-boot__meta {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.morp-boot__checkbox {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  margin: 1.5rem 0;
+  text-align: left;
+
+  label {
+    color: $morp-text;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0;
+    padding-top: 0.1rem;
+  }
+}
+
+.morp-boot__progress {
+  background: #1e3a2f;
+  border-radius: 3px;
+  height: 1.25rem;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.morp-boot__progress-bar {
+  background: #55ff99;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.morp-boot__status {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.morp-boot__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+// Terminal grid
+.morp-terminal {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  max-width: 100%;
+  min-width: 0;
+
+  @include morp-bp-medium {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &--no-chat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.morp-terminal__main,
+.morp-terminal__side,
+.morp-terminal__panel-content {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.morp-terminal__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+// Tab buttons — reset global `button` rules (#main invert theme + site button sizing)
+#main .morp-game .morp-terminal__tab {
+  align-items: center;
+  appearance: none;
+  background: $morp-bg-panel !important;
+  border: 1px solid $morp-border-subtle !important;
+  border-radius: 4px;
+  box-shadow: none !important;
+  color: $morp-text-secondary !important;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  height: auto;
+  justify-content: center;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: $morp-bg-elevated !important;
+    border-color: $morp-border !important;
+    color: $morp-text !important;
+  }
+
+  &:active {
+    background: $morp-bg-elevated !important;
+  }
+
+  &--active {
+    background: $morp-bg-elevated !important;
+    border-color: $morp-accent !important;
+    color: $morp-accent !important;
+  }
+}
+
+.morp-terminal__empty {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+}
+
+// Contextual actions
+.morp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+// Legacy repair panel (removed)
+.morp-field {
+  display: block;
+  margin-bottom: 0.75rem;
+
+  span {
+    color: $morp-accent-soft;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+  }
+
+  &--checkbox {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.morp-field__input,
+.morp-field select,
+.morp-field input[type='number'] {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  color: $morp-text;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+// Ending
+.morp-ending {
+  color: $morp-text;
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 2rem 1rem;
+  text-align: center;
+
+  h2 {
+    color: $morp-accent;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.morp-ending__status {
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  text-align: left;
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0.35rem 0;
+  }
+}
+
+.morp-ending__operational {
+  color: $morp-accent;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 0.75rem !important;
+}
+
+.morp-ending__dialogue {
+  margin-bottom: 1.5rem;
+  text-align: left;
+
+  p {
+    color: $morp-text;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0.5rem 0;
+  }
+}
+
+.morp-ending__learned {
+  border-top: 1px solid $morp-border-subtle;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  text-align: left;
+
+  h3 {
+    color: $morp-accent-soft;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+
+  li {
+    color: $morp-text;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    margin-bottom: 0.35rem;
+  }
+}

@@ -1,0 +1,167 @@
+@use './tokens' as *;
+
+// Stage progress
+.morp-progress {
+  border-bottom: 1px solid #1e3a2f;
+  margin-bottom: 1rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding-bottom: 0.75rem;
+}
+
+.morp-progress__main {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.morp-progress__list {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0 0 0.5rem;
+  min-width: 0;
+  padding: 0;
+}
+
+.morp-progress__item {
+  align-items: center;
+  background: transparent;
+  border: 1px solid $morp-border-subtle;
+  color: $morp-text-muted;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  gap: 0.15rem;
+  min-width: 3.25rem;
+  padding: 0.35rem 0.4rem;
+
+  &--current {
+    border-color: $morp-accent;
+    color: $morp-accent;
+    font-weight: 600;
+  }
+
+  &--complete {
+    border-color: $morp-border-subtle;
+    color: $morp-text-secondary;
+  }
+
+  &--reached {
+    border-color: $morp-border;
+    color: $morp-text-secondary;
+  }
+
+  &--upcoming {
+    color: $morp-text-muted;
+  }
+
+  &--navigable {
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $morp-bg-elevated;
+      border-color: $morp-accent;
+      color: $morp-accent;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+}
+
+// Progress nav buttons — reset global `button` rules
+#main .morp-game .morp-progress__item--navigable {
+  appearance: none;
+  border-radius: 0;
+  box-shadow: none !important;
+  height: auto;
+  line-height: inherit;
+  text-transform: none;
+  width: auto;
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated !important;
+    box-shadow: none !important;
+  }
+}
+
+.morp-progress__number {
+  font-weight: 700;
+}
+
+.morp-progress__current {
+  color: $morp-text-secondary;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+
+  strong {
+    color: $morp-text;
+    font-weight: 600;
+  }
+}
+
+.morp-progress__status {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed $morp-border;
+  color: $morp-text-secondary;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 0.4rem;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  min-height: 3.25rem;
+  min-width: 8.5rem;
+  padding: 0.75rem 1rem;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &--attention {
+    border-color: $morp-warning;
+    color: $morp-warning;
+  }
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated;
+    border-color: $morp-accent;
+    color: $morp-accent;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+#main .morp-game .morp-progress__status {
+  appearance: none;
+  border-radius: 0;
+  box-shadow: none !important;
+  height: auto;
+  width: auto;
+
+  &:hover:not(:disabled) {
+    background: $morp-bg-elevated !important;
+    box-shadow: none !important;
+  }
+}

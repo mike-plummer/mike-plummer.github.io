@@ -1,0 +1,33 @@
+// MORP palette — tuned for contrast on dark backgrounds (WCAG AA+)
+$morp-bg: #080b0d;
+$morp-bg-panel: #111a16;
+$morp-bg-elevated: #16241e;
+$morp-text: #e8fff0;
+$morp-text-secondary: #bdd9c8;
+$morp-text-muted: #94c4a8;
+$morp-accent: #55ff99;
+$morp-accent-soft: #7dffb8;
+$morp-border: #2a5240;
+$morp-border-subtle: #1e3a2f;
+$morp-warning: #ffd166;
+$morp-error: #ff6b6b;
+
+@mixin morp-contain-text {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+// Mirrors skel breakpoints from styles/main.scss
+@mixin morp-bp-medium {
+  @media screen and (max-width: 980px) {
+    @content;
+  }
+}
+
+@mixin morp-bp-small {
+  @media screen and (max-width: 736px) {
+    @content;
+  }
+}

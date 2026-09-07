@@ -1,11 +1,8 @@
 'use client';
 
 import { COPY } from '@/lib/games/morp/copy';
-import {
-  evaluateRefineConfig,
-  formatRefineValue,
-  REFINE_TOPICS
-} from '@/lib/games/morp/modules/refine-sampling';
+import { selectRefine } from '@/lib/games/morp/domain/state';
+import { evaluateRefineConfig, formatRefineValue, REFINE_TOPICS } from '@/lib/games/morp/modules/refine-sampling';
 import type { MorpState, RefineSamplingConfig } from '@/lib/games/morp/types';
 
 interface RefinePanelProps {
@@ -40,8 +37,9 @@ export default function RefinePanel({
   onResetSampling,
   onGenerate
 }: RefinePanelProps) {
-  const calibration = evaluateRefineConfig(state.refineSampling);
-  const displaySummary = generating ? streamingText : state.refineLastSummary;
+  const refine = selectRefine(state);
+  const calibration = evaluateRefineConfig(refine.refineSampling);
+  const displaySummary = generating ? streamingText : refine.refineLastSummary;
 
   return (
     <section className="morp-panel morp-panel--refine" aria-labelledby="refine-heading">
@@ -58,7 +56,7 @@ export default function RefinePanel({
               type="radio"
               name="refine-topic"
               value={topic}
-              checked={state.refineTopic === topic}
+              checked={refine.refineTopic === topic}
               onChange={() => onTopicChange(topic)}
               disabled={generating}
             />
@@ -72,14 +70,14 @@ export default function RefinePanel({
         {SAMPLING_FIELDS.map((field) => (
           <label key={field.key} className="morp-refine__control">
             <span className="morp-refine__control-label">
-              {field.key}: {formatRefineValue(field.key, state.refineSampling[field.key])}
+              {field.key}: {formatRefineValue(field.key, refine.refineSampling[field.key])}
             </span>
             <input
               type="range"
               min={field.min}
               max={field.max}
               step={field.step}
-              value={state.refineSampling[field.key]}
+              value={refine.refineSampling[field.key]}
               onChange={(event) =>
                 onSamplingChange({
                   [field.key]: Number.parseFloat(event.target.value)

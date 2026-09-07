@@ -13,15 +13,7 @@ interface TerminalGridProps {
   hideChatPanel?: boolean;
 }
 
-const PANEL_ORDER: SystemId[] = [
-  'prediction',
-  'refine',
-  'prompt',
-  'memory',
-  'context',
-  'verification',
-  'evals'
-];
+const PANEL_ORDER: SystemId[] = ['prediction', 'refine', 'prompt', 'memory', 'context', 'verification', 'evals'];
 
 export default function TerminalGrid({
   unlockedSystems,
@@ -56,9 +48,7 @@ export default function TerminalGrid({
             </nav>
           )}
           <div className="morp-terminal__panel-content" key={stageKey}>
-            {sidePanels[displayedPanel] ?? (
-              <p className="morp-terminal__empty">Select a diagnostic panel.</p>
-            )}
+            {sidePanels[displayedPanel] ?? <p className="morp-terminal__empty">Select a diagnostic panel.</p>}
           </div>
         </div>
       )}

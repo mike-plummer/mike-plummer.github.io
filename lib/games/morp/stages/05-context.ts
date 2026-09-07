@@ -1,4 +1,5 @@
 import { COPY } from '../copy';
+import { createInitialContextState, patchContext } from '../domain/state';
 import {
   addContextMessage,
   applyContextSummary,
@@ -12,38 +13,35 @@ import {
   truncateOldest
 } from '../modules/context-manager';
 import { addMemory } from '../modules/memory-store';
-import { unlockSystem } from '../modules/unlocks';
+import { markStageInitialized } from '../modules/unlocks';
 import type { MorpState, StageDefinition } from '../types';
 
 function applyContextMetrics(state: MorpState): MorpState {
-  const snapshot = getContextWindowSnapshot(state.contextMessages, '', state.contextMemory, state);
+  const context = state.context;
+  const snapshot = getContextWindowSnapshot(context.contextMessages, '', context.contextMemory, state);
 
-  return {
-    ...state,
+  return patchContext(state, {
     contextTokensUsed: snapshot.storedTokens,
     contextOverflowed: snapshot.overflowed,
-    contextOverflowExperienced: state.contextOverflowExperienced || snapshot.overflowed
-  };
+    contextOverflowExperienced: context.contextOverflowExperienced || snapshot.overflowed
+  });
 }
 
 export const contextStage: StageDefinition = {
   id: 'context',
-  concept: 'context',
 
   initialize(state) {
     const contextMessages = buildSeedContextMessages();
     const technicianId = state.technicianId ?? 'TECH-07';
-    const next = unlockSystem(
+    const next = markStageInitialized(
       {
         ...state,
         stage: 'context',
         technicianId,
-        contextMessages,
-        contextMemory: [],
-        contextTokensUsed: 0,
-        contextOverflowed: false,
-        contextOverflowExperienced: false,
-        contextLastCompaction: null,
+        context: {
+          ...createInitialContextState(),
+          contextMessages
+        },
         conversation: [
           ...state.conversation,
           ...COPY.context.morpLines.map((content) => ({ role: 'assistant' as const, content }))
@@ -60,102 +58,93 @@ export const contextStage: StageDefinition = {
       return [];
     }
 
-    return buildAmnesiaChatMessages(state.contextMessages, input, state.contextMemory, state);
+    const context = state.context;
+    return buildAmnesiaChatMessages(context.contextMessages, input, context.contextMemory, state);
   },
 
   processAction(action, state) {
+    const context = state.context;
+
     switch (action.type) {
       case 'truncate-context': {
-        const activeBefore = getActiveContextMessages(state.contextMessages).length;
-        const truncated = truncateOldest(state.contextMessages);
+        const activeBefore = getActiveContextMessages(context.contextMessages).length;
+        const truncated = truncateOldest(context.contextMessages);
         const activeAfter = getActiveContextMessages(truncated).length;
         if (activeAfter === activeBefore) {
           return state;
         }
 
-        return applyContextMetrics({
-          ...state,
-          contextMessages: truncated,
-          contextStrategyUsed: 'truncate',
-          contextLastCompaction: createContextCompaction('truncate', state.contextMessages, truncated, false)
-        });
+        return applyContextMetrics(
+          patchContext(state, {
+            contextMessages: truncated,
+            contextStrategyUsed: 'truncate',
+            contextLastCompaction: createContextCompaction('truncate', context.contextMessages, truncated, false)
+          })
+        );
       }
       case 'apply-context-summary': {
-        const summarized = applyContextSummary(state.contextMessages, action.summary);
-        if (summarized === state.contextMessages) {
+        const summarized = applyContextSummary(context.contextMessages, action.summary, action.messageIds);
+        if (summarized === context.contextMessages) {
           return state;
         }
 
-        return applyContextMetrics({
-          ...state,
-          contextMessages: summarized,
-          contextStrategyUsed: 'summarize',
-          contextLastCompaction: createContextCompaction(
-            'summarize',
-            state.contextMessages,
-            summarized,
-            action.usedLlm ?? true
-          )
-        });
+        return applyContextMetrics(
+          patchContext(state, {
+            contextMessages: summarized,
+            contextStrategyUsed: 'summarize',
+            contextLastCompaction: createContextCompaction(
+              'summarize',
+              context.contextMessages,
+              summarized,
+              action.usedLlm ?? true
+            )
+          })
+        );
       }
       case 'store-context-in-memory': {
-        if (!state.contextOverflowExperienced) {
+        if (!context.contextOverflowExperienced) {
           return state;
         }
 
-        const offloaded = offloadContextToMemory(state.contextMessages, state.contextMemory);
-        if (offloaded.contextMemory === state.contextMemory) {
+        const offloaded = offloadContextToMemory(context.contextMessages, context.contextMemory);
+        if (offloaded.contextMemory === context.contextMemory) {
           return state;
         }
 
-        const next = unlockSystem(
-          {
-            ...state,
+        return applyContextMetrics(
+          patchContext(state, {
             contextMessages: offloaded.contextMessages,
             contextMemory: offloaded.contextMemory,
-            contextStrategyUsed: 'memory' as const
-          },
-          'memory'
+            contextStrategyUsed: 'memory'
+          })
         );
-        return applyContextMetrics(next);
       }
       case 'clear-context-memory': {
-        if (!hasActiveContextMemory(state.contextMemory)) {
+        if (!hasActiveContextMemory(context.contextMemory)) {
           return state;
         }
 
-        return { ...state, contextMemory: [] };
+        return patchContext(state, { contextMemory: [] });
       }
       case 'store-memory':
-        return {
-          ...state,
-          memories: addMemory(state.memories, action.key, action.value)
-        };
+        return patchContext(state, {
+          memories: addMemory(context.memories, action.key, action.value)
+        });
       case 'delete-memory':
-        return {
-          ...state,
-          memories: state.memories.filter((m) => m.id !== action.id)
-        };
+        return patchContext(state, {
+          memories: context.memories.filter((m) => m.id !== action.id)
+        });
       case 'toggle-memory-context':
-        return {
-          ...state,
-          memories: state.memories.map((m) => (m.id === action.id ? { ...m, inContext: action.inContext } : m))
-        };
+        return patchContext(state, {
+          memories: context.memories.map((m) => (m.id === action.id ? { ...m, inContext: action.inContext } : m))
+        });
       default:
         return state;
     }
   },
 
-  inspectResponse(_response, state) {
-    const events = [];
-    if (state.contextOverflowExperienced) {
-      events.push({ type: 'context_overflow' as const });
-    }
-    return events;
-  },
-
   getContextualActions(state) {
-    if (!state.contextOverflowExperienced) {
+    if (!state.context.contextOverflowExperienced) {
       return [];
     }
 
@@ -180,7 +169,7 @@ export const contextStage: StageDefinition = {
         pro: COPY.context.tools.memory.pro,
         con: COPY.context.tools.memory.con,
         action: { type: 'store-context-in-memory' },
-        ...(hasActiveContextMemory(state.contextMemory)
+        ...(hasActiveContextMemory(state.context.contextMemory)
           ? {
               secondaryAction: {
                 label: 'Clear Memory',
@@ -197,7 +186,8 @@ export const contextStage: StageDefinition = {
   },
 
   isComplete(state) {
-    return state.contextOverflowExperienced && state.contextStrategyUsed !== null;
+    const context = state.context;
+    return context.contextOverflowExperienced && context.contextStrategyUsed !== null;
   },
 
   getDiagnosticReport() {
@@ -206,19 +196,19 @@ export const contextStage: StageDefinition = {
 };
 
 export function recordContextTurn(state: MorpState, userInput: string, assistantResponse: string): MorpState {
-  let contextMessages = addContextMessage(state.contextMessages, 'user', userInput);
+  const context = state.context;
+  let contextMessages = addContextMessage(context.contextMessages, 'user', userInput);
   contextMessages = addContextMessage(contextMessages, 'assistant', assistantResponse);
 
-  const snapshot = getContextWindowSnapshot(contextMessages, '', state.contextMemory, state);
-  const newlyOverflowed = snapshot.overflowed && !state.contextOverflowExperienced;
+  const snapshot = getContextWindowSnapshot(contextMessages, '', context.contextMemory, state);
+  const newlyOverflowed = snapshot.overflowed && !context.contextOverflowExperienced;
 
-  let next: MorpState = {
-    ...state,
+  let next = patchContext(state, {
     contextMessages,
     contextTokensUsed: snapshot.storedTokens,
     contextOverflowed: snapshot.overflowed,
-    contextOverflowExperienced: state.contextOverflowExperienced || snapshot.overflowed
-  };
+    contextOverflowExperienced: context.contextOverflowExperienced || snapshot.overflowed
+  });
 
   if (newlyOverflowed) {
     next = {

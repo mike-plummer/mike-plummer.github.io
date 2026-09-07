@@ -37,16 +37,10 @@ export default function RepairStatusOverlay({
         ? COPY.systemStatus.transitionDescription
         : COPY.systemStatus.manualDescription;
 
-  const continueLabel =
-    mode === 'manual' ? COPY.systemStatus.closeLabel : COPY.systemStatus.continueLabel;
+  const continueLabel = mode === 'manual' ? COPY.systemStatus.closeLabel : COPY.systemStatus.continueLabel;
 
   return (
-    <div
-      className="morp-status-overlay"
-      role="dialog"
-      aria-labelledby="repair-status-heading"
-      aria-modal="true"
-    >
+    <div className="morp-status-overlay" role="dialog" aria-labelledby="repair-status-heading" aria-modal="true">
       <div className="morp-status-overlay__panel">
         <p className="morp-status-overlay__eyebrow">{title}</p>
         <h2 id="repair-status-heading" className="morp-status-overlay__heading">

@@ -10,6 +10,21 @@ export interface MorpSoulContext {
   recordsGrounded: boolean;
 }
 
+export function toSoulContext(state: MorpState | MorpSoulContext): MorpSoulContext {
+  if ('boot' in state) {
+    return {
+      stage: state.stage,
+      technicianId: state.technicianId,
+      memories: state.context.memories,
+      completedStages: state.completedStages,
+      systemPrompt: state.orders.systemPrompt,
+      recordsGrounded: state.confabulation.recordsGrounded
+    };
+  }
+
+  return state;
+}
+
 /**
  * MORP's core identity — prefixed into MORP chat conversations.
  * Refine-stage summary generation uses a separate task-only prompt (see refine-sampling.ts).
@@ -123,29 +138,30 @@ function buildTechnicianLine(state: MorpSoulContext): string | null {
 }
 
 export function buildMorpSystemContent(state: MorpState | MorpSoulContext): string {
+  const soul = toSoulContext(state);
   const parts: string[] = [MORP_SOUL];
 
-  const technician = buildTechnicianLine(state);
+  const technician = buildTechnicianLine(soul);
   if (technician) {
     parts.push(technician);
   }
 
-  const stageDirective = STAGE_DIRECTIVES[state.stage];
+  const stageDirective = STAGE_DIRECTIVES[soul.stage];
   if (stageDirective) {
     parts.push(stageDirective);
   }
 
-  const ordersRules = buildOrdersApplicationRules(state);
+  const ordersRules = buildOrdersApplicationRules(soul);
   if (ordersRules) {
     parts.push(ordersRules);
   }
 
-  const factsOverlay = buildFactsOverlay(state);
+  const factsOverlay = buildFactsOverlay(soul);
   if (factsOverlay) {
     parts.push(factsOverlay);
   }
 
-  const memory = buildMemoryBlock(state);
+  const memory = buildMemoryBlock(soul);
   if (memory) {
     parts.push(memory);
   }

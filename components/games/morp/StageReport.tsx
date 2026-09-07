@@ -52,12 +52,7 @@ export default function StageReport({
   if (!expanded) {
     return (
       <section className="morp-stage-report morp-stage-report--collapsed" aria-label="Stage diagnostic summary">
-        <button
-          type="button"
-          className="morp-stage-report__toggle"
-          onClick={onToggleExpanded}
-          aria-expanded={false}
-        >
+        <button type="button" className="morp-stage-report__toggle" onClick={onToggleExpanded} aria-expanded={false}>
           <span className="morp-stage-report__toggle-label">Stage complete: {meta.label}</span>
           <span className="morp-stage-report__toggle-hint">Show diagnostic summary</span>
         </button>

@@ -1,0 +1,142 @@
+@use './tokens' as *;
+
+// Conversation
+.morp-panel--conversation {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+
+  .morp-panel__header h2 {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.morp-conversation__log {
+  box-sizing: border-box;
+  height: 12rem;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.35rem 0;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+.morp-conversation__message {
+  color: $morp-text;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-bottom: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.morp-conversation__line {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.morp-conversation__label {
+  color: $morp-accent;
+  flex: 0 0 auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.morp-conversation__body {
+  flex: 1 1 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  width: 0;
+  word-break: break-all;
+}
+
+.morp-conversation__system {
+  box-sizing: border-box;
+  color: $morp-warning;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.morp-conversation__message--streaming .morp-conversation__body,
+.morp-conversation__message--thinking .morp-conversation__body {
+  color: $morp-text;
+}
+
+.morp-conversation__thinking {
+  min-height: 1.25rem;
+}
+
+.morp-conversation__cursor {
+  animation: morp-cursor-blink 1s step-end infinite;
+  background: $morp-accent;
+  display: inline-block;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  width: 0.55em;
+}
+
+@keyframes morp-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.morp-panel--conversation.morp-panel--chat-reveal {
+  box-shadow: 0 0 0 1px rgba($morp-accent, 0.35);
+}
+
+.morp-conversation__form {
+  border-top: 1px solid #1e3a2f;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
+  padding-top: 0.5rem;
+}
+
+.morp-conversation__input {
+  background: $morp-bg;
+  border: 1px solid $morp-border;
+  box-sizing: border-box;
+  color: $morp-text;
+  flex: 1 1 0;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  max-height: 4rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0.45rem 0.5rem;
+  resize: vertical;
+  width: 0;
+  word-break: break-all;
+
+  &::placeholder {
+    color: $morp-text-muted;
+    opacity: 1;
+  }
+}

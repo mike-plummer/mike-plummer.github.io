@@ -1,21 +1,22 @@
 import { COPY } from '../copy';
+import { createInitialTrainingState } from '../domain/state';
 import { isTrainingComplete } from '../modules/training-probes';
+import { markStageInitialized } from '../modules/unlocks';
 import { buildChatMessages } from '../prompts';
 import type { StageDefinition } from '../types';
 
 export const trainingStage: StageDefinition = {
   id: 'training',
-  concept: 'training',
 
   initialize(state) {
-    return {
-      ...state,
-      stage: 'training',
-      unlockedSystems: ['chat'],
-      trainingTechnologySynonymVerified: false,
-      trainingFranceCapitalVerified: false,
-      trainingWaterBoilingPointVerified: false
-    };
+    return markStageInitialized(
+      {
+        ...state,
+        stage: 'training',
+        training: createInitialTrainingState()
+      },
+      'training'
+    );
   },
 
   buildMessages(state, input) {
@@ -27,10 +28,6 @@ export const trainingStage: StageDefinition = {
 
   processAction(_action, state) {
     return state;
-  },
-
-  inspectResponse(_response, _state) {
-    return [];
   },
 
   getContextualActions() {

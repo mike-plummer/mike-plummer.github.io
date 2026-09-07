@@ -14,7 +14,6 @@ import {
   streamChat,
   subscribeLLM
 } from '@/lib/llm/engine';
-import { DEFAULT_MODEL_ID } from '@/lib/llm/types';
 import type {
   ChatMessage,
   LLMProgress,
@@ -24,6 +23,7 @@ import type {
   StreamChatOptions,
   StreamChatResult
 } from '@/lib/llm/types';
+import { DEFAULT_MODEL_ID } from '@/lib/llm/types';
 
 interface LLMContextValue {
   status: LLMStatus;
@@ -40,13 +40,7 @@ interface LLMContextValue {
 
 const LLMContext = createContext<LLMContextValue | null>(null);
 
-export function LLMProvider({
-  children,
-  modelId = DEFAULT_MODEL_ID
-}: {
-  children: ReactNode;
-  modelId?: string;
-}) {
+export function LLMProvider({ children, modelId = DEFAULT_MODEL_ID }: { children: ReactNode; modelId?: string }) {
   const [status, setStatus] = useState<LLMStatus>('idle');
   const [progress, setProgress] = useState<LLMProgress>({
     progress: 0,
@@ -69,7 +63,11 @@ export function LLMProvider({
     sync();
     const unsubscribe = subscribeLLM(sync);
 
-    const disposeOnPageHide = () => {
+    const disposeOnPageHide = (event: PageTransitionEvent) => {
+      // bfcache keeps the page alive — disposing here would unload the model on back-nav.
+      if (event.persisted) {
+        return;
+      }
       void disposeLLM();
     };
     window.addEventListener('pagehide', disposeOnPageHide);

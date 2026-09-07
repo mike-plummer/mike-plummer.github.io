@@ -1,6 +1,7 @@
 'use client';
 
 import { COPY } from '@/lib/games/morp/copy';
+import { selectBoot } from '@/lib/games/morp/domain/state';
 import type { MorpState } from '@/lib/games/morp/types';
 import type { LLMProgress, LLMStatus } from '@/lib/llm/types';
 
@@ -21,6 +22,8 @@ export default function BootSequence({
   onAcknowledge,
   onInitialize
 }: BootSequenceProps) {
+  const boot = selectBoot(state);
+
   if (!webGPUSupported) {
     return (
       <div className="morp-boot morp-boot--error" role="alert">
@@ -45,7 +48,7 @@ export default function BootSequence({
     );
   }
 
-  if (state.bootPhase === 'ack') {
+  if (boot.bootPhase === 'ack') {
     return (
       <div className="morp-boot">
         <div className="morp-boot__frame">
@@ -55,20 +58,10 @@ export default function BootSequence({
           <p className="morp-boot__meta">{COPY.boot.modelSize}</p>
           <p className="morp-boot__meta">{COPY.boot.requirements}</p>
           <div className="morp-boot__checkbox">
-            <input
-              type="checkbox"
-              id="morp-boot-ack"
-              checked={state.bootAcknowledged}
-              onChange={onAcknowledge}
-            />
+            <input type="checkbox" id="morp-boot-ack" checked={boot.bootAcknowledged} onChange={onAcknowledge} />
             <label htmlFor="morp-boot-ack">{COPY.boot.checkbox}</label>
           </div>
-          <button
-            type="button"
-            className="button"
-            disabled={!state.bootAcknowledged}
-            onClick={onInitialize}
-          >
+          <button type="button" className="button" disabled={!boot.bootAcknowledged} onClick={onInitialize}>
             {COPY.boot.initialize}
           </button>
         </div>
@@ -76,12 +69,23 @@ export default function BootSequence({
     );
   }
 
-  if (state.bootPhase === 'loading' || status === 'loading' || status === 'checking' || (state.bootPhase === 'ready' && status === 'idle')) {
+  if (
+    boot.bootPhase === 'loading' ||
+    status === 'loading' ||
+    status === 'checking' ||
+    (boot.bootPhase === 'ready' && status === 'idle')
+  ) {
     return (
       <div className="morp-boot">
         <div className="morp-boot__frame">
           <h2>{COPY.boot.initializing}</h2>
-          <div className="morp-boot__progress" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="morp-boot__progress"
+            role="progressbar"
+            aria-valuenow={progress.percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div className="morp-boot__progress-bar" style={{ width: `${progress.percent}%` }} />
           </div>
           <p>{progress.percent}%</p>

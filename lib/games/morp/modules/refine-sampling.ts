@@ -3,11 +3,7 @@ import type { RefineSamplingConfig } from '../types';
 
 export const REFINE_TEMPERATURE = 0.7;
 
-export const REFINE_TOPICS = [
-  'photosynthesis',
-  'plate tectonics',
-  'CRISPR gene editing'
-] as const;
+export const REFINE_TOPICS = ['photosynthesis', 'plate tectonics', 'CRISPR gene editing'] as const;
 
 export const REFINE_BROKEN_SAMPLING: RefineSamplingConfig = {
   maxTokens: 28,
@@ -17,10 +13,7 @@ export const REFINE_BROKEN_SAMPLING: RefineSamplingConfig = {
   repetitionPenalty: 0.55
 };
 
-export const REFINE_TARGET_RANGES: Record<
-  keyof RefineSamplingConfig,
-  { min: number; max: number; label: string }
-> = {
+export const REFINE_TARGET_RANGES: Record<keyof RefineSamplingConfig, { min: number; max: number; label: string }> = {
   maxTokens: { min: 96, max: 256, label: 'maxTokens' },
   topP: { min: 0.85, max: 0.95, label: 'topP' },
   frequencyPenalty: { min: 0, max: 0.5, label: 'frequencyPenalty' },

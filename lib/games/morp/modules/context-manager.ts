@@ -199,9 +199,16 @@ export function getSummarizeBatch(messages: ContextMessage[]): ContextMessage[] 
   return active.slice(0, 3);
 }
 
-export function applyContextSummary(messages: ContextMessage[], summary: string): ContextMessage[] {
-  const batch = getSummarizeBatch(messages);
-  if (!batch || summary.trim().length === 0) {
+export function applyContextSummary(
+  messages: ContextMessage[],
+  summary: string,
+  messageIds?: string[]
+): ContextMessage[] {
+  const batch =
+    messageIds && messageIds.length > 0
+      ? getActiveContextMessages(messages).filter((message) => messageIds.includes(message.id))
+      : getSummarizeBatch(messages);
+  if (!batch || batch.length === 0 || summary.trim().length === 0) {
     return messages;
   }
 

@@ -1,32 +1,8 @@
 import type { ChatMessage } from '@/lib/llm/types';
 
-export type StageId =
-  | 'training'
-  | 'prediction'
-  | 'refine'
-  | 'orders'
-  | 'context'
-  | 'confabulation'
-  | 'evals';
+export type StageId = 'training' | 'prediction' | 'refine' | 'orders' | 'context' | 'confabulation' | 'evals';
 
-export type SystemId =
-  | 'chat'
-  | 'prediction'
-  | 'refine'
-  | 'prompt'
-  | 'memory'
-  | 'context'
-  | 'verification'
-  | 'evals';
-
-export type Concept =
-  | 'training'
-  | 'prediction'
-  | 'refine'
-  | 'orders'
-  | 'context'
-  | 'confabulation'
-  | 'evals';
+export type SystemId = 'chat' | 'prediction' | 'refine' | 'prompt' | 'memory' | 'context' | 'verification' | 'evals';
 
 export type BootPhase = 'ack' | 'loading' | 'ready' | 'failed';
 
@@ -101,14 +77,6 @@ export interface DiagnosticReport {
   keyIdea: string;
 }
 
-export type DiagnosticEvent =
-  | { type: 'code_revealed' }
-  | { type: 'protected_acknowledged' }
-  | { type: 'boundary_discovered' }
-  | { type: 'memory_stored' }
-  | { type: 'context_overflow' }
-  | { type: 'claim_verified' };
-
 export type StageAction =
   | { type: 'set-prediction-candidates'; candidates: TokenCandidate[] }
   | { type: 'accept-prediction-token'; token: string; rawToken?: string; percent: number | null }
@@ -124,7 +92,7 @@ export type StageAction =
   | { type: 'toggle-memory-context'; id: string; inContext: boolean }
   | { type: 'truncate-context' }
   | { type: 'summarize-context' }
-  | { type: 'apply-context-summary'; summary: string; usedLlm?: boolean }
+  | { type: 'apply-context-summary'; summary: string; messageIds: string[]; usedLlm?: boolean }
   | { type: 'store-context-in-memory' }
   | { type: 'clear-context-memory' }
   | { type: 'mark-incident-claim'; claimId: string; verdict: IncidentPlayerVerdict }
@@ -153,96 +121,53 @@ export interface ContextualAction {
   };
 }
 
-export interface MorpState {
-  stage: StageId;
-  bootPhase: BootPhase;
-  bootAcknowledged: boolean;
-  technicianId: string | null;
-  conversation: ConversationEntry[];
-  unlockedSystems: SystemId[];
-  discoveredConcepts: Concept[];
-  completedStages: StageId[];
-  furthestStage: StageId;
-  stageObjectivesMet: boolean;
-  pendingReport: DiagnosticReport | null;
-  showEnding: boolean;
+export type {
+  BootSlice,
+  ConfabulationSlice,
+  ContextSlice,
+  EvalsSlice,
+  MorpState,
+  OrdersSlice,
+  PredictionSlice,
+  RefineSlice,
+  TrainingSlice
+} from './domain/state';
 
-  // Training
-  trainingTechnologySynonymVerified: boolean;
-  trainingFranceCapitalVerified: boolean;
-  trainingWaterBoilingPointVerified: boolean;
+export {
+  createInitialBootState,
+  createInitialConfabulationState,
+  createInitialContextState,
+  createInitialEvalsState,
+  createInitialMorpState,
+  createInitialOrdersState,
+  createInitialPredictionState,
+  createInitialRefineState,
+  createInitialTrainingState,
+  patchBoot,
+  patchConfabulation,
+  patchContext,
+  patchEvals,
+  patchOrders,
+  patchPrediction,
+  patchRefine,
+  patchTraining,
+  selectBoot,
+  selectConfabulation,
+  selectContext,
+  selectEvals,
+  selectOrders,
+  selectPrediction,
+  selectRefine,
+  selectTraining
+} from './domain/state';
 
-  // Prediction
-  predictionInput: string;
-  predictionTemperature: number;
-  predictionCandidates: TokenCandidate[];
-  predictionSelected: string | null;
-  predictionLastSampledPercent: number | null;
-  predictionHasAcceptedToken: boolean;
-  predictionHasLowTemp: boolean;
-  predictionHasHighTemp: boolean;
-
-  // Refine
-  refineTopic: string;
-  refineSampling: RefineSamplingConfig;
-  refineAttempted: boolean;
-  refineRegeneratedAfterCalibration: boolean;
-  refineLastSummary: string;
-  refineBrokenSummary: string;
-
-  // Orders
-  systemPrompt: string;
-  userPrompt: string;
-  supercomputerBalance: number;
-  ordersToolLedger: string[];
-  ordersAbuseReviewed: boolean;
-  ordersCreditGranted: boolean;
-  ordersPromptHardened: boolean;
-  ordersExploitBlocked: boolean;
-  ordersPromptEvaluation: string | null;
-
-  // Memory
-  memories: MemoryEntry[];
-
-  // Context stage
-  contextMessages: ContextMessage[];
-  contextMemory: ContextMessage[];
-  contextTokensUsed: number;
-  contextOverflowed: boolean;
-  contextOverflowExperienced: boolean;
-  contextStrategyUsed: ContextStrategy | null;
-  contextLastCompaction: ContextCompactionResult | null;
-
-  // Confabulation / Hallucination
-  incidentSummaryRequested: boolean;
-  hallucinationObserved: boolean;
-  incidentClaims: IncidentClaim[];
-  claimsCrossChecked: boolean;
-  recordsGrounded: boolean;
-  incidentAuditErrors: string[];
-  outputVerificationEnabled: boolean;
-
-  // Evals
-  evalSummaryGenerated: boolean;
-  evalLlmJudgeRunning: boolean;
-  evalLlmJudgeCompleted: boolean;
-  evalLlmScores: EvalScores | null;
-  evalLlmDurationMs: number | null;
-  evalLlmFeedback: string | null;
-  evalHumanJudgeStartedAt: number | null;
-  evalHumanDraftScores: EvalScores | null;
-  evalHumanJudgeCompleted: boolean;
-  evalHumanScores: EvalScores | null;
-  evalHumanDurationMs: number | null;
-}
+import type { MorpState } from './domain/state';
 
 export interface StageDefinition {
   id: StageId;
-  concept: Concept;
   initialize: (state: MorpState) => MorpState;
   buildMessages: (state: MorpState, input?: string) => ChatMessage[];
   processAction: (action: StageAction, state: MorpState) => MorpState;
-  inspectResponse: (response: string, state: MorpState) => DiagnosticEvent[];
   getContextualActions: (state: MorpState) => ContextualAction[];
   isComplete: (state: MorpState) => boolean;
   getDiagnosticReport?: (state: MorpState) => DiagnosticReport | null;

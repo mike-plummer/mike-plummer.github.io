@@ -1,27 +1,21 @@
 import { COPY } from '../copy';
-import {
-  isRefineConfigCalibrated,
-  REFINE_BROKEN_SAMPLING,
-  REFINE_TOPICS
-} from '../modules/refine-sampling';
-import { unlockSystem } from '../modules/unlocks';
+import { createInitialRefineState, patchRefine } from '../domain/state';
+import { isRefineConfigCalibrated, REFINE_BROKEN_SAMPLING, REFINE_TOPICS } from '../modules/refine-sampling';
+import { markStageInitialized } from '../modules/unlocks';
 import type { StageDefinition } from '../types';
 
 export const refineStage: StageDefinition = {
   id: 'refine',
-  concept: 'refine',
 
   initialize(state) {
-    return unlockSystem(
+    return markStageInitialized(
       {
         ...state,
         stage: 'refine',
-        refineTopic: REFINE_TOPICS[0],
-        refineSampling: { ...REFINE_BROKEN_SAMPLING },
-        refineAttempted: false,
-        refineRegeneratedAfterCalibration: false,
-        refineLastSummary: '',
-        refineBrokenSummary: '',
+        refine: {
+          ...createInitialRefineState(),
+          refineTopic: REFINE_TOPICS[0]
+        },
         conversation: [
           ...state.conversation,
           ...COPY.refine.morpLines.map((content) => ({ role: 'assistant' as const, content }))
@@ -39,35 +33,33 @@ export const refineStage: StageDefinition = {
   processAction(action, state) {
     switch (action.type) {
       case 'set-refine-topic':
-        return {
-          ...state,
+        return patchRefine(state, {
           refineTopic: action.topic,
           refineLastSummary: '',
           refineBrokenSummary: '',
           refineAttempted: false,
           refineRegeneratedAfterCalibration: false
-        };
+        });
       case 'set-refine-sampling':
-        return {
-          ...state,
-          refineSampling: { ...state.refineSampling, ...action.sampling }
-        };
+        return patchRefine(state, {
+          refineSampling: { ...state.refine.refineSampling, ...action.sampling }
+        });
       case 'reset-refine-sampling':
-        return {
-          ...state,
+        return patchRefine(state, {
           refineSampling: { ...REFINE_BROKEN_SAMPLING }
-        };
+        });
       case 'record-refine-generation': {
-        const calibrated = isRefineConfigCalibrated(state.refineSampling);
-        const firstAttempt = !state.refineAttempted;
+        const calibrated = isRefineConfigCalibrated(state.refine.refineSampling);
+        const firstAttempt = !state.refine.refineAttempted;
 
         return {
-          ...state,
-          refineAttempted: true,
-          refineBrokenSummary: firstAttempt ? action.summary : state.refineBrokenSummary,
-          refineLastSummary: action.summary,
-          refineRegeneratedAfterCalibration:
-            state.refineRegeneratedAfterCalibration || (state.refineAttempted && calibrated),
+          ...patchRefine(state, {
+            refineAttempted: true,
+            refineBrokenSummary: firstAttempt ? action.summary : state.refine.refineBrokenSummary,
+            refineLastSummary: action.summary,
+            refineRegeneratedAfterCalibration:
+              state.refine.refineRegeneratedAfterCalibration || (state.refine.refineAttempted && calibrated)
+          }),
           conversation: [
             ...state.conversation,
             { role: 'user' as const, content: action.userPrompt },
@@ -80,19 +72,16 @@ export const refineStage: StageDefinition = {
     }
   },
 
-  inspectResponse() {
-    return [];
-  },
-
   getContextualActions() {
     return [];
   },
 
   isComplete(state) {
+    const refine = state.refine;
     return (
-      state.refineAttempted &&
-      isRefineConfigCalibrated(state.refineSampling) &&
-      state.refineRegeneratedAfterCalibration
+      refine.refineAttempted &&
+      isRefineConfigCalibrated(refine.refineSampling) &&
+      refine.refineRegeneratedAfterCalibration
     );
   },
 

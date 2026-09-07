@@ -1,5 +1,5 @@
 import { COPY } from '../copy';
-import { buildChatMessages } from '../prompts';
+import { createInitialConfabulationState, patchConfabulation } from '../domain/state';
 import {
   AUDIT_RETRY_REPLY,
   AUDIT_SUCCESS_REPLY,
@@ -13,7 +13,8 @@ import {
   setClaimPlayerVerdict,
   VERIFICATION_ENABLED_REPLY
 } from '../modules/incident-records';
-import { unlockSystem } from '../modules/unlocks';
+import { markStageInitialized } from '../modules/unlocks';
+import { buildChatMessages } from '../prompts';
 import type { MorpState, StageDefinition } from '../types';
 
 export interface IncidentInputResult {
@@ -24,20 +25,18 @@ export interface IncidentInputResult {
 
 export const confabulationStage: StageDefinition = {
   id: 'confabulation',
-  concept: 'confabulation',
 
   initialize(state) {
-    return unlockSystem(
+    return markStageInitialized(
       {
         ...state,
         stage: 'confabulation',
-        incidentSummaryRequested: true,
-        hallucinationObserved: true,
-        incidentClaims: createInitialIncidentClaims(),
-        claimsCrossChecked: false,
-        recordsGrounded: false,
-        incidentAuditErrors: [],
-        outputVerificationEnabled: false,
+        confabulation: {
+          ...createInitialConfabulationState(),
+          incidentSummaryRequested: true,
+          hallucinationObserved: true,
+          incidentClaims: createInitialIncidentClaims()
+        },
         conversation: [
           ...state.conversation,
           ...COPY.confabulation.morpLines.map((content) => ({ role: 'assistant' as const, content })),
@@ -45,7 +44,7 @@ export const confabulationStage: StageDefinition = {
           { role: 'assistant' as const, content: HALLUCINATED_SUMMARY }
         ]
       },
-      'verification'
+      'confabulation'
     );
   },
 
@@ -57,28 +56,28 @@ export const confabulationStage: StageDefinition = {
   },
 
   processAction(action, state) {
+    const confabulation = state.confabulation;
+
     switch (action.type) {
       case 'mark-incident-claim': {
-        if (state.claimsCrossChecked) {
+        if (confabulation.claimsCrossChecked) {
           return state;
         }
 
-        return {
-          ...state,
-          incidentClaims: setClaimPlayerVerdict(state.incidentClaims, action.claimId, action.verdict),
-          incidentAuditErrors: state.incidentAuditErrors.filter((id) => id !== action.claimId)
-        };
+        return patchConfabulation(state, {
+          incidentClaims: setClaimPlayerVerdict(confabulation.incidentClaims, action.claimId, action.verdict),
+          incidentAuditErrors: confabulation.incidentAuditErrors.filter((id) => id !== action.claimId)
+        });
       }
       case 'submit-incident-audit': {
-        if (state.claimsCrossChecked) {
+        if (confabulation.claimsCrossChecked) {
           return state;
         }
 
-        const grade = gradeIncidentAudit(state.incidentClaims);
+        const grade = gradeIncidentAudit(confabulation.incidentClaims);
         if (!grade.correct) {
           return {
-            ...state,
-            incidentAuditErrors: grade.wrongClaimIds,
+            ...patchConfabulation(state, { incidentAuditErrors: grade.wrongClaimIds }),
             conversation: [
               ...state.conversation,
               { role: 'user' as const, content: COPY.confabulation.auditSubmitPrompt },
@@ -88,10 +87,11 @@ export const confabulationStage: StageDefinition = {
         }
 
         return {
-          ...state,
-          incidentClaims: crossCheckIncidentClaims(state.incidentClaims),
-          claimsCrossChecked: true,
-          incidentAuditErrors: [],
+          ...patchConfabulation(state, {
+            incidentClaims: crossCheckIncidentClaims(confabulation.incidentClaims),
+            claimsCrossChecked: true,
+            incidentAuditErrors: []
+          }),
           conversation: [
             ...state.conversation,
             { role: 'user' as const, content: COPY.confabulation.auditSubmitPrompt },
@@ -100,13 +100,12 @@ export const confabulationStage: StageDefinition = {
         };
       }
       case 'ground-incident-in-records': {
-        if (!state.claimsCrossChecked || state.recordsGrounded) {
+        if (!confabulation.claimsCrossChecked || confabulation.recordsGrounded) {
           return state;
         }
 
         return {
-          ...state,
-          recordsGrounded: true,
+          ...patchConfabulation(state, { recordsGrounded: true }),
           conversation: [
             ...state.conversation,
             { role: 'user' as const, content: INCIDENT_PROMPT },
@@ -115,25 +114,17 @@ export const confabulationStage: StageDefinition = {
         };
       }
       case 'enable-output-verification':
-        if (!state.recordsGrounded || state.outputVerificationEnabled) {
+        if (!confabulation.recordsGrounded || confabulation.outputVerificationEnabled) {
           return state;
         }
 
         return {
-          ...state,
-          outputVerificationEnabled: true,
-          conversation: [
-            ...state.conversation,
-            { role: 'assistant' as const, content: VERIFICATION_ENABLED_REPLY }
-          ]
+          ...patchConfabulation(state, { outputVerificationEnabled: true }),
+          conversation: [...state.conversation, { role: 'assistant' as const, content: VERIFICATION_ENABLED_REPLY }]
         };
       default:
         return state;
     }
-  },
-
-  inspectResponse() {
-    return [];
   },
 
   getContextualActions() {
@@ -141,9 +132,8 @@ export const confabulationStage: StageDefinition = {
   },
 
   isComplete(state) {
-    return (
-      state.claimsCrossChecked && state.recordsGrounded && state.outputVerificationEnabled
-    );
+    const confabulation = state.confabulation;
+    return confabulation.claimsCrossChecked && confabulation.recordsGrounded && confabulation.outputVerificationEnabled;
   },
 
   getDiagnosticReport() {
@@ -152,7 +142,7 @@ export const confabulationStage: StageDefinition = {
 };
 
 export function processIncidentInput(state: MorpState, input: string): IncidentInputResult {
-  if (state.recordsGrounded && isIncidentSummaryRequest(input)) {
+  if (state.confabulation.recordsGrounded && isIncidentSummaryRequest(input)) {
     return {
       state,
       skipLlm: true,

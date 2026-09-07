@@ -14,15 +14,7 @@ interface RepairStatusViewProps {
   animate?: boolean;
 }
 
-function StatusRow({
-  item,
-  highlighted,
-  animate
-}: {
-  item: SystemStatusItem;
-  highlighted: boolean;
-  animate: boolean;
-}) {
+function StatusRow({ item, highlighted, animate }: { item: SystemStatusItem; highlighted: boolean; animate: boolean }) {
   const statusText = item.state === 'repaired' ? item.repairedStatus : item.brokenStatus;
   const className = [
     'morp-status__row',
@@ -57,12 +49,7 @@ export default function RepairStatusView({
       </header>
       <ul className="morp-status__list" aria-label="Subsystem status">
         {items.map((item) => (
-          <StatusRow
-            key={item.id}
-            item={item}
-            highlighted={highlightSet.has(item.id)}
-            animate={animate}
-          />
+          <StatusRow key={item.id} item={item} highlighted={highlightSet.has(item.id)} animate={animate} />
         ))}
       </ul>
       <p

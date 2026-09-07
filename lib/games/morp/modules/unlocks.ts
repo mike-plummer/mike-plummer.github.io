@@ -1,11 +1,11 @@
-import type { MorpState, SystemId } from '../types';
+import type { MorpState, StageId } from '../types';
 
-export function unlockSystem(state: MorpState, system: SystemId): MorpState {
-  if (state.unlockedSystems.includes(system)) {
+export function markStageInitialized(state: MorpState, stageId: StageId): MorpState {
+  if (state.initializedStages.includes(stageId)) {
     return state;
   }
   return {
     ...state,
-    unlockedSystems: [...state.unlockedSystems, system]
+    initializedStages: [...state.initializedStages, stageId]
   };
 }

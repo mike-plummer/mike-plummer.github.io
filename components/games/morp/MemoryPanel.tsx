@@ -10,12 +10,7 @@ interface MemoryPanelProps {
   onDelete: (id: string) => void;
 }
 
-export default function MemoryPanel({
-  memories,
-  contextMemory,
-  onToggleContext,
-  onDelete
-}: MemoryPanelProps) {
+export default function MemoryPanel({ memories, contextMemory, onToggleContext, onDelete }: MemoryPanelProps) {
   const offloadedMessages = contextMemory.filter((message) => !message.removed);
 
   return (
@@ -28,8 +23,8 @@ export default function MemoryPanel({
         <>
           <h4>OFFLOADED CONTEXT</h4>
           <p className="morp-memory__note">
-            {offloadedMessages.length} message{offloadedMessages.length === 1 ? '' : 's'} stored outside
-            the context window and injected on each model call.
+            {offloadedMessages.length} message{offloadedMessages.length === 1 ? '' : 's'} stored outside the context
+            window and injected on each model call.
           </p>
           <ul className="morp-memory__list morp-memory__list--context">
             {offloadedMessages.map((message) => (

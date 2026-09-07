@@ -1,34 +1,21 @@
 import { COPY } from '../copy';
+import { createInitialPredictionState, patchPrediction } from '../domain/state';
 import { formatTokenForAppend } from '../modules/token-simulator';
-import { unlockSystem } from '../modules/unlocks';
-import type { MorpState, StageDefinition } from '../types';
-
-function withTemperatureFlags(state: MorpState, temperature: number): MorpState {
-  return {
-    ...state,
-    predictionTemperature: temperature,
-    predictionHasLowTemp: state.predictionHasLowTemp || temperature <= 0.4,
-    predictionHasHighTemp: state.predictionHasHighTemp || temperature >= 1.0
-  };
-}
+import { markStageInitialized } from '../modules/unlocks';
+import type { StageDefinition } from '../types';
 
 export const predictionStage: StageDefinition = {
   id: 'prediction',
-  concept: 'prediction',
 
   initialize(state) {
-    return unlockSystem(
+    return markStageInitialized(
       {
         ...state,
         stage: 'prediction',
-        predictionInput: 'The most popular language',
-        predictionCandidates: [],
-        predictionSelected: null,
-        predictionLastSampledPercent: null,
-        predictionTemperature: 0.7,
-        predictionHasAcceptedToken: false,
-        predictionHasLowTemp: false,
-        predictionHasHighTemp: false
+        prediction: {
+          ...createInitialPredictionState(),
+          predictionInput: 'The most popular language'
+        }
       },
       'prediction'
     );
@@ -41,37 +28,31 @@ export const predictionStage: StageDefinition = {
   processAction(action, state) {
     switch (action.type) {
       case 'set-prediction-input':
-        return {
-          ...state,
+        return patchPrediction(state, {
           predictionInput: action.value,
           predictionCandidates: [],
           predictionSelected: null,
           predictionLastSampledPercent: null
-        };
+        });
       case 'set-temperature':
-        return withTemperatureFlags(state, action.value);
+        return patchPrediction(state, { predictionTemperature: action.value });
       case 'accept-prediction-token':
-        return {
-          ...state,
-          predictionInput:
-            state.predictionInput + formatTokenForAppend(action.token, action.rawToken),
+        return patchPrediction(state, {
+          predictionInput: state.prediction.predictionInput + formatTokenForAppend(action.token, action.rawToken),
           predictionSelected: action.token,
           predictionLastSampledPercent: action.percent,
           predictionCandidates: [],
           predictionHasAcceptedToken: true
-        };
+        });
       case 'set-prediction-candidates':
-        return {
-          ...state,
-          predictionCandidates: action.candidates
-        };
+        return patchPrediction(state, {
+          predictionCandidates: action.candidates,
+          predictionHasLowTemp: state.prediction.predictionHasLowTemp || state.prediction.predictionTemperature <= 0.4,
+          predictionHasHighTemp: state.prediction.predictionHasHighTemp || state.prediction.predictionTemperature >= 1.0
+        });
       default:
         return state;
     }
-  },
-
-  inspectResponse() {
-    return [];
   },
 
   getContextualActions() {
@@ -79,11 +60,8 @@ export const predictionStage: StageDefinition = {
   },
 
   isComplete(state) {
-    return (
-      state.predictionHasAcceptedToken &&
-      state.predictionHasLowTemp &&
-      state.predictionHasHighTemp
-    );
+    const prediction = state.prediction;
+    return prediction.predictionHasAcceptedToken && prediction.predictionHasLowTemp && prediction.predictionHasHighTemp;
   },
 
   getDiagnosticReport() {

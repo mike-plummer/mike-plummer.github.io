@@ -168,9 +168,7 @@ export default function IncidentReviewPanel({
         <p className="morp-incident__tools-hint">Mark every claim, then submit your audit.</p>
       )}
 
-      {stageComplete && (
-        <p className="morp-incident__tools-hint">All mitigation steps complete.</p>
-      )}
+      {stageComplete && <p className="morp-incident__tools-hint">All mitigation steps complete.</p>}
     </section>
   );
 }

@@ -1,0 +1,120 @@
+@use './tokens' as *;
+
+// Repair status
+.morp-status-overlay {
+  align-items: center;
+  background: rgba(8, 11, 13, 0.92);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.5rem;
+  position: fixed;
+  z-index: 110;
+}
+
+.morp-status-overlay__panel {
+  background: $morp-bg-elevated;
+  border: 1px solid $morp-border;
+  max-height: min(90vh, 44rem);
+  max-width: 36rem;
+  overflow: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  width: 100%;
+}
+
+.morp-status-overlay__eyebrow {
+  color: $morp-text-muted;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.morp-status-overlay__heading {
+  color: $morp-text;
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.morp-status-overlay__description {
+  color: $morp-text-secondary;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.morp-status-overlay__continue {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.morp-status__header {
+  margin-bottom: 0.75rem;
+}
+
+.morp-status__title {
+  color: $morp-text;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.morp-status__subtitle {
+  color: $morp-text-muted;
+  font-size: 0.8125rem;
+  margin: 0.2rem 0 0;
+}
+
+.morp-status__list {
+  border: 1px solid $morp-border-subtle;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.morp-status__row {
+  align-items: center;
+  border-bottom: 1px solid $morp-border-subtle;
+  display: flex;
+  font-size: 0.875rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &--highlight {
+    animation: morp-status-highlight 1.2s ease;
+    background: rgba($morp-accent, 0.08);
+  }
+}
+
+.morp-status__label {
+  color: $morp-text;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.morp-status__value {
+  font-weight: 700;
+}
+
+.morp-status__overall {
+  border-top: 1px solid $morp-border-subtle;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+}
+
+@keyframes morp-status-highlight {
+  0% {
+    background: rgba($morp-accent, 0.28);
+  }
+
+  100% {
+    background: rgba($morp-accent, 0.08);
+  }
+}

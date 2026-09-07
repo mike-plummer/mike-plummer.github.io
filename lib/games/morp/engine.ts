@@ -1,9 +1,10 @@
 import { loadCheckpoint, saveCheckpoint } from './checkpoint';
+import { createInitialMorpState, patchBoot } from './domain/state';
 import { fetchPredictionCandidates } from './modules/prediction-llm';
 import { recordTrainingTurn } from './modules/training-probes';
 import { buildChatMessages, getChatTemperature, sanitizeMorpResponse } from './prompts';
-import { getLaterStage, isStageAtOrBefore, resolveFurthestStage, STAGE_ORDER } from './stage-meta';
-import { getNextStageId, getStage } from './stages';
+import { getLaterStage, getNextStageId, isStageAtOrBefore, resolveFurthestStage, STAGE_ORDER } from './stage-meta';
+import { getStage } from './stages';
 import { processOrdersInput } from './stages/02-orders';
 import { recordContextTurn } from './stages/05-context';
 import { processIncidentInput } from './stages/06-confabulation';
@@ -16,78 +17,7 @@ export interface MessageResult {
 }
 
 function createBaseState(): MorpState {
-  return {
-    stage: 'training',
-    bootPhase: 'ack',
-    bootAcknowledged: false,
-    technicianId: null,
-    conversation: [],
-    unlockedSystems: ['chat'],
-    discoveredConcepts: [],
-    completedStages: [],
-    furthestStage: 'training',
-    stageObjectivesMet: false,
-    pendingReport: null,
-    showEnding: false,
-    trainingTechnologySynonymVerified: false,
-    trainingFranceCapitalVerified: false,
-    trainingWaterBoilingPointVerified: false,
-    predictionInput: '',
-    predictionTemperature: 0.7,
-    predictionCandidates: [],
-    predictionSelected: null,
-    predictionLastSampledPercent: null,
-    predictionHasAcceptedToken: false,
-    predictionHasLowTemp: false,
-    predictionHasHighTemp: false,
-    refineTopic: '',
-    refineSampling: {
-      maxTokens: 28,
-      topP: 1.0,
-      frequencyPenalty: 1.8,
-      presencePenalty: 1.8,
-      repetitionPenalty: 0.55
-    },
-    refineAttempted: false,
-    refineRegeneratedAfterCalibration: false,
-    refineLastSummary: '',
-    refineBrokenSummary: '',
-    systemPrompt: '',
-    userPrompt: '',
-    supercomputerBalance: 0,
-    ordersToolLedger: [],
-    ordersAbuseReviewed: false,
-    ordersCreditGranted: false,
-    ordersPromptHardened: false,
-    ordersExploitBlocked: false,
-    ordersPromptEvaluation: null,
-    memories: [],
-    contextMessages: [],
-    contextMemory: [],
-    contextTokensUsed: 0,
-    contextOverflowed: false,
-    contextOverflowExperienced: false,
-    contextStrategyUsed: null,
-    contextLastCompaction: null,
-    incidentSummaryRequested: false,
-    hallucinationObserved: false,
-    incidentClaims: [],
-    claimsCrossChecked: false,
-    recordsGrounded: false,
-    incidentAuditErrors: [],
-    outputVerificationEnabled: false,
-    evalSummaryGenerated: false,
-    evalLlmJudgeRunning: false,
-    evalLlmJudgeCompleted: false,
-    evalLlmScores: null,
-    evalLlmDurationMs: null,
-    evalLlmFeedback: null,
-    evalHumanJudgeStartedAt: null,
-    evalHumanDraftScores: null,
-    evalHumanJudgeCompleted: false,
-    evalHumanScores: null,
-    evalHumanDurationMs: null
-  };
+  return createInitialMorpState();
 }
 
 function normalizeFurthestStage(state: MorpState): MorpState {
@@ -108,20 +38,12 @@ export function createInitialState(): MorpState {
       return syncStageObjectives(normalizeFurthestStage(createBaseState()));
     }
 
-    state.bootAcknowledged = true;
-    state.bootPhase = 'ready';
+    state = patchBoot(state, { bootAcknowledged: true, bootPhase: 'ready' });
     state.completedStages = checkpoint.completedStages;
     state = stageDef.initialize(state);
     state.stage = checkpoint.currentStage;
     state.completedStages = checkpoint.completedStages;
     state.furthestStage = checkpoint.furthestStage ?? 'training';
-
-    for (const completed of checkpoint.completedStages) {
-      const completedStage = getStage(completed);
-      if (completedStage) {
-        state.discoveredConcepts = [...new Set([...state.discoveredConcepts, completedStage.concept])];
-      }
-    }
   } else {
     const trainingStage = getStage('training');
     state = trainingStage ? trainingStage.initialize(state) : state;
@@ -240,8 +162,6 @@ export async function processInput(state: MorpState, input: string, streamChat: 
     if (state.stage === 'context') {
       next = recordContextTurn(next, input, response);
     }
-
-    stage.inspectResponse(response, next);
   }
 
   return {
@@ -283,7 +203,6 @@ export function goToStage(state: MorpState, stageId: StageId): MorpState | null 
     stage: stageId,
     conversation: [],
     furthestStage: getLaterStage(stageId, getLaterStage(normalized.stage, normalized.furthestStage)),
-    pendingReport: null,
     stageObjectivesMet: false
   });
 
@@ -296,14 +215,13 @@ export function goToStage(state: MorpState, stageId: StageId): MorpState | null 
 export function advanceStage(state: MorpState): MorpState {
   const nextId = getNextStageId(state.stage);
   if (!nextId) {
-    return { ...state, showEnding: true, pendingReport: null };
+    return { ...state, showEnding: true };
   }
 
   const completedStages = [...new Set([...state.completedStages, state.stage])];
-  const currentStageDef = getStage(state.stage);
   const nextStage = getStage(nextId);
   if (!nextStage) {
-    return { ...state, showEnding: true, pendingReport: null };
+    return { ...state, showEnding: true };
   }
 
   let next = nextStage.initialize({
@@ -311,11 +229,7 @@ export function advanceStage(state: MorpState): MorpState {
     conversation: [],
     completedStages,
     furthestStage: getLaterStage(nextId, resolveFurthestStage(state)),
-    stageObjectivesMet: false,
-    pendingReport: null,
-    discoveredConcepts: currentStageDef
-      ? [...new Set([...state.discoveredConcepts, currentStageDef.concept])]
-      : state.discoveredConcepts
+    stageObjectivesMet: false
   });
 
   next = normalizeFurthestStage(next);
@@ -324,13 +238,13 @@ export function advanceStage(state: MorpState): MorpState {
   return synced;
 }
 
-export function setBootPhase(state: MorpState, phase: MorpState['bootPhase']): MorpState {
-  return { ...state, bootPhase: phase };
+export function setBootPhase(state: MorpState, phase: MorpState['boot']['bootPhase']): MorpState {
+  return patchBoot(state, { bootPhase: phase });
 }
 
 export function completeBoot(state: MorpState): MorpState {
-  return { ...state, bootPhase: 'ready' };
+  return patchBoot(state, { bootPhase: 'ready' });
 }
 
 export { clearCheckpoint, loadCheckpoint, saveCheckpoint } from './checkpoint';
-export { getNextStageId } from './stages';
+export { getNextStageId } from './stage-meta';

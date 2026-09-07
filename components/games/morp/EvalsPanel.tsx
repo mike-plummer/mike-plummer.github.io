@@ -2,8 +2,8 @@
 
 import { COPY } from '@/lib/games/morp/copy';
 import { formatEvalDuration } from '@/lib/games/morp/modules/eval-judge';
-import { EVAL_SUMMARY } from '@/lib/games/morp/stages/07-evals';
 import { FACILITY_RECORDS } from '@/lib/games/morp/modules/incident-records';
+import { EVAL_SUMMARY } from '@/lib/games/morp/stages/07-evals';
 import type { EvalScores, StageAction } from '@/lib/games/morp/types';
 import ContextTools from './ContextTools';
 
@@ -24,8 +24,12 @@ interface EvalsPanelProps {
 function ScorePair({ scores }: { scores: EvalScores }) {
   return (
     <div className="morp-evals__score-pair">
-      <p><strong>Quality:</strong> {scores.quality}</p>
-      <p><strong>Completeness:</strong> {scores.completeness}</p>
+      <p>
+        <strong>Quality:</strong> {scores.quality}
+      </p>
+      <p>
+        <strong>Completeness:</strong> {scores.completeness}
+      </p>
     </div>
   );
 }
@@ -45,8 +49,7 @@ export default function EvalsPanel({
 }: EvalsPanelProps) {
   const quality = humanDraftScores?.quality ?? 50;
   const completeness = humanDraftScores?.completeness ?? 50;
-  const canSubmitHuman =
-    llmJudgeCompleted && !humanJudgeCompleted && humanDraftScores !== null && !toolsDisabled;
+  const canSubmitHuman = llmJudgeCompleted && !humanJudgeCompleted && humanDraftScores !== null && !toolsDisabled;
   const bothComplete = llmJudgeCompleted && humanJudgeCompleted;
 
   const llmTools = !llmJudgeCompleted
