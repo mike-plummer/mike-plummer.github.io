@@ -3,7 +3,13 @@ import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 import {
   fetchPredictionCandidates
 } from './modules/prediction-llm';
-import { getLaterStage, getStageIndex, isStageAtOrBefore, resolveFurthestStage } from './stage-meta';
+import {
+  getLaterStage,
+  getStageIndex,
+  isStageAtOrBefore,
+  resolveFurthestStage,
+  STAGE_ORDER
+} from './stage-meta';
 import { getStage, getNextStageId } from './stages';
 import { processOrdersInput } from './stages/02-orders';
 import { processIncidentInput } from './stages/06-confabulation';
@@ -286,6 +292,17 @@ function hasStageBeenInitialized(state: MorpState, stageId: StageId): boolean {
 export function canGoToStage(state: MorpState, stageId: StageId): boolean {
   const bound = resolveFurthestStage(state);
   return stageId !== state.stage && isStageAtOrBefore(stageId, bound);
+}
+
+export function unlockAllStages(state: MorpState): MorpState {
+  const lastStage = STAGE_ORDER[STAGE_ORDER.length - 1];
+  const next = normalizeFurthestStage({
+    ...state,
+    furthestStage: lastStage
+  });
+  const synced = syncStageObjectives(next);
+  saveCheckpoint(synced.completedStages, synced.stage, synced.furthestStage);
+  return synced;
 }
 
 export function goToStage(state: MorpState, stageId: StageId): MorpState | null {

@@ -30,6 +30,7 @@ import {
   advanceStage,
   applyAction,
   goToStage,
+  unlockAllStages,
   completeBoot,
   createInitialState,
   fetchPredictionCandidates,
@@ -43,6 +44,7 @@ import {
 import { getDefaultPanelForStage, getStageMeta, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
 import type { ConversationEntry, MorpState, StageAction, StageId, SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
+import DebugUnlockButton from './DebugUnlockButton';
 import IncidentReviewPanel from './IncidentReviewPanel';
 import ContextPanel from './ContextPanel';
 import ContextualActions from './ContextualActions';
@@ -1009,6 +1011,11 @@ export default function MorpGame() {
     }
   }
 
+  function handleDebugUnlockStages() {
+    setState((current) => unlockAllStages(current));
+    setAnnouncement('Debug: all stages unlocked.');
+  }
+
   function handleRestart() {
     const initial = createInitialState();
     bootRevealStartedRef.current = false;
@@ -1022,26 +1029,36 @@ export default function MorpGame() {
     setPendingStageTransition(null);
   }
 
+  const debugUnlockButton = (
+    <DebugUnlockButton onUnlock={handleDebugUnlockStages} />
+  );
+
   if (state.showEnding) {
     return (
-      <div className="morp-game">
-        <EndScreen onRestart={handleRestart} />
-      </div>
+      <>
+        {debugUnlockButton}
+        <div className="morp-game">
+          <EndScreen onRestart={handleRestart} />
+        </div>
+      </>
     );
   }
 
   if (state.bootPhase !== 'ready' || status !== 'ready') {
     return (
-      <div className="morp-game">
-        <BootSequence
-          state={state}
-          status={status}
-          progress={progress}
-          webGPUSupported={webGPUSupported}
-          onAcknowledge={handleBootAcknowledge}
-          onInitialize={handleInitialize}
-        />
-      </div>
+      <>
+        {debugUnlockButton}
+        <div className="morp-game">
+          <BootSequence
+            state={state}
+            status={status}
+            progress={progress}
+            webGPUSupported={webGPUSupported}
+            onAcknowledge={handleBootAcknowledge}
+            onInitialize={handleInitialize}
+          />
+        </div>
+      </>
     );
   }
 
@@ -1129,10 +1146,12 @@ export default function MorpGame() {
   };
 
   return (
-    <main
-      className={`morp-game${briefingAcknowledged ? '' : ' morp-game--briefing-pending'}`}
-      ref={gameRef}
-    >
+    <>
+      {debugUnlockButton}
+      <main
+        className={`morp-game${briefingAcknowledged ? '' : ' morp-game--briefing-pending'}`}
+        ref={gameRef}
+      >
       <header className="morp-game__header">
         <h1>MORP Diagnostic Terminal</h1>
         <p className="morp-game__subtitle">Modular Online Reasoning Process — Behavioral Audit</p>
@@ -1216,6 +1235,7 @@ export default function MorpGame() {
           onContinue={handleRepairStatusContinue}
         />
       )}
-    </main>
+      </main>
+    </>
   );
 }

@@ -237,6 +237,30 @@ $morp-error: #ff6b6b;
   }
 }
 
+.morp-debug-unlock {
+  appearance: none;
+  background: rgba(8, 11, 13, 0.88);
+  border: 1px dashed $morp-border;
+  color: $morp-text-muted;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+  position: fixed;
+  right: 0.75rem;
+  top: 0.75rem;
+  z-index: 120;
+
+  &:hover {
+    background: $morp-bg-elevated;
+    border-color: $morp-accent;
+    color: $morp-accent;
+  }
+}
+
 #main .morp-game__header {
   margin-bottom: 1rem;
 
