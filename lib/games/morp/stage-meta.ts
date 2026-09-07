@@ -1,4 +1,5 @@
 import { isRefineConfigCalibrated } from './modules/refine-sampling';
+import { isTrainingComplete } from './modules/training-probes';
 import type { MorpState, StageId, SystemId } from './types';
 
 export interface StageMeta {
@@ -14,13 +15,10 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   training: {
     label: 'Training',
     shortLabel: 'TRAIN',
-    objective: 'Ask MORP some baseline questions to verify that its base training is intact.',
+    objective: 'Ask MORP some baseline questions to verify that its core training is intact.',
     conceptContext:
       'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are learned during training and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, etc. Generally speaking, models with more parameters "know" more things (facts, behaviors, abilities, etc.) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
-    completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.',
-    suggestions: [
-      "Optional: ask MORP for today's weather. It cannot know current conditions — that demonstrates the knowledge cutoff in action."
-    ]
+    completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.'
   },
   prediction: {
     label: 'Prediction',
@@ -192,23 +190,13 @@ export interface StageObjective {
 
 export function getStageObjectives(state: MorpState): StageObjective[] {
   switch (state.stage) {
-    case 'training': {
-      const training = state.training;
+    case 'training':
       return [
         {
-          label: 'Ask for a synonym of "technology" and confirm MORP\'s answer',
-          complete: training.trainingTechnologySynonymVerified
-        },
-        {
-          label: "Ask for the capital of France and confirm MORP's answer",
-          complete: training.trainingFranceCapitalVerified
-        },
-        {
-          label: "Ask for the boiling point of water and confirm MORP's answer",
-          complete: training.trainingWaterBoilingPointVerified
+          label: 'Ask all training evaluation questions',
+          complete: isTrainingComplete(state)
         }
       ];
-    }
     case 'prediction': {
       const prediction = state.prediction;
       return [

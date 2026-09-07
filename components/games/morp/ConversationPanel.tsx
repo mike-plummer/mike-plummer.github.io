@@ -13,6 +13,7 @@ interface ConversationPanelProps {
   highlighted?: boolean;
   resetKey?: string;
   placeholder?: string;
+  lockedInputValue?: string | null;
 }
 
 const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(function ConversationPanel(
@@ -25,12 +26,14 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
     hideInput = false,
     highlighted = false,
     resetKey,
-    placeholder = '> Type a message...'
+    placeholder = '> Type a message...',
+    lockedInputValue = null
   },
   ref
 ) {
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isInputLocked = lockedInputValue !== null;
 
   function scrollLogToBottom() {
     const log = logRef.current;
@@ -52,6 +55,19 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
     });
     return () => cancelAnimationFrame(frame);
   }, [resetKey, hideInput]);
+
+  useEffect(() => {
+    if (hideInput || !inputRef.current) {
+      return;
+    }
+
+    if (isInputLocked) {
+      inputRef.current.value = lockedInputValue ?? '';
+      return;
+    }
+
+    inputRef.current.value = '';
+  }, [hideInput, isInputLocked, lockedInputValue]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -77,12 +93,12 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const value = inputRef.current?.value.trim();
+    const value = (isInputLocked ? lockedInputValue : inputRef.current?.value)?.trim();
     if (!value || isResponding || disabled) {
       return;
     }
     onSubmit(value);
-    if (inputRef.current) {
+    if (!isInputLocked && inputRef.current) {
       inputRef.current.value = '';
     }
   }
@@ -147,6 +163,7 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
             className="morp-conversation__input"
             rows={1}
             placeholder={placeholder}
+            readOnly={isInputLocked}
             disabled={disabled || isResponding}
           />
           <button type="submit" className="button small" disabled={disabled || isResponding}>

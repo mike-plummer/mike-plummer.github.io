@@ -19,9 +19,11 @@ export interface BootSlice {
 }
 
 export interface TrainingSlice {
-  trainingTechnologySynonymVerified: boolean;
-  trainingFranceCapitalVerified: boolean;
-  trainingWaterBoilingPointVerified: boolean;
+  trainingTreeMammalAsked: boolean;
+  trainingWaterBoilingAsked: boolean;
+  trainingTwosComplementAsked: boolean;
+  trainingWeatherAsked: boolean;
+  trainingActiveQuestion: number | null;
 }
 
 export interface PredictionSlice {
@@ -119,9 +121,11 @@ export function createInitialBootState(): BootSlice {
 
 export function createInitialTrainingState(): TrainingSlice {
   return {
-    trainingTechnologySynonymVerified: false,
-    trainingFranceCapitalVerified: false,
-    trainingWaterBoilingPointVerified: false
+    trainingTreeMammalAsked: false,
+    trainingWaterBoilingAsked: false,
+    trainingTwosComplementAsked: false,
+    trainingWeatherAsked: false,
+    trainingActiveQuestion: null
   };
 }
 

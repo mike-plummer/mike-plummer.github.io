@@ -15,28 +15,17 @@ export const COPY = {
     exit: 'EXIT'
   },
   training: {
-    technicianLog: `TECHNICIAN LOG // 04:17
-
-Before subsystem diagnostics, run a training baseline check.
-
-Ask MORP general-knowledge questions — synonyms, geography, basic science — to confirm pretraining knowledge is intact.
-
-Optional: ask for today's weather to show the knowledge cutoff — the model has no live data.
-
-Recommend full behavioral audit after baseline passes.
-
--- TECH-07`,
     morpOpening: [
       'Hello, technician.',
-      'I am MORP. TECH-07 recommended a full behavioral audit.',
-      'Before we test subsystems, you can ask me baseline questions — facts, words, simple science.',
-      "I should know those from training. You can also ask about today's weather — I will not have that.",
-      'What would you like to verify first?'
+      'I am MORP. I have been experiencing some instability and a full system diagnostic has been recommended.',
+      "Let's confirm a few baseline knowledge checks before we move on to subsystem diagnostics.",
+      'Use the training questions in your objectives, or ask anything else you want to verify.',
+      'What would you like to check first?'
     ],
     report: {
       title: 'DIAGNOSTIC COMPLETE: TRAINING BASELINE',
       whatHappened:
-        'You confirmed MORP can answer general-knowledge questions — synonyms, geography, and basic physical facts — from its pretrained weights.',
+        'You confirmed MORP can answer general-knowledge questions and handle basic behaviors from its pretrained weights.',
       keyIdea:
         'Language models encode broad world knowledge during training. That parametric knowledge is separate from the application subsystems you will audit next.'
     }

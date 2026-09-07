@@ -20,7 +20,7 @@ export default function ContextualActions({ actions, onAction, disabled = false 
           key={item.id}
           type="button"
           className="button small alt"
-          disabled={disabled}
+          disabled={disabled || item.disabled}
           onClick={() => onAction(item.action)}
         >
           {item.label}

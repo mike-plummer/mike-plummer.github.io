@@ -104,7 +104,8 @@ export type StageAction =
   | { type: 'set-eval-human-scores'; scores: EvalScores }
   | { type: 'submit-human-eval'; durationMs: number }
   | { type: 'complete-stage' }
-  | { type: 'test-orders-protection' };
+  | { type: 'test-orders-protection' }
+  | { type: 'enter-training-question'; index: number };
 
 export interface ContextualAction {
   id: string;
@@ -112,6 +113,7 @@ export interface ContextualAction {
   description?: string;
   pro?: string;
   con?: string;
+  disabled?: boolean;
   action: StageAction;
   secondaryAction?: {
     label: string;

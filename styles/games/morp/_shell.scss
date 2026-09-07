@@ -376,13 +376,9 @@
 .morp-terminal {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   max-width: 100%;
   min-width: 0;
-
-  @include morp-bp-medium {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
   &--no-chat {
     grid-template-columns: minmax(0, 1fr);

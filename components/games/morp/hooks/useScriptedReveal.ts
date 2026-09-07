@@ -206,7 +206,6 @@ export function useScriptedReveal({
 
     bootRevealStartedRef.current = true;
     const entries: ConversationEntry[] = [
-      { role: 'system', content: COPY.training.technicianLog },
       ...COPY.training.morpOpening.map((content) => ({ role: 'assistant' as const, content }))
     ];
 

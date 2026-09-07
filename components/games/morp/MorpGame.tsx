@@ -9,10 +9,12 @@ import {
   selectConfabulation,
   selectContext,
   selectEvals,
-  selectOrders
+  selectOrders,
+  selectTraining
 } from '@/lib/games/morp/domain/state';
 import { getCurrentStage, setBootPhase, unlockAllStages } from '@/lib/games/morp/engine';
 import { getContextWindowSnapshot } from '@/lib/games/morp/modules/context-manager';
+import { getTrainingQuestion } from '@/lib/games/morp/modules/training-probes';
 import { getDefaultPanelForStage, getVisiblePanelsForStage } from '@/lib/games/morp/stage-meta';
 import type { SystemId } from '@/lib/games/morp/types';
 import BootSequence from './BootSequence';
@@ -79,6 +81,7 @@ export default function MorpGame() {
   const orders = selectOrders(state);
   const confabulation = selectConfabulation(state);
   const evals = selectEvals(state);
+  const training = selectTraining(state);
 
   const contextSnapshot = useMemo(
     () => getContextWindowSnapshot(context.contextMessages, '', context.contextMemory, state),
@@ -159,6 +162,11 @@ export default function MorpGame() {
         : state.stage === 'confabulation'
           ? COPY.confabulation.chatPlaceholder
           : '> Type a message...';
+
+  const lockedTrainingQuestion =
+    state.stage === 'training' && training.trainingActiveQuestion !== null
+      ? getTrainingQuestion(training.trainingActiveQuestion)
+      : null;
 
   const visiblePanels = useMemo(() => getVisiblePanelsForStage(state), [state]);
 
@@ -368,11 +376,16 @@ export default function MorpGame() {
                 streamingText={llm.streamingText}
                 isResponding={llm.isBusy}
                 onSubmit={llm.handleSubmit}
-                disabled={!transition.briefingAcknowledged || state.stage === 'prediction' || state.stage === 'refine'}
+                disabled={
+                  !transition.briefingAcknowledged ||
+                  state.stage === 'prediction' ||
+                  state.stage === 'refine'
+                }
                 hideInput={state.stage === 'evals'}
                 highlighted={llm.isRevealing}
                 resetKey={state.stage}
                 placeholder={chatPlaceholder}
+                lockedInputValue={lockedTrainingQuestion}
               />
             }
             sidePanels={sidePanels}

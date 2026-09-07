@@ -2,9 +2,9 @@ import type { ConversationEntry } from '../types';
 
 export const SCRIPTED_THINKING_MS = 750;
 
-const MIN_WORD_DELAY_MS = 90;
-const MAX_WORD_DELAY_MS = 220;
-const TARGET_STREAM_MS = 5200;
+const MIN_WORD_DELAY_MS = 10;
+const MAX_WORD_DELAY_MS = 100;
+const TARGET_STREAM_MS = 2000;
 
 export function getNewConversationEntries(
   previous: ConversationEntry[],

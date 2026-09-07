@@ -1,7 +1,7 @@
 import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 import { createInitialMorpState, patchBoot } from './domain/state';
 import { fetchPredictionCandidates } from './modules/prediction-llm';
-import { recordTrainingTurn } from './modules/training-probes';
+import { markTrainingQuestionAsked } from './modules/training-probes';
 import { buildChatMessages, getChatTemperature, sanitizeMorpResponse } from './prompts';
 import { getLaterStage, getNextStageId, isStageAtOrBefore, resolveFurthestStage, STAGE_ORDER } from './stage-meta';
 import { getStage } from './stages';
@@ -120,6 +120,8 @@ export async function processInput(state: MorpState, input: string, streamChat: 
 
   let response = '';
   let scripted = false;
+  const activeTrainingQuestion = state.stage === 'training' ? state.training.trainingActiveQuestion : null;
+
   if (state.stage === 'orders' && ordersResult?.skipLlm && ordersResult.scriptedResponse) {
     response = ordersResult.scriptedResponse;
     scripted = true;
@@ -131,7 +133,7 @@ export async function processInput(state: MorpState, input: string, streamChat: 
       const result = await streamChat({
         messages,
         temperature: getChatTemperature(state.stage),
-        maxTokens: state.stage === 'training' ? 160 : 256,
+        maxTokens: 256,
         onToken: (token) => {
           response += token;
         }
@@ -155,8 +157,8 @@ export async function processInput(state: MorpState, input: string, streamChat: 
   };
 
   if (!scripted) {
-    if (state.stage === 'training') {
-      next = recordTrainingTurn(next, input, response);
+    if (state.stage === 'training' && activeTrainingQuestion !== null) {
+      next = markTrainingQuestionAsked(next, activeTrainingQuestion);
     }
 
     if (state.stage === 'context') {
