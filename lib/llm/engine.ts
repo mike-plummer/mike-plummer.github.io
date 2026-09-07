@@ -166,10 +166,6 @@ export async function disposeLLM(): Promise<void> {
   return disposePromise;
 }
 
-export async function resetLLM(): Promise<void> {
-  await disposeLLM();
-}
-
 export async function loadLLM(
   onProgress?: (value: LLMProgress) => void,
   modelId: string = DEFAULT_MODEL_ID
@@ -246,9 +242,7 @@ export async function loadLLM(
   return loadPromise;
 }
 
-function getDevelopmentHotApi():
-  | { dispose: (callback: () => void) => void }
-  | undefined {
+function getDevelopmentHotApi(): { dispose: (callback: () => void) => void } | undefined {
   if (process.env.NODE_ENV !== 'development') {
     return undefined;
   }
@@ -263,8 +257,7 @@ function getDevelopmentHotApi():
   }
 
   if (typeof module !== 'undefined') {
-    const moduleHot = (module as NodeModule & { hot?: { dispose: (callback: () => void) => void } })
-      .hot;
+    const moduleHot = (module as NodeModule & { hot?: { dispose: (callback: () => void) => void } }).hot;
     if (moduleHot) {
       return moduleHot;
     }
@@ -359,11 +352,7 @@ interface LogprobContentEntry {
   top_logprobs?: Array<{ token: string; logprob: number; bytes?: number[] | null }>;
 }
 
-function tokenFromLogprobItem(item: {
-  token: unknown;
-  logprob: number;
-  bytes?: number[] | null;
-}): string | null {
+function tokenFromLogprobItem(item: { token: unknown; logprob: number; bytes?: number[] | null }): string | null {
   if (typeof item.token === 'string' && item.token.length > 0 && !/^\d{1,6}$/.test(item.token)) {
     return item.token;
   }
@@ -375,9 +364,7 @@ function tokenFromLogprobItem(item: {
   return null;
 }
 
-function extractTopLogprobs(
-  content: LogprobContentEntry[] | null | undefined
-): TokenLogprob[] {
+function extractTopLogprobs(content: LogprobContentEntry[] | null | undefined): TokenLogprob[] {
   const entry = content?.[0];
   if (!entry) {
     return [];

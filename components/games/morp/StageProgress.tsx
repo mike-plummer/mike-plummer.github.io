@@ -2,14 +2,19 @@
 
 import { COPY } from '@/lib/games/morp/copy';
 import { getOverallMorpStatus } from '@/lib/games/morp/modules/system-status';
-import { getStageMeta, getStageNumber, isStageAtOrBefore, resolveFurthestStage, STAGE_ORDER } from '@/lib/games/morp/stage-meta';
+import {
+  getStageMeta,
+  getStageNumber,
+  isStageAtOrBefore,
+  resolveFurthestStage,
+  STAGE_ORDER
+} from '@/lib/games/morp/stage-meta';
 import type { StageId } from '@/lib/games/morp/types';
 
 interface StageProgressProps {
   currentStage: StageId;
   completedStages: StageId[];
   furthestStage: StageId;
-  stageObjectivesMet: boolean;
   onStageSelect?: (stageId: StageId) => void;
   onStatusOpen?: () => void;
   disabled?: boolean;
@@ -19,7 +24,6 @@ export default function StageProgress({
   currentStage,
   completedStages,
   furthestStage,
-  stageObjectivesMet,
   onStageSelect,
   onStatusOpen,
   disabled = false
@@ -28,8 +32,7 @@ export default function StageProgress({
   const reachableStage = resolveFurthestStage({
     furthestStage,
     stage: currentStage,
-    completedStages,
-    stageObjectivesMet
+    completedStages
   });
   const overallStatus = getOverallMorpStatus(completedStages);
   const statusNeedsAttention = overallStatus !== 'OPERATIONAL';

@@ -458,10 +458,6 @@ $morp-error: #ff6b6b;
 }
 
 // Stage briefing
-.morp-briefing-overlay {
-  display: none;
-}
-
 .morp-briefing {
   background: $morp-bg-panel;
   border: 1px solid $morp-border-subtle;
@@ -1088,16 +1084,6 @@ $morp-error: #ff6b6b;
   word-break: break-all;
 }
 
-.morp-conversation__typing {
-  color: $morp-text-secondary;
-  font-size: 0.8125rem;
-  font-style: italic;
-  font-weight: 500;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
 .morp-conversation__message--streaming .morp-conversation__body,
 .morp-conversation__message--thinking .morp-conversation__body {
   color: $morp-text;
@@ -1173,41 +1159,6 @@ $morp-error: #ff6b6b;
   font-size: 0.9375rem;
   line-height: 1.5;
   margin: 0 0 1rem;
-}
-
-.morp-prediction__output {
-  background: $morp-bg;
-  border: 1px solid $morp-border;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-}
-
-.morp-prediction__output-label {
-  color: $morp-accent-soft;
-  display: block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.35rem;
-}
-
-.morp-prediction__output-text {
-  color: $morp-text;
-  font-size: 1rem;
-  line-height: 1.55;
-  margin: 0;
-  word-break: break-word;
-}
-
-.morp-prediction__output-generated {
-  color: $morp-accent;
-  font-weight: 600;
-}
-
-.morp-prediction__output-placeholder {
-  color: $morp-text-muted;
-  font-style: italic;
 }
 
 .morp-prediction__temperature {
@@ -1681,45 +1632,6 @@ $morp-error: #ff6b6b;
 }
 
 // Verification
-.morp-claim {
-  color: $morp-text;
-  font-size: 1rem;
-  line-height: 1.55;
-  margin-bottom: 0.75rem;
-}
-
-.morp-claim__status {
-  color: $morp-text;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.morp-source-db {
-  border-top: 1px solid #1e3a2f;
-  margin-top: 1rem;
-  padding-top: 1rem;
-
-  ul {
-    list-style: none;
-    margin: 0.5rem 0;
-    padding: 0;
-  }
-
-  li {
-    color: $morp-text;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    margin-bottom: 0.35rem;
-  }
-}
-
-.morp-source-db__verdict {
-  color: #ff6b6b;
-  font-weight: bold;
-}
-
-// Incident review
 .morp-incident__records,
 .morp-incident__claims,
 .morp-incident__mitigations {
@@ -2150,17 +2062,6 @@ $morp-error: #ff6b6b;
   font-weight: 400;
   padding: 0.5rem;
   width: 100%;
-}
-
-.morp-repair__result {
-  color: $morp-error;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-top: 0.75rem;
-
-  &--pass {
-    color: $morp-accent;
-  }
 }
 
 // Contextual actions

@@ -1,11 +1,11 @@
+import type { StageDefinition, StageId } from '../types';
 import { trainingStage } from './00-training';
 import { predictionStage } from './01-prediction';
-import { refineStage } from './02-refine';
 import { ordersStage } from './02-orders';
+import { refineStage } from './02-refine';
 import { contextStage } from './05-context';
 import { confabulationStage } from './06-confabulation';
 import { evalsStage } from './07-evals';
-import type { StageDefinition, StageId } from '../types';
 
 export const stages: StageDefinition[] = [
   trainingStage,
@@ -17,12 +17,8 @@ export const stages: StageDefinition[] = [
   evalsStage
 ];
 
-export function getStage(id: StageId): StageDefinition {
-  const stage = stages.find((s) => s.id === id);
-  if (!stage) {
-    throw new Error(`Unknown stage: ${id}`);
-  }
-  return stage;
+export function getStage(id: StageId): StageDefinition | undefined {
+  return stages.find((s) => s.id === id);
 }
 
 export function getNextStageId(current: StageId): StageId | null {

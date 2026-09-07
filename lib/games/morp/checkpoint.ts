@@ -1,37 +1,56 @@
 import { CHECKPOINT_KEY } from './config';
-import { getLaterStage } from './stage-meta';
+import { getLaterStage, STAGE_ORDER } from './stage-meta';
 import type { MorpCheckpoint, StageId } from './types';
 
 const REMOVED_STAGES = new Set(['remember', 'intrusion', 'repair']);
 
-function migrateStageId(stageId: string): StageId {
-  if (stageId === 'boot') {
-    return 'training';
-  }
-  if (stageId === 'remember' || stageId === 'intrusion' || stageId === 'amnesia') {
-    return 'context';
-  }
-  if (stageId === 'repair' || stageId === 'recursion') {
-    return 'evals';
-  }
-  return stageId as StageId;
+function isValidStageId(stageId: string): stageId is StageId {
+  return (STAGE_ORDER as readonly string[]).includes(stageId);
 }
 
-export function migrateCheckpoint(checkpoint: MorpCheckpoint): MorpCheckpoint {
-  const completedStages = [
-    ...new Set(
-      checkpoint.completedStages
-        .filter((stageId) => !REMOVED_STAGES.has(stageId))
-        .map((stageId) => migrateStageId(stageId))
-    )
-  ];
+function migrateStageId(stageId: string): StageId | null {
+  let migrated = stageId;
 
+  if (stageId === 'boot') {
+    migrated = 'training';
+  } else if (stageId === 'remember' || stageId === 'intrusion' || stageId === 'amnesia') {
+    migrated = 'context';
+  } else if (stageId === 'repair' || stageId === 'recursion') {
+    migrated = 'evals';
+  }
+
+  return isValidStageId(migrated) ? migrated : null;
+}
+
+export function migrateCheckpoint(checkpoint: MorpCheckpoint): MorpCheckpoint | null {
   const currentStage = migrateStageId(checkpoint.currentStage);
-  const furthestCandidates = [
+  if (!currentStage) {
+    return null;
+  }
+
+  const completedStages: StageId[] = [];
+  for (const stageId of checkpoint.completedStages) {
+    if (REMOVED_STAGES.has(stageId)) {
+      continue;
+    }
+    const migrated = migrateStageId(stageId);
+    if (!migrated) {
+      return null;
+    }
+    if (!completedStages.includes(migrated)) {
+      completedStages.push(migrated);
+    }
+  }
+
+  const furthestCandidates: StageId[] = [
     checkpoint.furthestStage ? migrateStageId(checkpoint.furthestStage) : currentStage,
     currentStage,
     ...completedStages
-  ];
+  ].filter((stageId): stageId is StageId => stageId !== null);
+
+  if (furthestCandidates.length === 0) {
+    return null;
+  }
 
   const furthestStage = furthestCandidates.reduce(
     (latest, stageId) => getLaterStage(latest, stageId),
@@ -62,11 +81,7 @@ export function loadCheckpoint(): MorpCheckpoint | null {
   }
 }
 
-export function saveCheckpoint(
-  completedStages: StageId[],
-  currentStage: StageId,
-  furthestStage: StageId
-) {
+export function saveCheckpoint(completedStages: StageId[], currentStage: StageId, furthestStage: StageId) {
   if (typeof window === 'undefined') {
     return;
   }

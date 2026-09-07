@@ -2,10 +2,6 @@ import type { ChatMessage } from '@/lib/llm/types';
 import { buildMorpSystemContent } from './soul';
 import type { ConversationEntry, MorpState, StageId } from './types';
 
-export function buildMorpSystemPrompt(state: MorpState): string {
-  return buildSystemContent(state);
-}
-
 function buildTrainingFacilityLogBlock(state: MorpState): string | null {
   if (state.stage !== 'training') {
     return null;

@@ -13,8 +13,6 @@ interface ConversationPanelProps {
   highlighted?: boolean;
   resetKey?: string;
   placeholder?: string;
-  draftMessage?: string | null;
-  onDraftConsumed?: () => void;
 }
 
 const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(function ConversationPanel(
@@ -27,9 +25,7 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
     hideInput = false,
     highlighted = false,
     resetKey,
-    placeholder = '> Type a message...',
-    draftMessage = null,
-    onDraftConsumed
+    placeholder = '> Type a message...'
   },
   ref
 ) {
@@ -56,15 +52,6 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
     });
     return () => cancelAnimationFrame(frame);
   }, [resetKey, hideInput]);
-
-  useEffect(() => {
-    if (hideInput || !draftMessage || !inputRef.current) {
-      return;
-    }
-    inputRef.current.value = draftMessage;
-    inputRef.current.focus({ preventScroll: true });
-    onDraftConsumed?.();
-  }, [draftMessage, hideInput, onDraftConsumed]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -111,13 +98,7 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
       <header className="morp-panel__header">
         <h2 id="morp-conversation-heading">MORP CHAT</h2>
       </header>
-      <div
-        ref={logRef}
-        className="morp-conversation__log"
-        role="log"
-        aria-live="polite"
-        aria-relevant="additions"
-      >
+      <div ref={logRef} className="morp-conversation__log" role="log" aria-live="polite" aria-relevant="additions">
         {messages.map((message, index) => (
           <div
             key={`${index}-${message.content.slice(0, 20)}`}
@@ -127,9 +108,7 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
               <div className="morp-conversation__system">{message.content}</div>
             ) : (
               <div className="morp-conversation__line">
-                <span className="morp-conversation__label">
-                  {message.role === 'user' ? '>' : 'MORP>'}
-                </span>
+                <span className="morp-conversation__label">{message.role === 'user' ? '>' : 'MORP>'}</span>
                 <div className="morp-conversation__body">{message.content}</div>
               </div>
             )}

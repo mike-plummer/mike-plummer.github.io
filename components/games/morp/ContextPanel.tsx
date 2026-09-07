@@ -21,9 +21,7 @@ function formatCompaction(compaction: ContextCompactionResult): string {
   const label = compaction.strategy === 'truncate' ? 'Truncated' : 'Summarized';
   const llmNote = compaction.strategy === 'summarize' && compaction.usedLlm ? ' (LLM)' : '';
   const saved =
-    compaction.tokensSaved > 0
-      ? `, saved ${compaction.tokensSaved.toLocaleString()} tokens`
-      : ', no token savings';
+    compaction.tokensSaved > 0 ? `, saved ${compaction.tokensSaved.toLocaleString()} tokens` : ', no token savings';
 
   return `${label}${llmNote}: ${compaction.tokensBefore.toLocaleString()} → ${compaction.tokensAfter.toLocaleString()} tokens${saved}; ${compaction.messagesBefore} → ${compaction.messagesAfter} messages`;
 }
@@ -61,12 +59,21 @@ export default function ContextPanel({
         <div className="morp-context__bar-fill" style={{ width: `${percent}%` }} />
       </div>
       <p className="morp-context__note">
-        The model can only accept a maximum of {SIMULATED_CONTEXT_LIMIT.toLocaleString()} tokens at a time. Once this limit is reached further calls to the LLM will fail.
+        The model can only accept a maximum of {SIMULATED_CONTEXT_LIMIT.toLocaleString()} tokens at a time. Once this
+        limit is reached further calls to the LLM will fail.
       </p>
+      {(sentTokens > 0 || droppedMessageCount > 0) && (
+        <p className="morp-context__sent">
+          {droppedMessageCount > 0
+            ? ` (${droppedMessageCount} older message${droppedMessageCount === 1 ? '' : 's'} trimmed)`
+            : ''}
+        </p>
+      )}
       {memoryMessageCount > 0 && (
         <p className="morp-context__memory" aria-live="polite">
-          MEMORY: {memoryMessageCount} offloaded message{memoryMessageCount === 1 ? '' : 's'} can be accessed by the LLM as needed
-          . By querying and retrieving messages only as needed you don't have to add it all to the prompt and minimize the impact to the context window. However, this querying takes time and is not free.
+          MEMORY: {memoryMessageCount} offloaded message{memoryMessageCount === 1 ? '' : 's'} can be accessed by the LLM
+          as needed . By querying and retrieving messages only as needed you don't have to add it all to the prompt and
+          minimize the impact to the context window. However, this querying takes time and is not free.
         </p>
       )}
       {overflowed && (
@@ -75,7 +82,8 @@ export default function ContextPanel({
             CONTEXT OVERFLOW
           </p>
           <p>
-            The LLM will reject calls that exceed its context window limits. You must use a context management strategy to manage the size of the context window. Each has advantages and disadvantages.
+            The LLM will reject calls that exceed its context window limits. You must use a context management strategy
+            to manage the size of the context window. Each has advantages and disadvantages.
           </p>
         </>
       )}

@@ -77,13 +77,7 @@ export const contextStage: StageDefinition = {
           ...state,
           contextMessages: truncated,
           contextStrategyUsed: 'truncate',
-          contextLastCompaction: createContextCompaction(
-            'truncate',
-            state.contextMessages,
-            truncated,
-            false,
-            state
-          )
+          contextLastCompaction: createContextCompaction('truncate', state.contextMessages, truncated, false)
         });
       }
       case 'apply-context-summary': {
@@ -100,8 +94,7 @@ export const contextStage: StageDefinition = {
             'summarize',
             state.contextMessages,
             summarized,
-            action.usedLlm ?? true,
-            state
+            action.usedLlm ?? true
           )
         });
       }
@@ -146,9 +139,7 @@ export const contextStage: StageDefinition = {
       case 'toggle-memory-context':
         return {
           ...state,
-          memories: state.memories.map((m) =>
-            m.id === action.id ? { ...m, inContext: action.inContext } : m
-          )
+          memories: state.memories.map((m) => (m.id === action.id ? { ...m, inContext: action.inContext } : m))
         };
       default:
         return state;
@@ -214,11 +205,7 @@ export const contextStage: StageDefinition = {
   }
 };
 
-export function recordContextTurn(
-  state: MorpState,
-  userInput: string,
-  assistantResponse: string
-): MorpState {
+export function recordContextTurn(state: MorpState, userInput: string, assistantResponse: string): MorpState {
   let contextMessages = addContextMessage(state.contextMessages, 'user', userInput);
   contextMessages = addContextMessage(contextMessages, 'assistant', assistantResponse);
 

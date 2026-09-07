@@ -119,8 +119,3 @@ export function isSystemFullyRepaired(completedStages: StageId[]): boolean {
 export function getOverallMorpStatus(completedStages: StageId[]): OverallMorpStatus {
   return isSystemFullyRepaired(completedStages) ? 'OPERATIONAL' : 'DEGRADED';
 }
-
-export function formatStatusLine(item: SystemStatusItem): string {
-  const status = item.state === 'repaired' ? item.repairedStatus : item.brokenStatus;
-  return `${item.label} — ${status}`;
-}

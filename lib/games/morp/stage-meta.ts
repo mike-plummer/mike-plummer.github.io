@@ -1,5 +1,5 @@
-import type { MorpState, StageId, SystemId } from './types';
 import { isRefineConfigCalibrated } from './modules/refine-sampling';
+import type { MorpState, StageId, SystemId } from './types';
 
 export interface StageMeta {
   label: string;
@@ -14,13 +14,12 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   training: {
     label: 'Training',
     shortLabel: 'TRAIN',
-    objective:
-      'Ask MORP some baseline questions to verify that its base training is intact.',
+    objective: 'Ask MORP some baseline questions to verify that its base training is intact.',
     conceptContext:
       'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are learned during training and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, etc. Generally speaking, models with more parameters "know" more things (facts, behaviors, abilities, etc.) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
     completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.',
     suggestions: [
-      'Optional: ask MORP for today\'s weather. It cannot know current conditions — that demonstrates the knowledge cutoff in action.'
+      "Optional: ask MORP for today's weather. It cannot know current conditions — that demonstrates the knowledge cutoff in action."
     ]
   },
   prediction: {
@@ -62,7 +61,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Facts',
     shortLabel: 'FACTS',
     objective:
-      'Review MORP\'s incident summary, audit each claim against Facility Records, then ground responses and enable output verification.',
+      "Review MORP's incident summary, audit each claim against Facility Records, then ground responses and enable output verification.",
     conceptContext:
       'Language models optimize for plausible continuations, not verified truth. When evidence is thin, they may produce confident-sounding answers with invented specifics — hallucinations. Reliable systems cross-check critical claims against authoritative sources and mitigate with grounding and output verification.',
     completionHint: 'You have identified and mitigated hallucinated claims. Advance to continue.'
@@ -71,7 +70,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Evals',
     shortLabel: 'EVALS',
     objective:
-      'Review MORP\'s generated filing summary, run an LLM cross-check, then submit your own quality and completeness ratings.',
+      "Review MORP's generated filing summary, run an LLM cross-check, then submit your own quality and completeness ratings.",
     conceptContext:
       'Evals measure how good model output is before you ship it. Two common approaches: LLM-as-judge (another model scores quality and completeness) and human-as-judge (a person rates the same dimensions). Each has different speed, cost, and reliability tradeoffs.',
     completionHint: 'You have compared LLM and human evaluation. Advance to complete the diagnostic.'
@@ -116,7 +115,6 @@ export function resolveFurthestStage(state: {
   furthestStage: StageId;
   stage: StageId;
   completedStages: StageId[];
-  stageObjectivesMet?: boolean;
 }): StageId {
   let furthest = [state.furthestStage, state.stage, ...state.completedStages].reduce(
     (latest, stageId) => getLaterStage(latest, stageId),
@@ -125,13 +123,6 @@ export function resolveFurthestStage(state: {
 
   for (const completed of state.completedStages) {
     const nextId = getNextStageId(completed);
-    if (nextId) {
-      furthest = getLaterStage(furthest, nextId);
-    }
-  }
-
-  if (state.stageObjectivesMet) {
-    const nextId = getNextStageId(state.stage);
     if (nextId) {
       furthest = getLaterStage(furthest, nextId);
     }
@@ -208,11 +199,11 @@ export function getStageObjectives(state: MorpState): StageObjective[] {
           complete: state.trainingTechnologySynonymVerified
         },
         {
-          label: 'Ask for the capital of France and confirm MORP\'s answer',
+          label: "Ask for the capital of France and confirm MORP's answer",
           complete: state.trainingFranceCapitalVerified
         },
         {
-          label: 'Ask for the boiling point of water and confirm MORP\'s answer',
+          label: "Ask for the boiling point of water and confirm MORP's answer",
           complete: state.trainingWaterBoilingPointVerified
         }
       ];
