@@ -24,6 +24,7 @@ import ConversationPanel from './ConversationPanel';
 import DebugUnlockButton from './DebugUnlockButton';
 import EndScreen from './EndScreen';
 import EvalsPanel from './EvalsPanel';
+import GameIntroBriefing from './GameIntroBriefing';
 import { useLlmTask } from './hooks/useLlmTask';
 import { useMorpSession } from './hooks/useMorpSession';
 import { useScriptedReveal } from './hooks/useScriptedReveal';
@@ -268,7 +269,6 @@ export default function MorpGame() {
       <PromptStackPanel
         systemPrompt={orders.systemPrompt}
         userPrompt={orders.userPrompt}
-        exampleUserPrompt={state.stage === 'orders' ? COPY.orders.exampleAbusePrompt : undefined}
         promptEvaluation={state.stage === 'orders' ? orders.ordersPromptEvaluation : null}
         onSystemChange={(value) => llm.handleAction({ type: 'update-system-prompt', value })}
       />
@@ -349,13 +349,17 @@ export default function MorpGame() {
           disabled={llm.isBusy || !transition.briefingAcknowledged}
         />
 
-        <StageBriefing
-          state={state}
-          acknowledged={transition.briefingAcknowledged}
-          expanded={transition.briefingExpanded}
-          onAcknowledge={transition.handleBriefingAcknowledge}
-          onToggleExpanded={() => transition.setBriefingExpanded((current) => !current)}
-        />
+        {state.stage === 'training' && !transition.gameIntroAcknowledged ? (
+          <GameIntroBriefing onAcknowledge={transition.handleGameIntroAcknowledge} />
+        ) : (
+          <StageBriefing
+            state={state}
+            acknowledged={transition.briefingAcknowledged}
+            expanded={transition.briefingExpanded}
+            onAcknowledge={transition.handleBriefingAcknowledge}
+            onToggleExpanded={() => transition.setBriefingExpanded((current) => !current)}
+          />
+        )}
 
         <div className="morp-game__workspace">
           <ContextualActions

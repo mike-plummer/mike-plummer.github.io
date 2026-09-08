@@ -1,6 +1,6 @@
 'use client';
 
-import { type RefObject, type SetStateAction, useCallback, useRef, useState } from 'react';
+import { type RefObject, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { MEMORY_ACCESS_DELAY_MS } from '@/lib/games/morp/config';
 import { COPY } from '@/lib/games/morp/copy';
 import { patchEvals, patchOrders, selectPrediction, selectRefine } from '@/lib/games/morp/domain/state';
@@ -31,6 +31,8 @@ import type {
   StreamChatResult
 } from '@/lib/llm/types';
 import { type Activity, isActivityBusy, isPredicting, isRevealing, isSummarizing } from './activity';
+
+const PREDICTION_TEMPERATURE_DEBOUNCE_MS = 300;
 
 async function waitForMemoryAccess(
   state: MorpState,
@@ -91,6 +93,16 @@ export function useLlmTask({
   const [candidatesFailed, setCandidatesFailed] = useState(false);
   const predictionRequestIdRef = useRef(0);
   const predictionAbortRef = useRef<AbortController | null>(null);
+  const predictionTemperatureDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPredictionTemperatureDebounce = useCallback(() => {
+    if (predictionTemperatureDebounceRef.current) {
+      clearTimeout(predictionTemperatureDebounceRef.current);
+      predictionTemperatureDebounceRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearPredictionTemperatureDebounce, [clearPredictionTemperatureDebounce]);
 
   const safeSetStreamingText = useCallback(
     (text: string) => {
@@ -107,9 +119,10 @@ export function useLlmTask({
   const revealing = isRevealing(activity);
 
   const abortPrediction = useCallback(() => {
+    clearPredictionTemperatureDebounce();
     predictionAbortRef.current?.abort();
     predictionAbortRef.current = null;
-  }, []);
+  }, [clearPredictionTemperatureDebounce]);
 
   const announceCompaction = useCallback(
     (next: MorpState) => {
@@ -208,6 +221,9 @@ export function useLlmTask({
           if (current.prediction.predictionInput !== context) {
             return current;
           }
+          if (current.prediction.predictionTemperature !== temperature) {
+            return current;
+          }
           return applyAction(current, { type: 'set-prediction-candidates', candidates });
         });
       } catch (error) {
@@ -247,6 +263,17 @@ export function useLlmTask({
     state.prediction.predictionTemperature,
     state.stage
   ]);
+
+  const schedulePredictionRefreshOnTemperature = useCallback(
+    (context: string, temperature: number) => {
+      clearPredictionTemperatureDebounce();
+      predictionTemperatureDebounceRef.current = setTimeout(() => {
+        predictionTemperatureDebounceRef.current = null;
+        void refreshPredictionCandidates(context, temperature);
+      }, PREDICTION_TEMPERATURE_DEBOUNCE_MS);
+    },
+    [clearPredictionTemperatureDebounce, refreshPredictionCandidates]
+  );
 
   const handleAcceptPredictionToken = useCallback(
     (token: string, percent: number | null, rawToken?: string) => {
@@ -500,7 +527,7 @@ export function useLlmTask({
     const signal = getSessionSignal();
     const batch = getSummarizeBatch(state.context.contextMessages);
     if (!batch) {
-      setAnnouncement('Need at least four active context messages to summarize.');
+      setAnnouncement('Need more conversation history before summarizing.');
       return;
     }
 
@@ -618,6 +645,23 @@ export function useLlmTask({
         return;
       }
 
+      if (action.type === 'set-temperature') {
+        const next = applyAction(state, action);
+        setState(next);
+
+        const input = next.prediction.predictionInput.trim();
+        if (
+          next.stage === 'prediction' &&
+          input &&
+          inGameplay &&
+          getBriefingAcknowledgedStage() === next.stage &&
+          next.prediction.predictionCandidates.length > 0
+        ) {
+          schedulePredictionRefreshOnTemperature(input, action.value);
+        }
+        return;
+      }
+
       const next = applyAction(state, action);
       const hasNewAssistant = getNewConversationEntries(state.conversation, next.conversation).some(
         (entry) => entry.role === 'assistant'
@@ -633,11 +677,14 @@ export function useLlmTask({
     [
       announceCompaction,
       applyStateTransitionWithReveal,
+      getBriefingAcknowledgedStage,
       handleContextSummarize,
       handleOrdersPromptTest,
+      inGameplay,
       isBusy,
       isMountedRef,
       runLlmEval,
+      schedulePredictionRefreshOnTemperature,
       setState,
       state
     ]

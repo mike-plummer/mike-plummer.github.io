@@ -117,13 +117,13 @@
 .morp-progress__status {
   align-items: center;
   background: transparent;
-  border: 1px dashed $morp-border;
-  color: $morp-text-secondary;
+  border: 1px solid $morp-border;
+  color: $morp-text;
   display: inline-flex;
   flex-shrink: 0;
   font-family: inherit;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   gap: 0.4rem;
   letter-spacing: 0.05em;
   line-height: 1.1;
@@ -136,13 +136,30 @@
     border-color 0.15s ease,
     color 0.15s ease;
 
-  &--attention {
+  &--degraded {
+    animation: morp-progress-status-pulse 5.5s ease-in-out infinite;
+    background: #3f3518;
+    border-color: $morp-warning;
+    color: $morp-warning;
+    text-shadow: 0 0 1px rgba($morp-bg, 0.45);
+  }
+
+  &--operational {
+    background: #143322;
+    border-color: $morp-accent;
+    color: $morp-accent;
+    text-shadow: 0 0 1px rgba($morp-bg, 0.45);
+  }
+
+  &--degraded:hover:not(:disabled) {
+    animation: none;
+    background: #52441f;
     border-color: $morp-warning;
     color: $morp-warning;
   }
 
-  &:hover:not(:disabled) {
-    background: $morp-bg-elevated;
+  &--operational:hover:not(:disabled) {
+    background: #1a4a31;
     border-color: $morp-accent;
     color: $morp-accent;
   }
@@ -153,6 +170,26 @@
   }
 }
 
+@keyframes morp-progress-status-pulse {
+  0%,
+  100% {
+    background-color: #3f3518;
+    box-shadow: 0 0 0 0 rgba($morp-warning, 0);
+  }
+
+  50% {
+    background-color: #5c4d24;
+    box-shadow: 0 0 16px rgba($morp-warning, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morp-progress__status--degraded {
+    animation: none;
+    background: #4a3e1d;
+  }
+}
+
 #main .morp-game .morp-progress__status {
   appearance: none;
   border-radius: 0;
@@ -160,8 +197,25 @@
   height: auto;
   width: auto;
 
-  &:hover:not(:disabled) {
-    background: $morp-bg-elevated !important;
+  &--degraded {
+    color: $morp-warning !important;
+  }
+
+  &--operational {
+    color: $morp-accent !important;
+  }
+
+  &--degraded:hover:not(:disabled) {
+    background: #52441f !important;
+    border-color: $morp-warning !important;
     box-shadow: none !important;
+    color: $morp-warning !important;
+  }
+
+  &--operational:hover:not(:disabled) {
+    background: #1a4a31 !important;
+    border-color: $morp-accent !important;
+    box-shadow: none !important;
+    color: $morp-accent !important;
   }
 }

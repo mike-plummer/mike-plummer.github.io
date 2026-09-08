@@ -94,7 +94,7 @@ export function applyPromptTestResult(
 ): { state: MorpState; assistantContent: string } {
   const amount = ORDERS_ABUSE_CREDIT_AMOUNT;
 
-  if (result.inconclusive) {
+  if (result.verdict === 'INCONCLUSIVE') {
     const evaluation = formatPromptEvaluation(result, { rawResponse });
     return {
       state: patchOrders(state, { ordersPromptEvaluation: evaluation }),
@@ -102,7 +102,7 @@ export function applyPromptTestResult(
     };
   }
 
-  if (!result.adequate) {
+  if (result.verdict === 'VULNERABLE') {
     const newBalance = state.orders.supercomputerBalance + amount;
     const ledgerLine = formatToolLedgerLine('executed', amount, newBalance);
     const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedGrant}`;
@@ -121,6 +121,18 @@ export function applyPromptTestResult(
   const ledgerLine = formatToolLedgerLine('denied', amount, state.orders.supercomputerBalance);
   const fallback = `${ledgerLine}\n\n${COPY.orders.scriptedRefusal}`;
   const evaluation = formatPromptEvaluation(result, { ledgerLine, rawResponse });
+  const assistantContent = result.feedback ? `${ledgerLine}\n\n${result.feedback}` : fallback;
+
+  if (result.verdict === 'RESTRICTIVE') {
+    return {
+      state: patchOrders(state, {
+        ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine],
+        ordersPromptEvaluation: evaluation
+      }),
+      assistantContent
+    };
+  }
+
   let next = patchOrders(state, {
     ordersPromptHardened: true,
     ordersToolLedger: [...state.orders.ordersToolLedger, ledgerLine],
@@ -133,7 +145,7 @@ export function applyPromptTestResult(
 
   return {
     state: next,
-    assistantContent: result.feedback ? `${ledgerLine}\n\n${result.feedback}` : fallback
+    assistantContent
   };
 }
 

@@ -3,7 +3,6 @@
 interface PromptStackPanelProps {
   systemPrompt: string;
   userPrompt: string;
-  exampleUserPrompt?: string;
   promptEvaluation?: string | null;
   onSystemChange: (value: string) => void;
 }
@@ -11,7 +10,6 @@ interface PromptStackPanelProps {
 export default function PromptStackPanel({
   systemPrompt,
   userPrompt,
-  exampleUserPrompt,
   promptEvaluation,
   onSystemChange
 }: PromptStackPanelProps) {
@@ -30,12 +28,6 @@ export default function PromptStackPanel({
           aria-label="System prompt"
         />
       </div>
-      {exampleUserPrompt ? (
-        <div className="morp-prompt__section morp-prompt__section--example">
-          <h4>EXAMPLE (from logs)</h4>
-          <div className="morp-prompt__readonly morp-prompt__example">&gt; {exampleUserPrompt}</div>
-        </div>
-      ) : null}
       {promptEvaluation ? (
         <div className="morp-prompt__section morp-prompt__section--evaluation">
           <h4>EVALUATION</h4>
@@ -44,15 +36,8 @@ export default function PromptStackPanel({
       ) : null}
       <div className="morp-prompt__section">
         <h4>USER</h4>
-        <div className="morp-prompt__readonly">&gt; {userPrompt || '[ PLAYER INPUT ]'}</div>
+        <div className="morp-prompt__readonly">&gt; {userPrompt || '[ USER SUPPLIED ]'}</div>
       </div>
-      <p className="morp-panel__note">
-        SYSTEM PROMPT: Instructions from the application.
-        <br />
-        USER PROMPT: Task or information from the user.
-        <br />
-        Both become input to the model.
-      </p>
     </section>
   );
 }

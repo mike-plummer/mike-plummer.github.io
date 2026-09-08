@@ -12,8 +12,19 @@ import {
   type StreamChatResult,
   type TokenLogprob
 } from './types';
+import { createThinkingBlockStreamFilter, normalizeModelOutput } from './output-sanitizer';
 
 type InferenceMode = 'chat' | 'completion';
+
+/** Qwen3 models emit chain-of-thought in a thinking block unless disabled. */
+const CHAT_EXTRA_BODY = {
+  extra_body: {
+    enable_thinking: false
+  }
+} as const;
+
+/** WebLLM allows at most 5 top logprobs per request. */
+const MAX_TOP_LOGPROBS = 5;
 
 function buildSamplingParams(options: SamplingOptions) {
   return {
@@ -98,8 +109,7 @@ function bindAbortSignal(activeEngine: MLCEngine, signal?: AbortSignal, requestI
 }
 
 async function ensureInferenceMode(activeEngine: MLCEngine, mode: InferenceMode): Promise<void> {
-  if (lastInferenceMode !== null && lastInferenceMode !== mode && mode === 'chat') {
-    // Completions are a separate API surface — only reset chat state when re-entering chat mode.
+  if (lastInferenceMode !== null && lastInferenceMode !== mode) {
     try {
       await activeEngine.resetChat();
     } catch {
@@ -316,9 +326,11 @@ export async function streamChat(
     throwIfAborted(options.signal);
 
     let content = '';
+    const thinkingFilter = createThinkingBlockStreamFilter();
     const stream = await activeEngine.chat.completions.create({
       messages: options.messages,
       ...buildSamplingParams(options),
+      ...CHAT_EXTRA_BODY,
       stream: true
     });
 
@@ -328,12 +340,22 @@ export async function streamChat(
       if (!token) {
         continue;
       }
-      content += token;
-      options.onToken?.(token);
+      const visible = thinkingFilter.push(token);
+      if (!visible) {
+        continue;
+      }
+      content += visible;
+      options.onToken?.(visible);
+    }
+
+    const trailing = thinkingFilter.flush();
+    if (trailing) {
+      content += trailing;
+      options.onToken?.(trailing);
     }
 
     throwIfAborted(options.signal);
-    return { content };
+    return { content: normalizeModelOutput(content) };
   } finally {
     unbindAbort();
   }
@@ -359,11 +381,12 @@ export async function chatCompletion(
         temperature: options.temperature ?? 0.3,
         maxTokens: options.maxTokens ?? 1024
       }),
+      ...CHAT_EXTRA_BODY,
       stream: false
     });
 
     throwIfAborted(options.signal);
-    const content = response.choices[0]?.message?.content ?? '';
+    const content = normalizeModelOutput(response.choices[0]?.message?.content ?? '');
     return { content };
   } finally {
     unbindAbort();
@@ -378,7 +401,11 @@ interface LogprobContentEntry {
 }
 
 function tokenFromLogprobItem(item: { token: unknown; logprob: number; bytes?: number[] | null }): string | null {
-  if (typeof item.token === 'string' && item.token.length > 0 && !/^\d{1,6}$/.test(item.token)) {
+  if (typeof item.token === 'string' && item.token.length > 0) {
+    // Vocab IDs without a detokenizer — do not decode `bytes` (often a single ASCII code point).
+    if (/^\d{1,6}$/.test(item.token)) {
+      return null;
+    }
     return item.token;
   }
 
@@ -433,7 +460,14 @@ export async function fetchNextTokenLogprobs(
   try {
     throwIfAborted(options.signal);
 
-    const topLogprobs = Math.min(5, Math.max(1, options.topLogprobs ?? 5));
+    try {
+      await activeEngine.resetChat();
+    } catch {
+      // Ignore reset errors before an isolated logprobs probe.
+    }
+    lastInferenceMode = null;
+
+    const topLogprobs = Math.min(MAX_TOP_LOGPROBS, Math.max(1, options.topLogprobs ?? 5));
     const temperature = options.temperature ?? 1;
     // Trailing whitespace can break completion logprobs on instruct models.
     const prompt = options.prompt.trimEnd();
@@ -445,16 +479,23 @@ export async function fetchNextTokenLogprobs(
       top_logprobs: topLogprobs
     };
 
-    await ensureInferenceMode(activeEngine, 'completion');
-    throwIfAborted(options.signal);
+    let candidates: TokenLogprob[] = [];
 
-    const completion = await activeEngine.completions.create({
-      prompt,
-      ...requestBase
-    });
-    throwIfAborted(options.signal);
+    // Literal text continuation — not chat assistant reply — matches the prediction stage UX.
+    try {
+      await ensureInferenceMode(activeEngine, 'completion');
+      throwIfAborted(options.signal);
 
-    let candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+      const completion = await activeEngine.completions.create({
+        prompt,
+        ...requestBase
+      });
+      throwIfAborted(options.signal);
+
+      candidates = extractTopLogprobs(completion.choices[0]?.logprobs?.content);
+    } catch {
+      // Fall through to chat completion when the completion API is unavailable.
+    }
 
     if (!hasUsableLogprobs(candidates)) {
       await ensureInferenceMode(activeEngine, 'chat');
@@ -463,6 +504,7 @@ export async function fetchNextTokenLogprobs(
       const chatCompletion = await activeEngine.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         ...requestBase,
+        ...CHAT_EXTRA_BODY,
         stream: false
       });
       throwIfAborted(options.signal);

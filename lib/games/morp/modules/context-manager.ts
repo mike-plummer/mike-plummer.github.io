@@ -3,7 +3,11 @@ import {
   AMNESIA_LLM_CONTEXT_LIMIT,
   AMNESIA_SEED_TARGET_TOKENS,
   MEMORY_CAPACITY,
-  SIMULATED_CONTEXT_LIMIT
+  SIMULATED_CONTEXT_LIMIT,
+  SUMMARIZE_MIN_BATCH_MESSAGES,
+  SUMMARIZE_MIN_REDUCTION_WHEN_UNDER_LIMIT,
+  SUMMARIZE_MIN_REMAINING_MESSAGES,
+  SUMMARIZE_TARGET_HEADROOM_TOKENS
 } from '../config';
 import { buildMorpSystemContent } from '../soul';
 import type { ContextCompactionResult, ContextMessage, MorpState } from '../types';
@@ -79,11 +83,11 @@ export function estimateChatMessagesTokens(messages: ChatMessage[]): number {
 }
 
 export function computeContextBufferTokens(messages: ContextMessage[]): number {
-  return getActiveContextMessages(messages).reduce((sum, message) => sum + estimateTokens(message.content) + 4, 0);
+  return getActiveContextMessages(messages).reduce((sum, message) => sum + message.tokens + 4, 0);
 }
 
 export function computeMemoryRetrievalTokens(memory: ContextMessage[]): number {
-  return getActiveContextMessages(memory).reduce((sum, message) => sum + estimateTokens(message.content) + 4, 0);
+  return getActiveContextMessages(memory).reduce((sum, message) => sum + message.tokens + 4, 0);
 }
 
 export function fitContextHistory(
@@ -191,12 +195,74 @@ export function truncateOldest(messages: ContextMessage[], count = 2): ContextMe
   return compactContextMessages(messages.filter((message) => !toRemove.has(message.id)));
 }
 
+function messageTokenCost(message: ContextMessage): number {
+  return message.tokens + 4;
+}
+
+export function estimateSummarizeTargetReduction(
+  storedTokens: number,
+  contextLimit: number = SIMULATED_CONTEXT_LIMIT
+): number {
+  const overflowTokens = Math.max(0, storedTokens - contextLimit);
+  if (overflowTokens > 0) {
+    return overflowTokens + SUMMARIZE_TARGET_HEADROOM_TOKENS;
+  }
+
+  return Math.max(
+    SUMMARIZE_MIN_REDUCTION_WHEN_UNDER_LIMIT,
+    Math.floor(storedTokens * 0.12)
+  );
+}
+
+function completeTrailingTurnBatch(
+  batch: ContextMessage[],
+  active: ContextMessage[],
+  maxBatchSize: number
+): void {
+  const last = batch[batch.length - 1];
+  if (last?.role !== 'user' || batch.length >= maxBatchSize) {
+    return;
+  }
+
+  const lastIndex = active.indexOf(last);
+  const next = active[lastIndex + 1];
+  if (next?.role === 'assistant' && !batch.includes(next)) {
+    batch.push(next);
+  }
+}
+
 export function getSummarizeBatch(messages: ContextMessage[]): ContextMessage[] | null {
   const active = getActiveContextMessages(messages);
-  if (active.length < 4) {
+  if (active.length < SUMMARIZE_MIN_BATCH_MESSAGES + SUMMARIZE_MIN_REMAINING_MESSAGES) {
     return null;
   }
-  return active.slice(0, 3);
+
+  const storedTokens = computeContextBufferTokens(messages);
+  const targetReduction = estimateSummarizeTargetReduction(storedTokens);
+  const maxBatchSize = active.length - SUMMARIZE_MIN_REMAINING_MESSAGES;
+  const batch: ContextMessage[] = [];
+  let batchTokens = 0;
+
+  for (const message of active) {
+    if (batch.length >= maxBatchSize) {
+      break;
+    }
+
+    batch.push(message);
+    batchTokens += messageTokenCost(message);
+
+    if (batch.length >= SUMMARIZE_MIN_BATCH_MESSAGES && batchTokens >= targetReduction) {
+      break;
+    }
+  }
+
+  completeTrailingTurnBatch(batch, active, maxBatchSize);
+
+  if (batch.length < SUMMARIZE_MIN_BATCH_MESSAGES) {
+    return null;
+  }
+
+  return batch;
 }
 
 export function applyContextSummary(

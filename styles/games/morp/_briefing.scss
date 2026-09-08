@@ -22,7 +22,55 @@
 
   &--reference {
     border-color: $morp-border;
+    padding: 0;
   }
+
+  &--expanded {
+    border-color: $morp-border;
+    padding: 0;
+  }
+}
+
+.morp-briefing__expandable {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.45s ease,
+    opacity 0.35s ease;
+}
+
+.morp-briefing--expanded .morp-briefing__expandable {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.morp-briefing__expandable-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1rem 0.875rem;
+}
+
+.morp-briefing--expanded .morp-briefing__header {
+  padding-top: 0.875rem;
+}
+
+.morp-briefing__toggle {
+  max-height: 4rem;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-height 0.35s ease,
+    opacity 0.3s ease,
+    padding 0.35s ease;
+}
+
+.morp-briefing--expanded .morp-briefing__toggle {
+  max-height: 0;
+  opacity: 0;
+  padding-bottom: 0;
+  padding-top: 0;
+  pointer-events: none;
 }
 
 .morp-briefing__header {
@@ -78,6 +126,14 @@
   letter-spacing: 0.04em;
   margin: 0 0 0.75rem;
   text-transform: uppercase;
+}
+
+.morp-briefing__game-title {
+  color: $morp-text;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 0.75rem;
 }
 
 .morp-briefing__begin {
@@ -185,18 +241,110 @@
 
 // Stage diagnostic report (post-stage)
 .morp-stage-report {
-  background: #0d1f17;
-  border: 1px solid #55ff99;
+  background: $morp-bg-panel;
+  border: 1px solid $morp-border-subtle;
   border-radius: 4px;
   margin-top: 1.5rem;
+  overflow: hidden;
   padding: 1rem 1.25rem;
+  transform-origin: center top;
+  transition:
+    background-color 0.55s ease,
+    border-color 0.55s ease,
+    box-shadow 0.55s ease,
+    padding 0.45s ease,
+    transform 0.55s ease;
 
-  &--collapsed {
+  &--collapsed,
+  &--expanded {
     padding: 0;
   }
 
   &--pending {
+    background: $morp-bg-panel;
     border-color: $morp-border-subtle;
+  }
+
+  &--complete {
+    background: #0d1f17;
+    border-color: $morp-accent;
+  }
+
+  &--revealed {
+    animation: morp-stage-report-reveal 0.85s ease;
+  }
+}
+
+.morp-stage-report__expandable {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.45s ease,
+    opacity 0.35s ease;
+}
+
+.morp-stage-report--expanded .morp-stage-report__expandable {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.morp-stage-report__expandable-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1.25rem 1rem;
+}
+
+.morp-stage-report--expanded .morp-stage-report__header {
+  padding-top: 1rem;
+}
+
+.morp-stage-report__toggle {
+  max-height: 4.5rem;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-height 0.35s ease,
+    opacity 0.3s ease,
+    padding 0.35s ease;
+}
+
+.morp-stage-report--expanded .morp-stage-report__toggle {
+  max-height: 0;
+  opacity: 0;
+  padding-bottom: 0;
+  padding-top: 0;
+  pointer-events: none;
+}
+
+@keyframes morp-stage-report-reveal {
+  0% {
+    box-shadow: 0 0 0 0 rgba($morp-accent, 0);
+    transform: scale(0.985);
+  }
+
+  45% {
+    box-shadow: 0 0 22px rgba($morp-accent, 0.28);
+    transform: scale(1.015);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba($morp-accent, 0);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morp-briefing__expandable,
+  .morp-briefing__toggle,
+  .morp-stage-report,
+  .morp-stage-report__expandable,
+  .morp-stage-report__toggle {
+    transition: none;
+  }
+
+  .morp-stage-report--revealed {
+    animation: none;
   }
 }
 
@@ -328,9 +476,33 @@
 
 .morp-stage-report__continue {
   min-width: 12rem;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease,
+    filter 0.45s ease;
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    filter: grayscale(0.35);
+    opacity: 0.5;
+    transform: scale(0.97);
+  }
+}
+
+.morp-stage-report--revealed .morp-stage-report__continue:not(:disabled) {
+  animation: morp-stage-report-button-enable 0.55s ease 0.15s both;
+}
+
+@keyframes morp-stage-report-button-enable {
+  0% {
+    filter: grayscale(0.35);
+    opacity: 0.5;
+    transform: scale(0.97);
+  }
+
+  100% {
+    filter: none;
+    opacity: 1;
+    transform: scale(1);
   }
 }

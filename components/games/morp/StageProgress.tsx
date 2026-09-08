@@ -86,7 +86,9 @@ export default function StageProgress({
         {onStatusOpen && (
           <button
             type="button"
-            className={`morp-progress__status${statusNeedsAttention ? ' morp-progress__status--attention' : ''}`}
+            className={`morp-progress__status${
+              statusNeedsAttention ? ' morp-progress__status--degraded' : ' morp-progress__status--operational'
+            }`}
             onClick={onStatusOpen}
             disabled={disabled}
             aria-label={`Open ${COPY.systemStatus.heading.toLowerCase()}`}

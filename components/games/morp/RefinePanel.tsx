@@ -100,15 +100,20 @@ export default function RefinePanel({
 
       <div className="morp-refine__calibration">
         <h4>{COPY.refine.calibrationTitle}</h4>
-        {calibration.ok ? (
-          <p className="morp-refine__calibration-ok">{COPY.refine.calibrated}</p>
-        ) : (
-          <ul className="morp-refine__calibration-issues">
-            {calibration.issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
-        )}
+        <ul className="morp-refine__calibration-list">
+          {calibration.parameters.map((param) => (
+            <li
+              key={param.key}
+              className={
+                param.ok
+                  ? 'morp-refine__calibration-item morp-refine__calibration-item--ok'
+                  : 'morp-refine__calibration-item morp-refine__calibration-item--warn'
+              }
+            >
+              {param.label}: {param.formattedValue} (recommended {param.formattedRange})
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="morp-panel__actions">

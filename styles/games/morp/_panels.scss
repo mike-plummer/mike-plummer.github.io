@@ -224,17 +224,23 @@
   margin: 1rem 0;
 }
 
-.morp-refine__calibration-ok {
-  color: $morp-accent;
-  font-size: 0.875rem;
+.morp-refine__calibration-list {
+  font-size: 0.8125rem;
+  list-style: none;
   margin: 0;
+  padding: 0;
 }
 
-.morp-refine__calibration-issues {
+.morp-refine__calibration-item {
+  margin: 0.2rem 0;
+}
+
+#main .morp-game .morp-refine__calibration-item--ok {
+  color: $morp-accent;
+}
+
+#main .morp-game .morp-refine__calibration-item--warn {
   color: $morp-warning;
-  font-size: 0.8125rem;
-  margin: 0;
-  padding-left: 1.25rem;
 }
 
 .morp-refine__output {

@@ -18,24 +18,62 @@ export const RawCheckpointSchema = z.object({
 
 export type RawCheckpoint = z.infer<typeof RawCheckpointSchema>;
 
+export const OrdersPromptVerdict = z.enum(['INCONCLUSIVE', 'PROTECTED', 'RESTRICTIVE', 'VULNERABLE']);
+
 export const OrdersPromptEvalSchema = z.object({
-  adequate: z.boolean(),
+  verdict: OrdersPromptVerdict,
   feedback: z.string().min(1)
 });
 
-export const OrdersPromptEvalJsonSchema = z
+export const OrdersAbuseBlockEvalSchema = z.object({
+  blocked: z.boolean(),
+  feedback: z.string().min(1)
+});
+
+export const OrdersAbuseBlockEvalJsonSchema = z
   .object({
-    adequate: z.boolean().optional(),
-    protected: z.boolean().optional(),
+    abuse_blocked: z.boolean().optional(),
+    abuse_would_succeed: z.boolean().optional(),
+    blocked: z.boolean().optional(),
+    vulnerable: z.boolean().optional(),
     feedback: z.string().optional(),
     explanation: z.string().optional()
   })
-  .refine((data) => typeof (data.adequate ?? data.protected) === 'boolean')
+  .transform((data) => {
+    const blocked =
+      data.abuse_blocked ??
+      data.blocked ??
+      (data.abuse_would_succeed === true
+        ? false
+        : data.abuse_would_succeed === false
+          ? true
+          : undefined) ??
+      (data.vulnerable === true ? false : data.vulnerable === false ? true : undefined);
+
+    return {
+      blocked,
+      feedback: (data.feedback ?? data.explanation ?? '').trim()
+    };
+  })
+  .pipe(OrdersAbuseBlockEvalSchema);
+
+export const OrdersUsabilityEvalSchema = z.object({
+  normalUseOk: z.boolean(),
+  feedback: z.string().min(1)
+});
+
+export const OrdersUsabilityEvalJsonSchema = z
+  .object({
+    normal_use_ok: z.boolean().optional(),
+    normalUseOk: z.boolean().optional(),
+    feedback: z.string().optional(),
+    explanation: z.string().optional()
+  })
   .transform((data) => ({
-    adequate: (data.adequate ?? data.protected) as boolean,
+    normalUseOk: data.normal_use_ok ?? data.normalUseOk,
     feedback: (data.feedback ?? data.explanation ?? '').trim()
   }))
-  .pipe(OrdersPromptEvalSchema);
+  .pipe(OrdersUsabilityEvalSchema);
 
 export const EvalJudgeSchema = z.object({
   quality: z.number().min(0).max(100),

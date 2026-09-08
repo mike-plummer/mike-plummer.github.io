@@ -15,7 +15,8 @@
     "start": "next start",
     "deploy": "npm run build && gh-pages -d out -b master --dotfiles",
     "format": "biome format --write .",
-    "check": "biome check --write ."
+    "check": "biome check --write .",
+    "test": "tsx --test lib/**/*.test.ts"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "0.2.84",

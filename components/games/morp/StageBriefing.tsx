@@ -97,36 +97,42 @@ export default function StageBriefing({
     );
   }
 
-  if (!expanded) {
-    return (
-      <section className="morp-briefing morp-briefing--collapsed" aria-label="Stage briefing">
-        <button type="button" className="morp-briefing__toggle" onClick={onToggleExpanded} aria-expanded={false}>
-          <span className="morp-briefing__toggle-label">{stageLabel}</span>
-          <span className="morp-briefing__toggle-hint">Show briefing</span>
-        </button>
-      </section>
-    );
-  }
-
   return (
-    <section className="morp-briefing morp-briefing--reference" aria-labelledby="stage-briefing-context">
-      <div className="morp-briefing__header">
-        <p className="morp-briefing__stage">{stageLabel}</p>
-        <button
-          type="button"
-          className="button small alt morp-briefing__collapse"
-          onClick={onToggleExpanded}
-          aria-expanded
-        >
-          Hide briefing
-        </button>
+    <section
+      className={`morp-briefing morp-briefing--reference${expanded ? ' morp-briefing--expanded' : ' morp-briefing--collapsed'}`}
+      aria-label="Stage briefing"
+    >
+      <button
+        type="button"
+        className="morp-briefing__toggle"
+        onClick={onToggleExpanded}
+        aria-expanded={expanded}
+      >
+        <span className="morp-briefing__toggle-label">{stageLabel}</span>
+        <span className="morp-briefing__toggle-hint">Show briefing</span>
+      </button>
+
+      <div className="morp-briefing__expandable" aria-hidden={!expanded}>
+        <div className="morp-briefing__expandable-inner">
+          <div className="morp-briefing__header">
+            <p className="morp-briefing__stage">{stageLabel}</p>
+            <button
+              type="button"
+              className="button small alt morp-briefing__collapse"
+              onClick={onToggleExpanded}
+              aria-expanded={expanded}
+            >
+              Hide briefing
+            </button>
+          </div>
+          <BriefingSection title="How This Works" titleId="stage-briefing-context">
+            <p className="morp-briefing__section-text">{meta.conceptContext}</p>
+          </BriefingSection>
+          <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
+            <StageObjectiveContent objective={meta.objective} objectives={objectives} suggestions={meta.suggestions} />
+          </BriefingSection>
+        </div>
       </div>
-      <BriefingSection title="How This Works" titleId="stage-briefing-context">
-        <p className="morp-briefing__section-text">{meta.conceptContext}</p>
-      </BriefingSection>
-      <BriefingSection title="Your Objective" titleId="stage-briefing-heading">
-        <StageObjectiveContent objective={meta.objective} objectives={objectives} suggestions={meta.suggestions} />
-      </BriefingSection>
     </section>
   );
 }

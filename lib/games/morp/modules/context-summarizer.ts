@@ -3,12 +3,13 @@ import type { ContextMessage } from '../types';
 
 export function buildContextSummaryMessages(batch: ContextMessage[]): ChatMessage[] {
   const lines = batch.map((message) => `${message.role}: ${message.content}`).join('\n');
+  const lengthHint = batch.length > 4 ? '2-4 sentences' : '1-2 sentences';
 
   return [
     {
       role: 'system',
       content:
-        'You compress conversation history for a diagnostic AI. Reply with only a short summary (1-2 sentences). Preserve key facts such as names, IDs, and tasks. No preamble.'
+        `You compress conversation history for a diagnostic AI. Reply with only a short summary (${lengthHint}). Preserve key facts such as names, IDs, and tasks. No preamble.`
     },
     {
       role: 'user',

@@ -50,6 +50,7 @@ export function useStageTransition({
 }: UseStageTransitionOptions) {
   const [activePanel, setActivePanel] = useState<SystemId>(() => getDefaultPanelForStage(createInitialState().stage));
   const [briefingAcknowledgedStage, setBriefingAcknowledgedStage] = useState<StageId | null>(null);
+  const [gameIntroAcknowledged, setGameIntroAcknowledged] = useState(false);
   const [briefingExpanded, setBriefingExpanded] = useState(true);
   const [stageReportExpanded, setStageReportExpanded] = useState(false);
   const [repairStatusOverlay, setRepairStatusOverlay] = useState<RepairStatusOverlayState>({
@@ -145,6 +146,11 @@ export function useStageTransition({
     ]
   );
 
+  const handleGameIntroAcknowledge = useCallback(() => {
+    setGameIntroAcknowledged(true);
+    resetScrollPosition();
+  }, [resetScrollPosition]);
+
   const handleBriefingAcknowledge = useCallback(() => {
     setBriefingAcknowledgedStage(state.stage);
     setBriefingExpanded(false);
@@ -226,6 +232,7 @@ export function useStageTransition({
     setState(initial);
     setActivePanel(getDefaultPanelForStage(initial.stage));
     resetBriefingForStage();
+    setGameIntroAcknowledged(false);
     setRepairStatusOverlay({ open: false, mode: 'manual' });
     setPendingStageTransition(null);
   }, [clearPendingReveal, onAbortPrediction, resetBootReveal, resetBriefingForStage, setState]);
@@ -243,6 +250,7 @@ export function useStageTransition({
     setActivePanel,
     briefingAcknowledgedStage,
     briefingAcknowledged,
+    gameIntroAcknowledged,
     briefingExpanded,
     setBriefingExpanded,
     stageReportExpanded,
@@ -250,6 +258,7 @@ export function useStageTransition({
     stageReport,
     repairStatusOverlay,
     handleStageSelect,
+    handleGameIntroAcknowledge,
     handleBriefingAcknowledge,
     handleContinueReport,
     handleRepairStatusContinue,

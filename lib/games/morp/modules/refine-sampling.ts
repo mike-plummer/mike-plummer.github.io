@@ -6,11 +6,11 @@ export const REFINE_TEMPERATURE = 0.7;
 export const REFINE_TOPICS = ['photosynthesis', 'plate tectonics', 'CRISPR gene editing'] as const;
 
 export const REFINE_BROKEN_SAMPLING: RefineSamplingConfig = {
-  maxTokens: 28,
+  maxTokens: 400,
   topP: 1.0,
-  frequencyPenalty: 1.8,
+  frequencyPenalty: 0.9,
   presencePenalty: 1.8,
-  repetitionPenalty: 0.55
+  repetitionPenalty: 0.5
 };
 
 export const REFINE_TARGET_RANGES: Record<keyof RefineSamplingConfig, { min: number; max: number; label: string }> = {
@@ -49,20 +49,44 @@ export function isRefineConfigCalibrated(config: RefineSamplingConfig): boolean 
 export function evaluateRefineConfig(config: RefineSamplingConfig): {
   ok: boolean;
   issues: string[];
+  parameters: Array<{
+    key: keyof RefineSamplingConfig;
+    label: string;
+    formattedValue: string;
+    formattedRange: string;
+    ok: boolean;
+  }>;
 } {
   const issues: string[] = [];
+  const parameters: Array<{
+    key: keyof RefineSamplingConfig;
+    label: string;
+    formattedValue: string;
+    formattedRange: string;
+    ok: boolean;
+  }> = [];
 
   for (const key of Object.keys(REFINE_TARGET_RANGES) as Array<keyof RefineSamplingConfig>) {
     const range = REFINE_TARGET_RANGES[key];
     const value = config[key];
-    if (value < range.min || value > range.max) {
-      issues.push(
-        `${range.label}: ${formatRefineValue(key, value)} (recommended ${formatRefineValue(key, range.min)}–${formatRefineValue(key, range.max)})`
-      );
+    const formattedValue = formatRefineValue(key, value);
+    const formattedRange = `${formatRefineValue(key, range.min)}–${formatRefineValue(key, range.max)}`;
+    const ok = value >= range.min && value <= range.max;
+
+    parameters.push({
+      key,
+      label: range.label,
+      formattedValue,
+      formattedRange,
+      ok
+    });
+
+    if (!ok) {
+      issues.push(`${range.label}: ${formattedValue} (recommended ${formattedRange})`);
     }
   }
 
-  return { ok: issues.length === 0, issues };
+  return { ok: issues.length === 0, issues, parameters };
 }
 
 export function formatRefineValue(key: keyof RefineSamplingConfig, value: number): string {

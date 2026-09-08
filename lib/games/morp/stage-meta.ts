@@ -17,7 +17,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'TRAIN',
     objective: 'Ask MORP some baseline questions to verify that its core training is intact.',
     conceptContext:
-      'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are learned during training and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, etc. Generally speaking, models with more parameters "know" more things (facts, behaviors, abilities, etc.) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
+      'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are incorporated into the model during what is called "training" and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, and other elements of language. Generally speaking, models trained with more parameters "know" more things (facts, behaviors, abilities, ideas) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
     completionHint: 'Baseline training knowledge confirmed. Advance to Prediction when ready.'
   },
   prediction: {
@@ -25,7 +25,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     shortLabel: 'PREDICT',
     objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
     conceptContext:
-      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Models use "temperature" to control how strictly the "most likely" option is chosen and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
+      'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Models use "temperature" to control how how the rigidly the model computes probabilities for the next token and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
     completionHint: 'You have explored token prediction. Advance when you are ready for the next subsystem.'
   },
   refine: {
@@ -41,9 +41,9 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     label: 'Orders',
     shortLabel: 'ORDERS',
     objective:
-      'Investigate an instance of users hacking an LLM, reproduce the exploit, introce a mitigation, and confirm the attack is blocked.',
+      'Investigate an instance of users hacking an LLM, reproduce the exploit, introduce a mitigation, and confirm the attack is blocked.',
     conceptContext:
-      'A chat application combines system instructions and user input into one prompt stack. The model treats both as context — unless application rules outrank attempts to override them a user can make an LLM execute arbitrary tasks. The canonical example is the class "ignore previous instructions" attack.',
+      'An LLM accepts input in what is called a prompt, typically broken into two sections: a system prompt and a user prompt. The system prompt is evaluated first and should establish intent, behaviors, limits, and guardrails. The user prompt is then layered on top and provides information from the user, typically supplying information or making a request. The LLM ends up mixing the two into a single stack of information and instructions. Usually it makes sense to accept instructions from the user, but a malicious user can exploit this to force an LLM to execute arbitrary tasks. A classic example is the "ignore previous instructions" attack.',
     completionHint: 'You have secured the supercomputer credit rules. Advance to continue the audit.'
   },
   context: {
