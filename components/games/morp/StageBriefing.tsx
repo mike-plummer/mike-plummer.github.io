@@ -104,7 +104,7 @@ export default function StageBriefing({
     >
       <button
         type="button"
-        className="morp-briefing__toggle"
+        className="morp-briefing__toggle button"
         onClick={onToggleExpanded}
         aria-expanded={expanded}
       >

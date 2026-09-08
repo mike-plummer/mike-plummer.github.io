@@ -141,7 +141,7 @@ export default function StageReport({
     >
       <p className="morp-stage-report__objectives-hint">
         {COPY.stageReport.objectivesIncomplete}{' '}
-        <button type="button" className="morp-stage-report__briefing-link" onClick={onOpenBriefing}>
+        <button type="button" className="button morp-stage-report__briefing-link" onClick={onOpenBriefing}>
           {COPY.stageReport.showBriefing}
         </button>
       </p>

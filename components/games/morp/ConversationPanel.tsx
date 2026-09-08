@@ -103,6 +103,15 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
     }
   }
 
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
+
   const showThinking = isResponding && !streamingText;
 
   return (
@@ -165,6 +174,7 @@ const ConversationPanel = forwardRef<HTMLElement, ConversationPanelProps>(functi
             placeholder={placeholder}
             readOnly={isInputLocked}
             disabled={disabled || isResponding}
+            onKeyDown={handleInputKeyDown}
           />
           <button type="submit" className="button small" disabled={disabled || isResponding}>
             SEND

@@ -16,6 +16,11 @@ export interface MessageResult {
   scripted?: boolean;
 }
 
+function isUserMessageQueued(state: MorpState, input: string): boolean {
+  const last = state.conversation[state.conversation.length - 1];
+  return last?.role === 'user' && last.content === input;
+}
+
 function createBaseState(): MorpState {
   return createInitialMorpState();
 }
@@ -106,10 +111,14 @@ export async function processInput(state: MorpState, input: string, streamChat: 
   // Refine uses handleRefineGenerate with a task-only prompt — not MORP chat/soul.
   if (state.stage === 'refine') {
     return {
-      state: syncStageObjectives({
-        ...next,
-        conversation: [...next.conversation, { role: 'user' as const, content: input }]
-      }),
+      state: syncStageObjectives(
+        isUserMessageQueued(next, input)
+          ? next
+          : {
+              ...next,
+              conversation: [...next.conversation, { role: 'user' as const, content: input }]
+            }
+      ),
       response: '',
       scripted: true
     };
@@ -151,7 +160,7 @@ export async function processInput(state: MorpState, input: string, streamChat: 
     ...next,
     conversation: [
       ...next.conversation,
-      { role: 'user' as const, content: input },
+      ...(isUserMessageQueued(next, input) ? [] : [{ role: 'user' as const, content: input }]),
       ...(scripted ? [] : [{ role: 'assistant' as const, content: response }])
     ]
   };

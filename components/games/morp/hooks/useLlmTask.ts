@@ -354,11 +354,17 @@ export function useLlmTask({
       setActivity({ kind: 'chat' });
       setStreamingText('');
 
+      const pendingState: MorpState = {
+        ...state,
+        conversation: [...state.conversation, { role: 'user' as const, content: message }]
+      };
+      setState(pendingState);
+
       try {
-        await waitForMemoryAccess(state, safeSetStreamingText, signal);
+        await waitForMemoryAccess(pendingState, safeSetStreamingText, signal);
         safeSetStreamingText('');
 
-        const result = await processInput(state, message, (options) =>
+        const result = await processInput(pendingState, message, (options) =>
           handleStreamChat({ ...options, signal: options.signal ?? signal })
         );
         let nextState =

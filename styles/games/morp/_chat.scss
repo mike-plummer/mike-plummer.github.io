@@ -136,7 +136,17 @@
   word-break: break-all;
 
   &::placeholder {
-    color: $morp-text-muted;
+    color: $morp-text-secondary !important;
+    opacity: 1;
+  }
+
+  &::-webkit-input-placeholder {
+    color: $morp-text-secondary !important;
+    opacity: 1;
+  }
+
+  &::-moz-placeholder {
+    color: $morp-text-secondary !important;
     opacity: 1;
   }
 }

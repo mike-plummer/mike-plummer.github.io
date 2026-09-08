@@ -22,10 +22,6 @@
     line-height: 1.4;
   }
 
-  p, li, span, div, strong, b, label, pre, td, th {
-    color: inherit;
-  }
-
   .morp-status__row--broken .morp-status__value {
     color: $morp-warning;
   }
@@ -168,8 +164,17 @@
     }
 
     &::placeholder {
-      color: $morp-text-muted;
+      color: $morp-text-secondary !important;
       opacity: 1;
+    }
+
+    &::-webkit-input-placeholder {
+      color: $morp-text-secondary !important;
+      opacity: 1;
+    }
+
+    &::-moz-placeholder {
+      color: $morp-text-secondary !important;      opacity: 1;
     }
   }
 

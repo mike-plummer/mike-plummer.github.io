@@ -287,6 +287,9 @@ export default function MorpGame() {
         sentTokens={contextSnapshot.sentTokens}
         droppedMessageCount={contextSnapshot.droppedMessageCount}
         overflowed={contextSnapshot.overflowed}
+        contextMessages={context.contextMessages}
+        contextMemory={context.contextMemory}
+        includedMessageIds={[...contextSnapshot.includedIds]}
         memoryMessageCount={context.contextMemory.filter((message) => !message.removed).length}
         lastCompaction={context.contextLastCompaction}
         summarizing={llm.isSummarizing}

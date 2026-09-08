@@ -53,7 +53,9 @@ export function buildChatMessages(state: MorpState, userInput?: string): ChatMes
   if (userInput) {
     const last = messages[messages.length - 1];
     if (last?.role === 'user') {
-      last.content = `${last.content}\n\n${userInput}`;
+      if (last.content !== userInput) {
+        last.content = `${last.content}\n\n${userInput}`;
+      }
     } else {
       messages.push({ role: 'user', content: userInput });
     }
