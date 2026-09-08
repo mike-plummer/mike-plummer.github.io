@@ -30,7 +30,7 @@ Personal website built with [Next.js](https://nextjs.org/) (static export), Reac
 
 These features run inference entirely in the browser.
 
-Profile context for job-match is generated at build time via `npm run prebuild` from site data, `profile.md`, and `Resume_Aug2026.2.pdf`.
+Profile context for job-match is generated at build time via `npm run prebuild` from site data and `profile.md`. Resume PDF text is **not** included by default. To opt in locally, set `INCLUDE_RESUME_IN_PROFILE_CONTEXT=1` and place `Resume_Aug2026.2.pdf` in the repo root (the PDF is gitignored).
 
 ## Content
 

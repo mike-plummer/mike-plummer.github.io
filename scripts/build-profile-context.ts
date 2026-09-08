@@ -61,13 +61,23 @@ function buildAboutText() {
   return `${aboutCopy.intro} ${aboutCopy.currentRole}`;
 }
 
+function shouldIncludeResumeText(): boolean {
+  const flag = process.env.INCLUDE_RESUME_IN_PROFILE_CONTEXT?.trim().toLowerCase();
+  return flag === '1' || flag === 'true' || flag === 'yes';
+}
+
 async function buildResumeText() {
+  if (!shouldIncludeResumeText()) {
+    return '';
+  }
+
   const resumePath = path.join(projectRoot, 'Resume_Aug2026.2.pdf');
   try {
     const buffer = readFileSync(resumePath);
     const parsed = await pdfParse(buffer);
     return parsed.text.replace(/\s+/g, ' ').trim();
   } catch {
+    console.warn('INCLUDE_RESUME_IN_PROFILE_CONTEXT is set but Resume_Aug2026.2.pdf could not be read.');
     return '';
   }
 }
@@ -95,6 +105,9 @@ async function main() {
   const education = buildEducationText();
   const about = buildAboutText();
   const resumeText = await buildResumeText();
+  if (shouldIncludeResumeText() && resumeText) {
+    console.log('Included resume excerpt in profile context.');
+  }
 
   const context: ProfileContext = {
     summary: linkedInAbout || about,
