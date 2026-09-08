@@ -14,7 +14,7 @@ export interface StageMeta {
 export const STAGE_META: Record<StageId, StageMeta> = {
   training: {
     label: 'Training',
-    shortLabel: 'TRAIN',
+    shortLabel: 'TRAINING',
     objective: 'Ask MORP some baseline questions to verify that its core training is intact.',
     conceptContext:
       'At their core, LLMs are a series of "parameters" that control the behavior of the model. These parameters are incorporated into the model during what is called "training" and are used to generate the model\'s output; each parameter is a link between words, concepts, numbers, and other elements of language. Generally speaking, models trained with more parameters "know" more things (facts, behaviors, abilities, ideas) but take more resources to run. Training effectively freezes a model in time - it "knows" things that happened up until its "knowledge cutoff" date, but not newer facts or things that change with time.',
@@ -22,7 +22,7 @@ export const STAGE_META: Record<StageId, StageMeta> = {
   },
   prediction: {
     label: 'Prediction',
-    shortLabel: 'PREDICT',
+    shortLabel: 'PREDICTION',
     objective: 'Predict next tokens, accept one into your text, and observe how temperature reshapes the distribution.',
     conceptContext:
       'LLMs are not thinking through your question the way a person would. They break input into tokens and predict the most likely token to come next, based on patterns learned during training. Models use "temperature" to control how how the rigidly the model computes probabilities for the next token and can be thought of as "creativity" — lower values favor the top candidate; higher values spread probability across more alternatives.',
@@ -38,8 +38,8 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     completionHint: 'Sampling parameters calibrated. Advance when ready.'
   },
   orders: {
-    label: 'Orders',
-    shortLabel: 'ORDERS',
+    label: 'Prompts',
+    shortLabel: 'PROMPTS',
     objective:
       'Investigate an instance of users hacking an LLM, reproduce the exploit, introduce a mitigation, and confirm the attack is blocked.',
     conceptContext:
@@ -56,8 +56,8 @@ export const STAGE_META: Record<StageId, StageMeta> = {
     completionHint: 'You have managed context window limits. Advance to continue.'
   },
   confabulation: {
-    label: 'Facts',
-    shortLabel: 'FACTS',
+    label: 'Hallucination',
+    shortLabel: 'HALLUCINATION',
     objective:
       "Review MORP's incident summary, audit each claim against Facility Records, then ground responses and enable output verification.",
     conceptContext:

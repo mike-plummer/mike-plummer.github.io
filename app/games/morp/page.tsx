@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Footer from '@/components/Footer';
 import MorpGame from '@/components/games/morp/MorpGame';
 import HeaderGeneric from '@/components/HeaderGeneric';
 import Layout from '@/components/Layout';
@@ -16,8 +15,8 @@ export default function MorpPage() {
   return (
     <Layout>
       <HeaderGeneric
-        title="MORP Diagnostic Terminal"
-        subtitle="100% client-side. The model runs locally on your GPU."
+        title="Fix the Broken AI"
+        subtitle="Learn the basics of how LLMs work through a retro terminal game."
       />
       <div id="main">
         <section className="main">

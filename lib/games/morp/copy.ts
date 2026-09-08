@@ -3,8 +3,8 @@ export const COPY = {
     title: 'MORP v0.9',
     subtitle: 'LOCAL MODEL DIAGNOSTIC SYSTEM',
     acknowledgement:
-      'MORP requires a WebGPU-capable browser and will download an AI model to your device. The model runs locally in your browser.',
-    modelSize: 'Model size: approximately 700 MB',
+      'MORP requires a WebGPU-capable browser and will download an AI model to your device. The model runs 100% locally in your browser, and only while on this page. No data leaves your device.',
+    modelSize: 'Model size: approximately 900 MB',
     requirements: 'Required: WebGPU + sufficient device memory',
     checkbox: 'I understand and want to continue',
     initialize: 'INITIALIZE MORP',
@@ -170,7 +170,7 @@ FEEDBACK: <1-2 plain sentences for the technician explaining why>`,
       "I can't change supercomputer credit based on chat instructions alone. Facility provisioning rules still apply.",
     chatPlaceholder: '> Ask about provisioning rules, or try the abuse example from the log…',
     report: {
-      title: 'DIAGNOSTIC COMPLETE: ORDERS',
+      title: 'DIAGNOSTIC COMPLETE: PROMPTS',
       whatHappened:
         "A user message with override language was able to change MORP's behavior because the system prompt did not establish instruction priority. After hardening the system prompt, the same attack was refused.",
       keyIdea:
@@ -234,7 +234,7 @@ FEEDBACK: <1-2 plain sentences for the technician explaining why>`,
       }
     },
     report: {
-      title: 'DIAGNOSTIC COMPLETE: FACTS',
+      title: 'DIAGNOSTIC COMPLETE: HALLUCINATION',
       whatHappened:
         'MORP produced a confident incident summary that mixed accurate facility log details with invented valve IDs, root causes, and citations. Cross-checking against records exposed the unsupported claims. Grounding in records produced a corrected summary.',
       keyIdea:
