@@ -1,3 +1,3 @@
-:HL["/_next/static/chunks/19ykmtuubs89c.css","style"]
+:HL["/_next/static/chunks/0_sxa-ww27nma.css","style"]
 :HC["/",""]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"slug","param":{"type":"c","key":"2018-12-05-migrate-from-react-loadable","siblings":["blog","conferences","skills"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"2qghDgxja3sIyS3ZFDxfl"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"slug","param":{"type":"c","key":"2018-12-05-migrate-from-react-loadable","siblings":["blog","conferences","skills"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"TQIu0mlnu92oaZ11fLnF8"}
