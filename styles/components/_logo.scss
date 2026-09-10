@@ -1,3 +1,19 @@
+@mixin optimized-logo($name, $ext) {
+  $mime: $ext;
+
+  @if $ext == 'jpg' {
+    $mime: 'jpeg';
+  }
+
+  &:before {
+    background-image: url('/images/logos/#{$name}.#{$ext}');
+    background-image: image-set(
+      url('/images/optimized/logos/#{$name}.webp') type('image/webp'),
+      url('/images/logos/#{$name}.#{$ext}') type('image/#{$mime}')
+    );
+  }
+}
+
 .logo {
   border: unset !important;
   border-radius: unset !important;
@@ -54,21 +70,15 @@
   // Conferences
 
   &.amegala {
-    &:before {
-      background-image: url('/images/logos/amegala.png');
-    }
+    @include optimized-logo('amegala', 'png');
   }
 
   &.cypress {
-    &:before {
-      background-image: url('/images/logos/cypress.png');
-    }
+    @include optimized-logo('cypress', 'png');
   }
 
   &.improving {
-    &:before {
-      background-image: url('/images/logos/improving.png');
-    }
+    @include optimized-logo('improving', 'png');
   }
 
   &.lockheed {
@@ -78,14 +88,10 @@
   }
 
   &.kcdc {
-    &:before {
-      background-image: url('/images/logos/kcdc.jpg');
-    }
+    @include optimized-logo('kcdc', 'jpg');
   }
 
   &.midwestjs {
-    &:before {
-      background-image: url('/images/logos/midwestjs.jpg');
-    }
+    @include optimized-logo('midwestjs', 'jpg');
   }
 }

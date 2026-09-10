@@ -6,3 +6,4 @@ out/
 .idea
 *.iml
 public/post-images/
+public/images/optimized/

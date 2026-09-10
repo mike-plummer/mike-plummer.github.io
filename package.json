@@ -8,7 +8,10 @@
     "node": ">=20.9.0"
   },
   "scripts": {
+    "optimize-images": "node scripts/optimize-images.mjs",
+    "predev": "npm run optimize-images",
     "dev": "next dev --turbopack",
+    "prebuild": "npm run optimize-images",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
@@ -33,12 +36,13 @@
     "unified": "^11.0.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.3",
     "gh-pages": "^6.3.0",
     "next-sitemap": "^4.2.3",
-    "@biomejs/biome": "^2.5.10",
+    "sharp": "^0.35.4",
     "typescript": "^7.0.2"
   }
 }
