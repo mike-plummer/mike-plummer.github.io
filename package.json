@@ -20,8 +20,8 @@
     "check": "biome check --write ."
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.3.1",
     "@next/third-parties": "^16.3.2",
+    "font-awesome": "^4.7.0",
     "gray-matter": "^4.0.3",
     "limax": "^4.2.3",
     "next": "^16.3.2",

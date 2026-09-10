@@ -7,27 +7,27 @@ export function StatsSection() {
       </header>
       <ul className="statistics">
         <li className="style1">
-          <span className="icon fa fa-calendar" />
+          <span className="icon fa-calendar" />
           <strong>15</strong> Years Experience
         </li>
         <li className="style2">
-          <span className="icon fa fa-code-fork" />
+          <span className="icon fa-code-fork" />
           <strong>&gt; 20000</strong> Commits
         </li>
         <li className="style3">
-          <span className="icon fa fa-building" />
+          <span className="icon fa-building" />
           <strong>10</strong> Clients & Companies
         </li>
         <li className="style4">
-          <span className="icon fa fa-briefcase" />
+          <span className="icon fa-briefcase" />
           <strong>&gt; 25</strong> Projects & Baselines
         </li>
         <li className="style5">
-          <span className="icon fa fa-github" />
+          <span className="icon fa-github" />
           <strong>59</strong> Repositories
         </li>
         <li className="style6">
-          <span className="icon fa fa-comment" />
+          <span className="icon fa-comment" />
           <strong>9</strong> Conference Talks
         </li>
       </ul>

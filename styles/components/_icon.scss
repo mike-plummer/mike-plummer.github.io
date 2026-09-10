@@ -2,21 +2,6 @@
 
 .icon {
   @include icon;
-
-  &.fa {
-    --fa-width: auto;
-    font-family: FontAwesome;
-    font-weight: normal;
-    width: auto;
-
-    &:before {
-      content: var(--fa);
-      font-family: FontAwesome;
-      font-style: normal;
-      font-weight: normal;
-    }
-  }
-
   @include vendor('transition', (
           'background-color #{_duration(transition)} ease-in-out',
           'color #{_duration(transition)} ease-in-out'

@@ -8,7 +8,7 @@ body {
 }
 
 body, input, select, textarea {
-  font-family: var(--font-source-sans), Helvetica, sans-serif;
+  font-family: _font(family);
   font-size: 17pt;
   font-weight: _font(weight);
   line-height: 1.65;
