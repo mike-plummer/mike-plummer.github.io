@@ -21,7 +21,7 @@ export default function Footer() {
           <li>
             <a
               href="https://github.com/mike-plummer"
-              className="icon fa-github alt"
+              className="icon fa fa-github alt"
               rel="noopener noreferrer"
               aria-label="GitHub"
             >
@@ -31,7 +31,7 @@ export default function Footer() {
           <li>
             <a
               href="https://www.linkedin.com/in/plummermikej/"
-              className="icon fa-linkedin alt"
+              className="icon fa fa-linkedin alt"
               rel="noopener noreferrer"
               aria-label="LinkedIn"
             >

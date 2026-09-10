@@ -7,11 +7,11 @@ export function EducationSection() {
       </header>
       <ul className="statistics">
         <li className="style1">
-          <span className="icon fa-graduation-cap" />
+          <span className="icon fa fa-graduation-cap" />
           <strong>Bachelor of Science</strong> Computer Engineering, Iowa State University
         </li>
         <li className="style2">
-          <span className="icon fa-graduation-cap" />
+          <span className="icon fa fa-graduation-cap" />
           <strong>Master of Engineering</strong> Software Engineering, Pennsylvania State University
         </li>
       </ul>
