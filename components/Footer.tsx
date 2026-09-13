@@ -1,3 +1,5 @@
+import { Icon } from './Icon';
+
 export default function Footer() {
   return (
     <footer id="footer">
@@ -21,20 +23,22 @@ export default function Footer() {
           <li>
             <a
               href="https://github.com/mike-plummer"
-              className="icon fa-github alt"
+              className="icon alt"
               rel="noopener noreferrer"
               aria-label="GitHub"
             >
+              <Icon icon="fa-github" bare />
               <span className="label">GitHub</span>
             </a>
           </li>
           <li>
             <a
               href="https://www.linkedin.com/in/plummermikej/"
-              className="icon fa-linkedin alt"
+              className="icon alt"
               rel="noopener noreferrer"
               aria-label="LinkedIn"
             >
+              <Icon icon="fa-linkedin" bare />
               <span className="label">LinkedIn</span>
             </a>
           </li>

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import HeaderGeneric from '@/components/HeaderGeneric';
+import { Icon } from '@/components/Icon';
 import Layout from '@/components/Layout';
 import { getAllSkills } from '@/lib/content';
-import { iconClassNames } from '@/lib/icons';
 
 export const metadata: Metadata = {
   title: 'Skills',
@@ -24,7 +24,7 @@ export default async function SkillsPage() {
                   <h1>{skill.name}</h1>
                   <div dangerouslySetInnerHTML={{ __html: skill.html }} />
                 </div>
-                <span className={iconClassNames(skill.icon, 'image icon major')} />
+                <Icon icon={skill.icon} className="image icon major" />
               </div>
             </section>
           ))}

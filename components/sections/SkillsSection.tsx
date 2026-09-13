@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { iconClassNames } from '@/lib/icons';
+import { Icon } from '@/components/Icon';
 import type { Skill } from '@/lib/types';
 
 interface SkillsSectionProps {
@@ -15,7 +15,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
       <ul className="features">
         {skills.map((skill) => (
           <li key={skill.name}>
-            <span className={iconClassNames(skill.icon, 'icon major style5')} style={{ margin: '0 0 0.4em 0', border: 'none' }} />
+            <Icon icon={skill.icon} className="icon major style5" style={{ margin: '0 0 0.4em 0', border: 'none' }} />
             <h3>{skill.name}</h3>
             <p>{skill.brief}</p>
           </li>

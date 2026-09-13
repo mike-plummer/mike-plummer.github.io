@@ -1,3 +1,5 @@
+import { Icon } from '@/components/Icon';
+
 export function EducationSection() {
   return (
     <>
@@ -7,11 +9,11 @@ export function EducationSection() {
       </header>
       <ul className="statistics">
         <li className="style1">
-          <span className="icon fa-graduation-cap" />
+          <Icon icon="fa-graduation-cap" className="icon" />
           <strong>Bachelor of Science</strong> Computer Engineering, Iowa State University
         </li>
         <li className="style2">
-          <span className="icon fa-graduation-cap" />
+          <Icon icon="fa-graduation-cap" className="icon" />
           <strong>Master of Engineering</strong> Software Engineering, Pennsylvania State University
         </li>
       </ul>

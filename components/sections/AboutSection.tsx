@@ -29,14 +29,7 @@ export function AboutSection() {
             srcSet="/images/optimized/mike-256.webp 256w, /images/optimized/mike-380.webp 380w"
             sizes="(max-width: 736px) 12em, (max-width: 980px) 16em, 20em"
           />
-          <img
-            src="/images/mike.jpg"
-            alt="Mike"
-            width={380}
-            height={380}
-            decoding="async"
-            fetchPriority="high"
-          />
+          <img src="/images/mike.jpg" alt="Mike" width={380} height={380} decoding="async" fetchPriority="high" />
         </picture>
       </span>
     </div>

@@ -37,7 +37,7 @@ textarea {
   position: relative;
 
   &:before {
-    content: '\f078';
+    content: '▼';
     display: block;
     height: _size(element-height);
     line-height: _size(element-height);
@@ -102,7 +102,7 @@ input[type="radio"], {
 
   &:checked + label {
     &:before {
-      content: '\f00c';
+      content: '✓';
     }
   }
 }

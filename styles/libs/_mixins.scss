@@ -3,7 +3,7 @@
 @use 'sass:math';
 @use 'sass:meta';
 
-/// Makes an element's :before pseudoelement a FontAwesome icon.
+/// Styles an element's :before pseudoelement (used for logo icons and form controls).
 /// @param {string} $content Optional content value to use.
 /// @param {string} $where Optional pseudoelement to target (before or after).
 @mixin icon($content: false, $where: before) {
@@ -15,13 +15,6 @@
     @if $content {
       content: $content;
     }
-
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    font-family: FontAwesome;
-    font-style: normal;
-    font-weight: normal;
-    text-transform: none !important;
 
   }
 

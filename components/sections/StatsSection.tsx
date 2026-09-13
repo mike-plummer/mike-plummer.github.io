@@ -1,3 +1,5 @@
+import { Icon } from '@/components/Icon';
+
 export function StatsSection() {
   return (
     <>
@@ -7,27 +9,27 @@ export function StatsSection() {
       </header>
       <ul className="statistics">
         <li className="style1">
-          <span className="icon fa-calendar" />
+          <Icon icon="fa-calendar" className="icon" />
           <strong>15</strong> Years Experience
         </li>
         <li className="style2">
-          <span className="icon fa-building" />
+          <Icon icon="fa-building" className="icon" />
           <strong>10</strong> Clients & Companies
         </li>
         <li className="style3">
-          <span className="icon fa-briefcase" />
+          <Icon icon="fa-briefcase" className="icon" />
           <strong>30+</strong> Projects & Baselines
         </li>
         <li className="style4">
-          <span className="icon fa-code-fork" />
+          <Icon icon="fa-code-fork" className="icon" />
           <strong>35000+</strong> Commits
         </li>
         <li className="style5">
-          <span className="icon fa-github" />
+          <Icon icon="fa-github" className="icon" />
           <strong>59</strong> Repositories
         </li>
         <li className="style6">
-          <span className="icon fa-comment" />
+          <Icon icon="fa-comment" className="icon" />
           <strong>9</strong> Conference Talks
         </li>
       </ul>

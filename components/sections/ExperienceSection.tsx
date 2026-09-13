@@ -1,5 +1,5 @@
+import { Icon } from '@/components/Icon';
 import { employers, projects } from '@/lib/experience';
-import { iconClassNames } from '@/lib/icons';
 
 export function ExperienceSection() {
   return (
@@ -11,8 +11,9 @@ export function ExperienceSection() {
       <ul className="features">
         {employers.map((employer) => (
           <li key={employer.company}>
-            <span
-              className={iconClassNames(employer.icon, 'icon major style5')}
+            <Icon
+              icon={employer.icon}
+              className="icon major style5"
               style={{ margin: '0 0 0.4em 0', border: 'none' }}
             />
             <h3>{employer.company}</h3>
@@ -23,7 +24,9 @@ export function ExperienceSection() {
             </p>
             <ul>
               {employer.highlights.map((highlight) => (
-                <li key={highlight} style={{ width: 'fit-content' }}>{highlight}</li>
+                <li key={highlight} style={{ width: 'fit-content' }}>
+                  {highlight}
+                </li>
               ))}
             </ul>
           </li>
@@ -35,10 +38,7 @@ export function ExperienceSection() {
       <ul className="features">
         {projects.map((project) => (
           <li key={`${project.company}-${project.name}`}>
-            <span
-              className={iconClassNames(project.icon, 'icon major style5')}
-              style={{ margin: '0 0 0.4em 0', border: 'none' }}
-            />
+            <Icon icon={project.icon} className="icon major style5" style={{ margin: '0 0 0.4em 0', border: 'none' }} />
             <h3>{project.name}</h3>
             <p>
               <strong>{project.company}</strong>

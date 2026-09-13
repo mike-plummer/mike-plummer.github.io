@@ -71,10 +71,7 @@ for (const relativePath of rasterImages) {
     const suffix = rule.widths.length > 1 ? `-${width}` : '';
     const outputPath = path.join(variantOutputDir, `${name}${suffix}.webp`);
 
-    await sharp(inputPath)
-      .resize(rule.resize(width))
-      .webp({ quality: WEBP_QUALITY })
-      .toFile(outputPath);
+    await sharp(inputPath).resize(rule.resize(width)).webp({ quality: WEBP_QUALITY }).toFile(outputPath);
 
     console.log(`Generated ${path.relative(root, outputPath)}`);
   }
