@@ -83,16 +83,16 @@ button,
     }
 
     &.special {
-      background-color: _palette(accent);
+      background-color: _palette(accent1);
       color: _palette(invert, bg) !important;
       box-shadow: none;
 
       &:hover {
-        background-color: color.scale(_palette(accent), $lightness: 3%);
+        background-color: color.scale(_palette(accent1), $lightness: 3%);
       }
 
       &:active {
-        background-color: color.scale(_palette(accent), $lightness: -3%);
+        background-color: color.scale(_palette(accent1), $lightness: -3%);
       }
 
       &.icon {

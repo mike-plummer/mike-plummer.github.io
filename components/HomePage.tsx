@@ -48,7 +48,7 @@ export default function HomePage({ skills }: HomePageProps) {
       <div ref={sentinelRef} aria-hidden="true" />
       <Nav sticky={stickyNav} />
 
-      <div id="main">
+      <main id="main">
         <section id="intro" className="main">
           <AboutSection />
         </section>
@@ -76,7 +76,7 @@ export default function HomePage({ skills }: HomePageProps) {
         <section id="cta" className="main special">
           <BlogSection />
         </section>
-      </div>
+      </main>
     </Layout>
   );
 }

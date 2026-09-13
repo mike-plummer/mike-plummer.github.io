@@ -11,16 +11,16 @@ export function StatsSection() {
           <strong>15</strong> Years Experience
         </li>
         <li className="style2">
-          <span className="icon fa-code-fork" />
-          <strong>&gt; 20000</strong> Commits
-        </li>
-        <li className="style3">
           <span className="icon fa-building" />
           <strong>10</strong> Clients & Companies
         </li>
-        <li className="style4">
+        <li className="style3">
           <span className="icon fa-briefcase" />
-          <strong>&gt; 25</strong> Projects & Baselines
+          <strong>30+</strong> Projects & Baselines
+        </li>
+        <li className="style4">
+          <span className="icon fa-code-fork" />
+          <strong>35000+</strong> Commits
         </li>
         <li className="style5">
           <span className="icon fa-github" />
