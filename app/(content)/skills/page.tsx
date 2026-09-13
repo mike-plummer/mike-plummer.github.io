@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import HeaderGeneric from '@/components/HeaderGeneric';
 import { Icon } from '@/components/Icon';
-import Layout from '@/components/Layout';
+import SiteLayout from '@/components/SiteLayout';
 import { getAllSkills } from '@/lib/content';
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default async function SkillsPage() {
   const skills = await getAllSkills();
 
   return (
-    <Layout>
+    <SiteLayout>
       <HeaderGeneric title="Skills" />
       <div id="main">
         <section id="content" className="main">
@@ -30,6 +30,6 @@ export default async function SkillsPage() {
           ))}
         </section>
       </div>
-    </Layout>
+    </SiteLayout>
   );
 }

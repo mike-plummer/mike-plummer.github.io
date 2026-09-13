@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import HeaderGeneric from '@/components/HeaderGeneric';
-import Layout from '@/components/Layout';
+import SiteLayout from '@/components/SiteLayout';
 import { getAllPosts } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Blog',
@@ -12,7 +12,7 @@ export default async function BlogPage() {
   const posts = await getAllPosts();
 
   return (
-    <Layout>
+    <SiteLayout>
       <HeaderGeneric title="Blog" />
       <div id="main">
         <section id="content" className="main">
@@ -26,6 +26,6 @@ export default async function BlogPage() {
           ))}
         </section>
       </div>
-    </Layout>
+    </SiteLayout>
   );
 }

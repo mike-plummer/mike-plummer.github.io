@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Layout from '@/components/Layout';
+import SiteLayout from '@/components/SiteLayout';
 import { getAllPosts, getPostBySlugSegments, getPostStaticParams } from '@/lib/content';
 
 interface BlogPostPageProps {
@@ -37,7 +37,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   await getAllPosts();
 
   return (
-    <Layout>
+    <SiteLayout>
       <div id="main">
         <section id="content" className="main">
           <h1>{post.title}</h1>
@@ -45,6 +45,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div dangerouslySetInnerHTML={{ __html: post.html }} />
         </section>
       </div>
-    </Layout>
+    </SiteLayout>
   );
 }

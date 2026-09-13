@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Scroll from './Scroll';
 
 const NAV_ITEMS = [
   ['intro', 'About'],
@@ -60,9 +59,7 @@ export default function Nav({ sticky }: NavProps) {
       <ul>
         {NAV_ITEMS.map(([id, label]) => (
           <li key={id} className={activeSection === id ? 'is-active' : ''}>
-            <Scroll type="id" element={id}>
-              <a href="#">{label}</a>
-            </Scroll>
+            <a href={`#${id}`}>{label}</a>
           </li>
         ))}
       </ul>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import HeaderGeneric from '@/components/HeaderGeneric';
 import { Icon } from '@/components/Icon';
-import Layout from '@/components/Layout';
+import SiteLayout from '@/components/SiteLayout';
 import { getAllConferences } from '@/lib/content';
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default async function ConferencesPage() {
   const conferences = await getAllConferences();
 
   return (
-    <Layout>
+    <SiteLayout>
       <HeaderGeneric title="Conferences" />
       <div id="main">
         <section id="content" className="main">
@@ -28,6 +28,6 @@ export default async function ConferencesPage() {
           </ul>
         </section>
       </div>
-    </Layout>
+    </SiteLayout>
   );
 }

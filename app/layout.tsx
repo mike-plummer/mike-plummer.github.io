@@ -31,6 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-US" className={sourceSans.variable}>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "requestAnimationFrame(() => { setTimeout(() => { document.querySelector('.body')?.classList.remove('is-loading'); }, 100); });"
+          }}
+        />
         {children}
         <GoogleTagManager gtmId={siteMetadata.gtmId} />
       </body>
