@@ -8,6 +8,7 @@ const imagesDir = path.join(root, 'public/images');
 const outputDir = path.join(imagesDir, 'optimized');
 
 const WEBP_QUALITY = 80;
+const LOGO_WEBP_QUALITY = 75;
 const RASTER_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png']);
 
 const variantRules = [
@@ -71,7 +72,9 @@ for (const relativePath of rasterImages) {
     const suffix = rule.widths.length > 1 ? `-${width}` : '';
     const outputPath = path.join(variantOutputDir, `${name}${suffix}.webp`);
 
-    await sharp(inputPath).resize(rule.resize(width)).webp({ quality: WEBP_QUALITY }).toFile(outputPath);
+    const quality = relativePath.startsWith('logos/') ? LOGO_WEBP_QUALITY : WEBP_QUALITY;
+
+    await sharp(inputPath).resize(rule.resize(width)).webp({ quality }).toFile(outputPath);
 
     console.log(`Generated ${path.relative(root, outputPath)}`);
   }

@@ -30,6 +30,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-US" className={sourceSans.variable}>
+      <GoogleTagManager gtmId={siteMetadata.gtmId} />
       <body>
         <script
           dangerouslySetInnerHTML={{
@@ -38,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         {children}
-        <GoogleTagManager gtmId={siteMetadata.gtmId} />
       </body>
     </html>
   );

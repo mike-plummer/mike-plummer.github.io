@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=20.9.0"
   },
+  "browserslist": [
+    "baseline widely available"
+  ],
   "scripts": {
     "optimize-images": "node scripts/optimize-images.mjs",
     "predev": "npm run optimize-images",
