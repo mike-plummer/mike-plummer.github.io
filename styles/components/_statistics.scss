@@ -78,7 +78,7 @@
     }
   }
 
-  @include breakpoint(small) {
+  @include breakpoint(medium) {
     display: block;
     width: 20em;
     max-width: 100%;
