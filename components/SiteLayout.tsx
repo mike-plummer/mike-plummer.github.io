@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import BodyWrapper from './BodyWrapper';
 import Footer from './Footer';
 
 interface SiteLayoutProps {
@@ -7,11 +8,11 @@ interface SiteLayoutProps {
 
 export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
-    <div className="body is-loading">
+    <BodyWrapper>
       <div id="wrapper">
         {children}
         <Footer />
       </div>
-    </div>
+    </BodyWrapper>
   );
 }

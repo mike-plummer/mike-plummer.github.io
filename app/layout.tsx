@@ -1,5 +1,4 @@
 import '@/lib/fontawesome';
-import { GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
 import { Source_Sans_3 } from 'next/font/google';
 import '@/styles/main.scss';
@@ -30,16 +29,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-US" className={sourceSans.variable}>
-      <GoogleTagManager gtmId={siteMetadata.gtmId} />
-      <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "requestAnimationFrame(() => { setTimeout(() => { document.querySelector('.body')?.classList.remove('is-loading'); }, 100); });"
-          }}
-        />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
