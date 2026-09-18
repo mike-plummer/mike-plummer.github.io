@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: 'https://mike.plummerfamily.org',
-  generateRobotsTxt: false,
+  generateRobotsTxt: true,
   outDir: 'out'
 };
