@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://mike.plummerfamily.org
+
+# Sitemaps
+Sitemap: https://mike.plummerfamily.org/sitemap.xml
